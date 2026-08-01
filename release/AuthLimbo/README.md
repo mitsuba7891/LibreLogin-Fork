@@ -1,30 +1,33 @@
 # AuthLimbo
 
-Small standalone Paper plugin for the backend server used as a Velocity limbo.
+A small standalone Paper companion for the Velocity architecture, based on the LibreLogin fork and replacing the NanoLimbo integration.
 
-AuthLimbo is a companion component of a fork/customized distribution based on [LibreLogin](https://github.com/kyngs/LibreLogin). The upstream license and attribution are retained in the release package.
+## Responsibility
 
-AuthLimbo is intentionally separate from LibreLogin authentication. It keeps the backend safe and empty while `LibreLogin-Velocity` handles login and 2FA on the proxy.
+AuthLimbo is not an authentication plugin. It does not access the database or provide `/login`, `/register` or `/2fa`. `LibreLogin-Velocity` remains responsible for authentication; AuthLimbo only protects the backend limbo world.
 
 ## Install
 
-1. Install `AuthLimbo-1.0.0.jar` in the Paper `auth/plugins/` directory.
-2. Do not install `LibreLogin-Paper` on this backend when `LibreLogin-Velocity` is active.
-3. Use a Paper backend with modern Velocity forwarding enabled and the same forwarding secret as Velocity.
-4. Stop/start the server normally after changing the files. Do not use `/reload` for world-generation changes.
+Copy the JAR into the Paper auth backend:
 
-The plugin creates/uses the dedicated `auth_void` world and locks players at its spawn. It blocks movement, teleportation outside the limbo world, block interaction, damage, item drops and inventory actions. The player is held in adventure mode with flight enabled to avoid falling in the void.
+```text
+Paper-auth/plugins/AuthLimbo-1.0.0.jar
+```
 
-## Required Paper configuration
+Do not install `LibreLogin-Paper` on this backend when `LibreLogin-Velocity` is active. Enable modern Velocity forwarding and use the same forwarding secret as the proxy.
 
-`server.properties`:
+## Void-world configuration
+
+Before the first generation:
+
+`server.properties`
 
 ```properties
 level-name=auth_void
 allow-flight=true
 ```
 
-`bukkit.yml`:
+`bukkit.yml`
 
 ```yaml
 worlds:
@@ -32,26 +35,37 @@ worlds:
     generator: AuthLimbo:void
 ```
 
-The first generation of `auth_void` must occur with this generator mapping present. Do not reuse a normal terrain world as the void world. The previous `limbo` world may be preserved as a backup or removed only after an administrator confirms it is no longer needed.
+Start the server once, confirm `auth_void` is created as the dedicated limbo world, then check the console. Do not reuse a normal terrain world. Do not use `/reload` for world-generation changes.
 
-## Velocity configuration
+## Velocity registration
 
-Register this backend as a normal server, for example:
+`velocity.toml`:
 
 ```toml
 [servers]
-auth = "AUTH_HOST:AUTH_PORT"
+auth = "127.0.0.1:25566"
 ```
 
-Then list `auth` under LibreLogin-Velocity's `limbo` configuration. `AuthLimbo` does not communicate with the database and does not provide authentication commands.
+Then list `auth` under LibreLogin-Velocity's `limbo` setting. The backend should be private and reachable only by the proxy.
 
-## Dependencies
+## Behavior
 
-- Paper compatible with the API used to build this release (validated against Paper 1.21.4); test the selected Paper/Minecraft release before production.
-- Java 21 or newer for this release build.
-- No database.
-- No NanoLimbo.
-- No LibreLogin-Paper.
-- No PacketEvents dependency.
+AuthLimbo keeps players at the limbo spawn and blocks movement, unsafe teleportation, block interaction, damage, item drops and inventory actions. It uses adventure mode and flight to avoid falling while the proxy completes authentication.
 
-AuthLimbo is a companion component of this fork and is not a replacement for LibreLogin-Velocity.
+## Dependencies and limitations
+
+- Java 21+ for this release build.
+- Paper compatible with the API used to build this release; validated against Paper 1.21.4.
+- No database, PacketEvents, NanoLimbo or LibreLogin-Paper dependency.
+- Test the exact Paper/Minecraft version before production.
+
+## Troubleshooting
+
+- **Limbo not running:** ensure the Paper process is online and `auth` in `velocity.toml` resolves to the correct address.
+- **Terrain appears:** stop the server, verify `level-name=auth_void` and the `AuthLimbo:void` generator entry, then recreate only the intended limbo world after taking a backup.
+- **Player can move:** confirm AuthLimbo is enabled and no other plugin overrides movement, teleport, game mode or flight events.
+- **Backend disconnects:** verify modern forwarding and the matching forwarding secret.
+
+## License
+
+This component is distributed under the upstream Mozilla Public License 2.0. See the repository `LICENSE`; do not replace it with MIT. Upstream: <https://github.com/kyngs/LibreLogin>.

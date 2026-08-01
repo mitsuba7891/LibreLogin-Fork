@@ -1,54 +1,71 @@
-# LibreLogin fork release package
+# LibreLogin Fork — Release package
 
-This package contains the three plugins required for the split proxy/backend setup:
+This is a maintained, customized distribution based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). It separates proxy authentication, standalone Paper authentication and the Paper limbo backend into three clearly named artifacts.
 
-- `LibreLogin-Velocity/` — authentication, sessions, premium login, commands and 2FA on the Velocity proxy.
-- `LibreLogin-Paper/` — the standalone Paper implementation for networks that use LibreLogin directly on Paper.
-- `AuthLimbo/` — a small independent Paper limbo-lockdown plugin for a Paper backend used as the Velocity limbo. It does **not** contain LibreLogin authentication or PacketEvents.
-
-This project is a fork/customized distribution based on [LibreLogin](https://github.com/kyngs/LibreLogin).
-Please keep the upstream license and attribution files included with the release.
-
-## Recommended proxy installation
-
-1. Install only `LibreLogin-Velocity-<version>.jar` in the Velocity `plugins/` directory.
-2. Register the backend servers in `velocity.toml`, for example:
-
-   ```toml
-   [servers]
-   auth = "AUTH_HOST:AUTH_PORT"
-   lobby = "LOBBY_HOST:LOBBY_PORT"
-   try = ["auth"]
-   ```
-
-3. Configure the Velocity plugin's `limbo` list with `auth` and its `lobby.root` list with `lobby`.
-4. Configure modern forwarding in Velocity and Paper with the same forwarding secret.
-5. Do not install `LibreLogin-Paper` on the proxied `auth` backend when `LibreLogin-Velocity` is handling authentication.
-6. Install `AuthLimbo` on the `auth` Paper backend and configure that backend as documented in `AuthLimbo/README.md`.
-
-## 2FA
-
-Enable TOTP in the Velocity `plugins/librelogin/config.yml`. The proxy needs a compatible image projector:
-
-- PacketEvents 2.13.0+ is the preferred cross-version path in this fork.
-- Protocolize remains an optional compatibility path where its supported protocol range is appropriate.
-
-The login prompt accepts:
+## Package contents
 
 ```text
-/login <password> <2fa_code>
+LibreLogin-Velocity/
+  LibreLogin-Velocity-0.24.6.jar
+  README.md
+  CHANGELOG.md
+LibreLogin-Paper/
+  LibreLogin-Paper-0.24.6.jar
+  README.md
+  CHANGELOG.md
+AuthLimbo/
+  AuthLimbo-1.0.0.jar
+  README.md
+  CHANGELOG.md
+README.md
+CHANGELOG.md
+LICENSE
 ```
 
-Accounts with premium/autologin enabled must first run `/cracked` before starting `/2fa`.
+## Which plugin should I install?
 
-## Configuration files
+### Velocity network
 
-LibreLogin generates readable YAML files on first startup:
+Install:
 
-- `config.yml` — database, limbo/lobby, TOTP, login and platform settings.
-- `messages.yml` — all user-facing messages.
+- `LibreLogin-Velocity-0.24.6.jar` on the Velocity proxy.
+- `AuthLimbo-1.0.0.jar` on the Paper backend named `auth`.
 
-The message prefix is user-controlled:
+Do **not** install `LibreLogin-Paper` on that auth backend. LibreLogin-Velocity owns authentication and AuthLimbo only supplies the protected empty limbo world.
+
+### Standalone Paper server
+
+Install only `LibreLogin-Paper-0.24.6.jar` on the Paper server. Do not install LibreLogin-Velocity unless the server is also part of a proxy architecture.
+
+## Dependencies
+
+- Java 21 or newer.
+- Paper/Velocity versions compatible with your selected Minecraft release.
+- On Velocity, install PacketEvents 2.13.0+ separately for cross-version QR projection; it is not bundled in the Velocity JAR. The Paper artifact loads its PacketEvents runtime dependency through Libby.
+- Optional Protocolize, LuckPerms, Floodgate and RedisBungee integrations when used by your network.
+- A supported database for persistent authentication data. Drivers are loaded by Libby at runtime.
+
+## License and attribution
+
+The original LibreLogin project and this fork are licensed under the **Mozilla Public License 2.0 (MPL-2.0)**. The upstream project is not MIT-licensed. The `MIT` notice in `licenses/FASTLOGIN_LICENSE` applies to a separate FastLogin-derived dependency only. Do not replace `LICENSE` with MIT: retain MPL-2.0 and all upstream notices.
+
+Upstream: <https://github.com/kyngs/LibreLogin>
+Fork: <https://github.com/mitsuba7891/LibreLogin-Fork>
+
+## Configuration quick start
+
+1. Start the selected server once to generate `config.yml` and `messages.yml`.
+2. Stop the server before changing structural settings.
+3. Set the database values in this order: database name, host, port, user, password.
+4. For Velocity, set the registered backend name under `limbo` and the post-login destination under `lobby.root`.
+5. For AuthLimbo, configure `level-name=auth_void` and the `AuthLimbo:void` generator before first world creation.
+6. Back up the database, plugin directory and worlds before migrating from HOCON.
+
+Generated legacy HOCON files are converted automatically to YAML and retained as `.conf.pre-yaml.bak` backups.
+
+## Message prefix
+
+In `plugins/librelogin/messages.yml`:
 
 ```yaml
 prefix: "LibreLogin"
@@ -60,14 +77,58 @@ Use an empty value to disable it:
 prefix: ""
 ```
 
-After editing messages, use `/librelogin reload messages` or restart the proxy.
+Reload messages with:
 
-## NanoLimbo
+```text
+/librelogin reload messages
+```
 
-NanoLimbo is not part of this release. There are no NanoLimbo dependencies, integrations or runtime lookup paths in the packaged artifacts. The limbo backend is a normal registered Paper server, with `AuthLimbo` providing the empty-world and movement-lock behavior.
+## Commands
 
-## Java and support notes
+```text
+/register <password> <password>
+/login <password>
+/login <password> <2fa_code>
+/2fa
+/2faconfirm <code>
+/cracked
+/premium
+```
 
-The LibreLogin artifacts target Java 21 bytecode. Java 21 or newer is required. Paper and Velocity themselves may impose additional Java and Minecraft-version requirements. Test the selected Paper, Velocity, ViaVersion/ViaBackwards and client-version combination before production rollout.
+Premium/autologin accounts must use `/cracked` before configuring 2FA. Treat QR URLs, TOTP secrets and recovery codes as passwords.
 
-See the component READMEs and `CHANGELOG.md` for the complete change list.
+## Build the package
+
+```bash
+./gradlew :API:test :Plugin:test :Plugin:platformJars :Plugin:releaseArchive --no-daemon -PnoBump
+```
+
+## Publish the GitHub Release
+
+The repository already contains the source commit and tag. To authenticate the GitHub CLI on the VPS without placing a token in shell history:
+
+```bash
+gh auth login --hostname github.com --git-protocol ssh --web
+```
+
+Alternatively, use a fine-grained token with repository **Contents: Read and write** permission without echoing it:
+
+```bash
+read -rsp 'GitHub token: ' GH_TOKEN; export GH_TOKEN; echo
+gh auth status
+```
+
+Then create the release from the repository root:
+
+```bash
+gh release create v0.24.6 \
+  Plugin/build/distributions/LibreLogin-0.24.6.zip \
+  Plugin/build/libs/platform/LibreLogin-Paper-0.24.6.jar \
+  Plugin/build/libs/platform/LibreLogin-Velocity-0.24.6.jar \
+  Plugin/build/libs/platform/AuthLimbo-1.0.0.jar \
+  --repo mitsuba7891/LibreLogin-Fork \
+  --title "LibreLogin Fork 0.24.6" \
+  --notes-file release/CHANGELOG.md
+```
+
+Do not paste the token into Git, a README, a shell script or this chat. SSH authenticates Git operations; GitHub Releases use the API and therefore require `gh auth` or `GH_TOKEN`.

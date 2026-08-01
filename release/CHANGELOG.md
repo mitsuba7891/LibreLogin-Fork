@@ -1,12 +1,12 @@
 # Changelog
 
-## 0.24.5 fork release
+## 0.24.6 fork release
 
 ### Major changes
 
 - Added three release artifacts with separate installation responsibilities:
-  - `LibreLogin-Velocity-0.24.5.jar` for proxy-side authentication.
-  - `LibreLogin-Paper-0.24.5.jar` for standalone Paper authentication.
+  - `LibreLogin-Velocity-0.24.6.jar` for proxy-side authentication.
+  - `LibreLogin-Paper-0.24.6.jar` for standalone Paper authentication.
   - `AuthLimbo-1.0.0.jar` for a registered Paper limbo backend used with Velocity.
 - Removed NanoLimbo from the supported architecture and release dependencies. The limbo backend is now a regular registered Paper server.
 - Added `AuthLimbo`, a small independent Paper plugin that creates/uses `auth_void`, keeps players in a void world and blocks movement/interactions while they are in the proxy limbo.

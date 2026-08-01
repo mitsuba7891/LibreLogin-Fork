@@ -364,6 +364,9 @@ val releaseArchive = tasks.register<Zip>("releaseArchive") {
     }
     from(layout.projectDirectory.file("../release/README.md"))
     from(layout.projectDirectory.file("../release/CHANGELOG.md"))
+    // Preserve the upstream license in the distributable package. LibreLogin
+    // is MPL-2.0; the MIT notice under licenses/ belongs to a dependency.
+    from(layout.projectDirectory.file("../LICENSE"))
 }
 
 // Bump the version before anything that embeds it runs (template generation and

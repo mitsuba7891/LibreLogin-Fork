@@ -1,27 +1,35 @@
 # LibreLogin-Velocity
 
-Proxy-side authentication plugin for Velocity.
-
-This component is part of a fork/customized distribution based on [LibreLogin](https://github.com/kyngs/LibreLogin).
+Proxy-side authentication for Velocity, based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin).
 
 ## Install
 
-Copy `LibreLogin-Velocity-0.24.5.jar` into the Velocity `plugins/` directory. Keep only one active LibreLogin Velocity jar.
+Copy the JAR into the Velocity proxy:
 
-LibreLogin must be installed on the proxy for this architecture. Do not also install `LibreLogin-Paper` on the proxied `auth` backend: the backend is only a registered Paper server and should not initialize a second authentication/PacketEvents pipeline.
+```text
+Velocity/plugins/LibreLogin-Velocity-0.24.6.jar
+```
 
-## Required backend registration
+Install `PacketEvents 2.13.0+` separately when QR projection is required. It is compile-only and is not bundled. Keep only one active LibreLogin Velocity JAR.
 
-Register the backend names in `velocity.toml`:
+For the split architecture, install `AuthLimbo-1.0.0.jar` on the Paper server registered as `auth`. Do not install `LibreLogin-Paper` on that backend.
+
+## Velocity registration
+
+`velocity.toml`:
 
 ```toml
 [servers]
-auth = "AUTH_HOST:AUTH_PORT"
-lobby = "LOBBY_HOST:LOBBY_PORT"
+auth = "127.0.0.1:25566"
+lobby = "127.0.0.1:25567"
 try = ["auth"]
 ```
 
-In `plugins/librelogin/config.yml`:
+Use the real backend addresses. Configure modern forwarding and the same forwarding secret on Velocity and every Paper backend.
+
+## LibreLogin configuration
+
+After first startup, edit `plugins/librelogin/config.yml`:
 
 ```yaml
 limbo:
@@ -31,30 +39,23 @@ lobby:
     - lobby
 ```
 
-Use modern forwarding and configure the same forwarding secret in Velocity and the Paper backend.
+Use the generated comments as the source of truth for your revision. Keep the auth backend private behind a firewall where possible.
 
-## Dependencies
-
-- Velocity API/runtime compatible with the selected proxy release.
-- Java 21 or newer.
-- Install PacketEvents 2.13.0+ separately as a proxy/plugin dependency for cross-version 2FA image projection; it is compile-only and is not bundled in this JAR.
-- Protocolize is optional as a compatibility fallback where its supported protocol range is suitable.
-- Optional integrations: LuckPerms, Floodgate and RedisBungee where used by the network.
-- Database driver libraries are downloaded by Libby at runtime according to the selected database type.
-
-NanoLimbo is not required or included.
-
-## 2FA and premium login
-
-Enable TOTP in `config.yml`. Login syntax is:
+## Commands and 2FA
 
 ```text
+/register <password> <password>
+/login <password>
 /login <password> <2fa_code>
+/2fa
+/2faconfirm <code>
+/cracked
+/premium
 ```
 
-Users with premium/autologin enabled must run `/cracked` before `/2fa` or `/2faconfirm` is accepted.
+If premium/autologin is active, run `/cracked` before `/2fa`. Never share a TOTP URI, secret or recovery code.
 
-## Prefix and messages
+## Messages and prefix
 
 Edit `plugins/librelogin/messages.yml`:
 
@@ -62,14 +63,36 @@ Edit `plugins/librelogin/messages.yml`:
 prefix: "LibreLogin"
 ```
 
-The prefix is literal and applies to chat, command and kick messages. It is not applied to titles, subtitles, action bars or email templates. Set it empty to disable it:
+The value is literal and can be disabled:
 
 ```yaml
 prefix: ""
 ```
 
-Reload after editing:
+Reload safely with:
 
 ```text
 /librelogin reload messages
 ```
+
+The prefix is excluded from titles, subtitles, action bars and email templates.
+
+## Dependencies
+
+- Java 21+.
+- Compatible Velocity proxy.
+- PacketEvents 2.13.0+ as an external plugin for the preferred QR path.
+- Protocolize optional where its supported protocol range is appropriate.
+- Optional LuckPerms, Floodgate and RedisBungee integrations.
+- Database driver libraries loaded at runtime through Libby.
+
+## Troubleshooting
+
+- **Limbo not running:** confirm the `auth` Paper backend is online, registered under the same name in `velocity.toml` and listed under `limbo`.
+- **Backend closes immediately:** verify modern forwarding and matching secrets; do not run LibreLogin-Paper on the auth backend.
+- **QR unavailable:** install a compatible external PacketEvents/Protocolize path, or use the manual provisioning URI output.
+- **Messages unchanged:** run `/librelogin reload messages` or restart the proxy.
+
+## License
+
+This artifact is distributed under the upstream Mozilla Public License 2.0. See the repository `LICENSE`; do not replace it with MIT. The original project is <https://github.com/kyngs/LibreLogin>.

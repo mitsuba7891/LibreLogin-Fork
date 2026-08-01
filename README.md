@@ -1,111 +1,188 @@
+# LibreLogin Fork
 
-# LibreLogin
+A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/LibreLogin), an open-source authentication platform for Minecraft networks.
 
-(formerly LibrePremium) is an open-source, multiplatform, and highly customizable authentication plugin with outstanding features and API.
+> **Attribution and license:** This repository contains modifications of LibreLogin by kyngs and contributors. The upstream project is licensed under the **Mozilla Public License 2.0 (MPL-2.0)**; this fork retains that license and the original notices. The MIT license present under `licenses/FASTLOGIN_LICENSE` applies only to the relevant FastLogin-derived dependency, not to LibreLogin itself.
 
-# Quick information
+## Release 0.24.6
 
-<img src="https://img.shields.io/badge/Java%20version-%2021+-blue?style=for-the-badge&logo=java&logoColor=white"
-alt="Plugin requires Java 21 or newer"></img>
+This release provides three clearly separated artifacts:
 
-### Java compatibility
+| Artifact | Install on | Purpose |
+|---|---|---|
+| `LibreLogin-Velocity-0.24.6.jar` | Velocity proxy | Central authentication, sessions, premium login, commands and proxy-side 2FA |
+| `LibreLogin-Paper-0.24.6.jar` | Standalone Paper server | Authentication when no proxy-side LibreLogin is used |
+| `AuthLimbo-1.0.0.jar` | Paper `auth` backend | Empty-world limbo protection for the Velocity architecture |
 
-The generated plugin bytecode targets Java 21 and the complete Gradle build has been validated
-on JDK 21, 22, 23, 24 and 25. The resulting Java 21 bytecode runs on those JVMs, but this does
-not replace testing each Paper/Velocity server combination: live server smoke tests remain a
-release prerequisite. The build uses Gradle 9.6.1, native license-header tasks, and Java
-`--release 21`; newer JVMs are supported build environments, while Java 21 remains the minimum.
+For a Velocity network, install **LibreLogin-Velocity on the proxy** and **AuthLimbo on the Paper auth backend**. Do not install LibreLogin-Paper on that auth backend; it would create a second authentication pipeline.
 
-Paper and Velocity have their own Java requirements and platform API compatibility rules.
-Running LibreLogin on a newer Java runtime does not by itself add support for a newer
-Minecraft or proxy release. See [`docs/modernization-report.md`](docs/modernization-report.md)
-for the tested matrix and remaining release prerequisites.
+## Requirements
 
-<a href="https://discord.gg/HP3CSfCv2v">
-<img src="https://img.shields.io/badge/Discord-%20SUPPORT-blue?style=for-the-badge&logo=discord&logoColor=white" 
-alt="Support available on Discord"></img>
-</a>
-<a href="https://github.com/kyngs/LibreLogin/wiki">
-<img src="https://img.shields.io/badge/Documentation-555555?style=for-the-badge&logo=wikipedia" alt="Documentation on the Wiki"></img>
-</a>
+- Java 21 or newer.
+- A supported Paper or Velocity build compatible with the selected Minecraft version.
+- A database supported by the generated configuration when using persistent authentication data.
+- On Velocity, install PacketEvents 2.13.0+ separately for cross-version QR projection; it is compile-only and is not bundled in the Velocity JAR. The Paper artifact loads its PacketEvents runtime dependency through Libby.
+- Optional integrations: Protocolize, LuckPerms, Floodgate and RedisBungee, only when your network uses them.
 
-<a href="https://github.com/kyngs/LibreLogin/graphs/contributors">
-<img src="https://img.shields.io/badge/Contributors-Credits-blue?style=for-the-badge" 
-alt="Contributors listed"></img>
-</a>
+The build targets Java 21 bytecode. Running on a newer Java runtime does not automatically certify every newer Minecraft or proxy release; test the exact server/client matrix before production.
 
-## Basic set of features
+## Installation: Velocity network
 
-- AutoLogin for premium players
-- TOTP 2FA (Authy, Google Authenticator...) [details](https://github.com/kyngs/LibreLogin/wiki/2FA)
-- Session system
-- Name validation (including case sensitivity check)
-- Automatic data migration for premium players
-- Migration of a player's data by using one command
-- Geyser (Bedrock) support using [Floodgate](https://github.com/kyngs/LibreLogin/wiki/Floodgate)
+### 1. Install the artifacts
 
-## Considerations
+```text
+Velocity/plugins/LibreLogin-Velocity-0.24.6.jar
+Paper-auth/plugins/AuthLimbo-1.0.0.jar
+```
 
-- When using on proxy, you need to secure your limbo
+Install PacketEvents 2.13.0+ separately if QR projection is needed. Do not install `LibreLogin-Paper` on the proxied auth server.
 
-## Platforms
+### 2. Register backend servers in `velocity.toml`
 
-- [x] Velocity
-- [x] Paper
+```toml
+[servers]
+auth = "127.0.0.1:25566"
+lobby = "127.0.0.1:25567"
+try = ["auth"]
+```
 
-The current source tree contains Paper and Velocity entry points in the `Plugin` module. The
-modernization build exposes clearly named platform artifacts under `Plugin/build/libs/platform/`:
+Use your actual bind addresses and ports. Keep the auth backend inaccessible from the public internet where possible.
 
-- `LibreLogin-Paper-<version>.jar`
-- `LibreLogin-Velocity-<version>.jar`
+### 3. Configure forwarding
 
-Run `./gradlew :Plugin:platformJars` to generate both artifacts. These are currently
-platform-filtered outputs of the shared plugin jar; a future source-set split is required before
-claiming fully minimal per-platform dependency graphs. The previous automatic `mcupload`
-publisher was removed because it accepted only one shared file. Upload the two platform jars
-manually, or use a future release pipeline that handles Paper and Velocity independently.
+Enable modern Velocity forwarding and use the same forwarding secret in Velocity and every Paper backend. Do not expose backend ports publicly without firewall protection.
 
-Every build that compiles the `Plugin` module increments the patch version in `gradle.properties`
-(`0.24.0` → `0.24.1` → ...), so consecutive rebuilds produce distinguishable artifacts. The
-embedded version (`plugin.yml` / `velocity-plugin.json`) and the jar file names always match the
-bumped value. Use `-PnoBump` to leave the version unchanged (used by CI/releases, where the
-version must stay aligned with the git tag). Old jars from previous versions are not deleted; run
-`./gradlew clean` to wipe the build directory.
+### 4. Configure AuthLimbo before first startup
 
-The runtime dependencies downloaded by Libby on first startup are declared in the `libby`
-configuration of `Plugin/build.gradle.kts`; the embedded `libby.json` resource is generated by the
-`generateLibbyJson` task (SHA-256 checksums, repositories and relocations). This replaced the
-previous `xyz.kyngs.librelogin.libby.plugin` Gradle plugin, whose repository
-(`repo.kyngs.xyz/gradle-plugins`) no longer exists.
+In the auth Paper server:
 
-## Configuration and upgrades
+`server.properties`
 
-LibreLogin now uses revisioned YAML files (`config.yml` and `messages.yml`). Existing HOCON files
-(`config.conf` and `messages.conf`) are converted automatically on first startup and preserved as
-`*.conf.pre-yaml.bak` backups. See [`docs/configuration-migration.md`](docs/configuration-migration.md)
-for the migration details.
+```properties
+level-name=auth_void
+allow-flight=true
+```
 
-The MySQL-compatible implementation supports both JDBC drivers through Libby: `jdbc:mariadb://`
-selects MariaDB Connector/J and `jdbc:mysql://` selects the official MySQL Connector/J. Keep the
-username and password in their dedicated configuration fields instead of embedding credentials in
-the URL. SQLite and PostgreSQL drivers are also loaded through Libby. See
-[`docs/modernization-report.md`](docs/modernization-report.md) for verified upstream sources, issue
-triage, and remaining release prerequisites.
+`bukkit.yml`
 
-## References
+```yaml
+worlds:
+  auth_void:
+    generator: AuthLimbo:void
+```
 
-- check out [reviews](https://www.spigotmc.org/resources/librelogin-authorization-plugin-automatic-login-2fa.101040/reviews) on spigotmc.org  
+Start the auth server once to generate the dedicated void world. Do not reuse a normal terrain world as the limbo world.
 
-# Special thanks
+### 5. Configure LibreLogin
 
-- [FastLogin contributors](https://github.com/games647/FastLogin) - for their work, which was used as a base for the
-  paper port
-- [Fejby](https://github.com/Fejby) - for providing Floodgate test server and helping with testing
+In the proxy plugin data directory, edit the generated `plugins/librelogin/config.yml` and set the backend names used by your network. The relevant shape is:
 
-# License
+```yaml
+limbo:
+  - auth
+lobby:
+  root:
+    - lobby
+```
 
-LibrePremium is [FOSS](https://en.wikipedia.org/wiki/Free_and_open-source_software), licensed under the Mozilla Public License 2.0.
+The exact generated keys and comments are authoritative for your installed revision. Back up `config.yml`, `messages.yml`, the database and worlds before upgrades.
 
-[Read the license here.](https://github.com/kyngs/LibreLogin/blob/master/LICENSE)
+## Standalone Paper installation
 
-The plugin **is and always will be** completely open-source, so you don't need to worry about malicous copies.
+Use `LibreLogin-Paper-0.24.6.jar` only when authentication is handled directly by Paper:
+
+```text
+Paper/plugins/LibreLogin-Paper-0.24.6.jar
+```
+
+Start the server, configure the generated `config.yml` and `messages.yml`, then restart after structural configuration changes. Do not run both the proxy and standalone Paper authentication flows for the same player path.
+
+## Login and 2FA commands
+
+The login form accepts the password and, when TOTP is enabled, the one-time code together:
+
+```text
+/login <password> <2fa_code>
+```
+
+Typical account flow:
+
+```text
+/register <password> <password>
+/login <password>
+/2fa
+/2faconfirm <code>
+```
+
+If a premium/autologin account is active, disable it first:
+
+```text
+/cracked
+/2fa
+```
+
+The QR/provisioning output must be treated as a secret. Never post a TOTP URI or recovery data publicly.
+
+## Messages and prefix
+
+Edit `plugins/librelogin/messages.yml`:
+
+```yaml
+prefix: "LibreLogin"
+```
+
+The value is literal. To disable the prefix completely:
+
+```yaml
+prefix: ""
+```
+
+After editing messages:
+
+```text
+/librelogin reload messages
+```
+
+or restart the proxy. The prefix is not added to titles, subtitles, action bars or email templates.
+
+## Database configuration
+
+Use the generated configuration comments. The documented order is:
+
+```text
+database name → host → port → user → password
+```
+
+MariaDB URLs use `jdbc:mariadb://`; official MySQL URLs use `jdbc:mysql://`. Keep credentials in dedicated fields and never commit active passwords. MariaDB, MySQL, SQLite and PostgreSQL drivers are loaded at runtime through Libby.
+
+## Upgrade and migration
+
+Legacy HOCON files (`config.conf` and `messages.conf`) are converted to YAML automatically and retained as backup files. Review the generated YAML after migration. Do not delete database or world backups until login, premium mode, 2FA and lobby routing have been tested.
+
+This fork removes the NanoLimbo integration from the supported release architecture. The replacement is a normal registered Paper backend running `AuthLimbo`.
+
+## Building and release files
+
+```bash
+./gradlew :API:test :Plugin:test :Plugin:platformJars :Plugin:releaseArchive --no-daemon -PnoBump
+```
+
+Outputs:
+
+```text
+Plugin/build/libs/platform/LibreLogin-Velocity-0.24.6.jar
+Plugin/build/libs/platform/LibreLogin-Paper-0.24.6.jar
+Plugin/build/libs/platform/AuthLimbo-1.0.0.jar
+Plugin/build/distributions/LibreLogin-0.24.6.zip
+```
+
+The ZIP contains one folder per component, a README and component changelog for each plugin, the root changelog and the MPL-2.0 license.
+
+## License and attribution
+
+LibreLogin Fork is distributed under the **Mozilla Public License 2.0**. See [`LICENSE`](LICENSE), [`HEADER.txt`](HEADER.txt), [`docs/dependency-licenses.md`](docs/dependency-licenses.md), and the component release directories for notices. This project is not affiliated with or endorsed by the upstream LibreLogin maintainers.
+
+- Upstream project: <https://github.com/kyngs/LibreLogin>
+- Fork repository: <https://github.com/mitsuba7891/LibreLogin-Fork>
+- Release documentation: [`release/README.md`](release/README.md)
+- Release changes: [`CHANGELOG.md`](CHANGELOG.md)
