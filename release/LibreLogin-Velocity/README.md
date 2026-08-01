@@ -37,7 +37,7 @@ Use modern forwarding and configure the same forwarding secret in Velocity and t
 
 - Velocity API/runtime compatible with the selected proxy release.
 - Java 21 or newer.
-- PacketEvents 2.13.0+ is preferred for cross-version 2FA image projection.
+- Install PacketEvents 2.13.0+ separately as a proxy/plugin dependency for cross-version 2FA image projection; it is compile-only and is not bundled in this JAR.
 - Protocolize is optional as a compatibility fallback where its supported protocol range is suitable.
 - Optional integrations: LuckPerms, Floodgate and RedisBungee where used by the network.
 - Database driver libraries are downloaded by Libby at runtime according to the selected database type.
