@@ -1,16 +1,92 @@
-plugins {
-    id 'org.cadixdev.licenser' version '0.6.1'
-}
+import org.gradle.api.tasks.compile.JavaCompile
 
 defaultTasks 'updateLicenses', 'shadowJar'
 
-version '0.24.0'
+def loadVersion = {
+    def text = rootProject.file('gradle.properties').getText('UTF-8')
+    def m = (text =~ /(?m)^version=(\S+)\s*$/)
+    m.find() ? m.group(1) : '0.24.0'
+}
+
+version = loadVersion()
+
+def javaHeader = { File headerFile ->
+    def lines = headerFile.readLines('UTF-8')
+    (['/*'] + lines.collect { line -> line.isEmpty() ? ' *' : " * ${line}" } + [' */', '']).join(System.lineSeparator())
+}
+
+def javaSourceFiles = { Project project ->
+    project.fileTree(project.file('src')) {
+        include '**/*.java'
+        include '**/*.java.peb'
+    }
+}
+
+def checkJavaHeaders = { Project project, File headerFile ->
+    def expected = javaHeader(headerFile)
+    def missing = javaSourceFiles(project).findAll { !it.getText('UTF-8').startsWith(expected) }
+
+    if (!missing.empty) {
+        throw new GradleException("Missing or invalid license header in:\n" + missing.collect { " - ${project.relativePath(it)}" }.join('\n'))
+    }
+}
+
+def updateJavaHeaders = { Project project, File headerFile ->
+    def expected = javaHeader(headerFile)
+    def commentAtStart = ~/(?s)^\/\*.*?\*\/\s*/
+
+    javaSourceFiles(project).each { file ->
+        def source = file.getText('UTF-8')
+        if (source.startsWith(expected)) {
+            return
+        }
+        if (source.startsWith('/*')) {
+            throw new GradleException("Refusing to replace an unrecognized leading comment in ${project.relativePath(file)}")
+        }
+        file.setText(expected + source.replaceFirst(commentAtStart, ''), 'UTF-8')
+    }
+}
+
+tasks.register('checkLicenses') {
+    dependsOn subprojects.collect { "${it.path}:checkLicenses" }
+}
+
+tasks.register('licenseCheck') {
+    dependsOn 'checkLicenses'
+}
+
+tasks.register('updateLicenses') {
+    dependsOn subprojects.collect { "${it.path}:updateLicenses" }
+}
+
+// Increments the patch component of the version in gradle.properties every time
+// the Plugin module is compiled, so each rebuild produces a distinct artifact
+// (0.24.0 -> 0.24.1 -> 0.24.2 ...). Disable with -PnoBump (used by CI/releases).
+tasks.register('bumpVersion') {
+    outputs.upToDateWhen { false }
+    onlyIf { !project.hasProperty('noBump') }
+    doLast {
+        def propsFile = rootProject.file('gradle.properties')
+        def text = propsFile.getText('UTF-8')
+        def pattern = /(?m)^version=(\d+)\.(\d+)\.(\d+)\s*$/
+        def matcher = (text =~ pattern)
+        if (!matcher.find()) {
+            throw new GradleException("Could not find a 'version=x.y.z' line in gradle.properties")
+        }
+        def newVersion = "${matcher.group(1)}.${matcher.group(2)}.${matcher.group(3).toInteger() + 1}"
+        propsFile.setText(text.replaceFirst(pattern, "version=${newVersion}"), 'UTF-8')
+        println "bumpVersion: version bumped to ${newVersion}"
+    }
+}
 
 subprojects {
     version = rootProject.version
     group = 'xyz.kyngs.librelogin'
 
-    apply plugin: 'org.cadixdev.licenser'
+    tasks.withType(JavaCompile).configureEach {
+        options.release = 21
+        options.encoding = 'UTF-8'
+    }
 
     repositories {
         mavenLocal()
@@ -21,14 +97,30 @@ subprojects {
         }
     }
 
-    license {
-        header = rootProject.file('HEADER.txt')
-        include '**/*.java'
-        newLine = true
-
-        matching("**/protocollib/EncryptionUtil.java") {
-            header = rootProject.file("licenses/FASTLOGIN_LICENSE")
+    tasks.register('checkLicenses') {
+        inputs.file rootProject.file('HEADER.txt')
+        inputs.files fileTree(file('src')) {
+            include '**/*.java'
+            include '**/*.java.peb'
+        }
+        doLast {
+            checkJavaHeaders(project, rootProject.file('HEADER.txt'))
         }
     }
 
+    tasks.register('licenseCheck') {
+        dependsOn 'checkLicenses'
+    }
+
+    tasks.register('updateLicenses') {
+        inputs.file rootProject.file('HEADER.txt')
+        inputs.files fileTree(file('src')) {
+            include '**/*.java'
+            include '**/*.java.peb'
+        }
+        outputs.upToDateWhen { false }
+        doLast {
+            updateJavaHeaders(project, rootProject.file('HEADER.txt'))
+        }
+    }
 }

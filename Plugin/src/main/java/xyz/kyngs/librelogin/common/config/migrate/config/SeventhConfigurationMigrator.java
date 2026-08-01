@@ -14,7 +14,10 @@ public class SeventhConfigurationMigrator implements ConfigurationMigrator {
 
     @Override
     public void migrate(ConfigurateHelper helper, Logger logger) {
-        var kickOnWrongPassword = helper.getBoolean("kick-on-wrong-password");
+        // The legacy key may be absent if an old config was hand-edited or
+        // truncated; treat a missing value as the old default (kick disabled)
+        // so migration never crashes the startup.
+        var kickOnWrongPassword = Boolean.TRUE.equals(helper.getBoolean("kick-on-wrong-password"));
 
         helper.set("kick-on-wrong-password", null);
         if (kickOnWrongPassword)

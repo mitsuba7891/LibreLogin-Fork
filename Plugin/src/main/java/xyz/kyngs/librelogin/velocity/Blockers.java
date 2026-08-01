@@ -62,7 +62,12 @@ public class Blockers {
     @Subscribe(order = PostOrder.FIRST)
     public void onServerKick(KickedFromServerEvent event) {
         if (!authorizationProvider.isAuthorized(event.getPlayer()) || authorizationProvider.isAwaiting2FA(event.getPlayer())) {
-            event.getPlayer().disconnect(event.getServerKickReason().orElse(Component.text("Limbo not running")));
+            // Keep the event inside Velocity's kick pipeline. Calling
+            // Player#disconnect directly here hides an empty backend reason
+            // behind the misleading "Limbo not running" message.
+            event.setResult(KickedFromServerEvent.DisconnectPlayer.create(
+                    event.getServerKickReason().orElse(Component.text("Backend connection closed without a reason"))
+            ));
         }
     }
 

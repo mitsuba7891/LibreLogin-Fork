@@ -56,18 +56,7 @@ import static xyz.kyngs.librelogin.paper.protocol.ProtocolUtil.getServerVersion;
 
 public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, World> implements Listener {
 
-    private static final String ENCRYPTION_CLASS_NAME = "MinecraftEncryption";
-    private static final Class<?> ENCRYPTION_CLASS;
     private static Method encryptMethod;
-    private static Method cipherMethod;
-
-    static {
-        try {
-            ENCRYPTION_CLASS = Class.forName("net.minecraft.util." + ENCRYPTION_CLASS_NAME);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private final KeyPair keyPair = EncryptionUtil.generateKeyPair();
     private final Random random = new SecureRandom();
@@ -144,6 +133,13 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
         }
         var world = chooseServer(event.getPlayer(), ip, readOnlyUserCache.getIfPresent(event.getPlayer().getUniqueId()));
         ipCache.invalidate(event.getPlayer());
+
+        // Do not carry a vehicle into limbo: otherwise a mount can be teleported
+        // with the player and die in the limbo void when the player logs in again.
+        // Fixes #402.
+        if (!world.key() && event.getPlayer().isInsideVehicle()) {
+            event.getPlayer().leaveVehicle();
+        }
         spawnLocationCache.invalidate(event.getPlayer());
         if (world.value() == null) {
             event.getPlayer().kick(plugin.getMessages().getMessage("kick-no-" + (world.key() ? "lobby" : "limbo")));
@@ -371,7 +367,12 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
     private boolean enableEncryption(SecretKey loginKey, com.github.retrooper.packetevents.protocol.player.User user, Object channel) throws IllegalArgumentException {
         // Initialize method reflections
         if (encryptMethod == null) {
-            Class<?> networkManagerClass = SpigotReflectionUtil.getNetworkManagers().get(0).getClass();
+            var networkManagers = SpigotReflectionUtil.getNetworkManagers();
+            if (networkManagers.isEmpty()) {
+                kickPlayer("Could not initialize network encryption", user);
+                return false;
+            }
+            Class<?> networkManagerClass = networkManagers.get(0).getClass();
 
             // Try to get the old (pre MC 1.16.4) encryption method
             encryptMethod = Reflection.getMethod(networkManagerClass, "setupEncryption", SecretKey.class);
@@ -382,27 +383,36 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
             }
 
             if (encryptMethod == null) {
-                // Get the 1.16.4-1.21.0 encryption method
+                // 1.16.4+ uses pre-built AES ciphers. Do not use the old
+                // net.minecraft.util.MinecraftEncryption helper here: that NMS
+                // class was removed/renamed in newer Paper mappings.
                 encryptMethod = Reflection.getMethod(networkManagerClass, "setEncryptionKey", Cipher.class, Cipher.class);
+            }
 
-                // Get the needed Cipher helper method (used to generate ciphers from login key)
-                cipherMethod = Reflection.getMethod(ENCRYPTION_CLASS, "a", int.class, Key.class);
+            if (encryptMethod == null) {
+                // Fallback for mappings that expose the same operation under
+                // the older method name.
+                encryptMethod = Reflection.getMethod(networkManagerClass, "setupEncryption", Cipher.class, Cipher.class);
+            }
+
+            if (encryptMethod == null) {
+                throw new IllegalStateException("Could not find a compatible network encryption method on " + networkManagerClass.getName());
             }
         }
 
         try {
             Object networkManager = ProtocolUtil.findNetworkManager(channel);
+            if (networkManager == null) {
+                throw new IllegalStateException("Could not find the network manager for the login channel");
+            }
 
-            // If cipherMethod is null - use old encryption (pre MC 1.16.4), otherwise use the new cipher one
-            if (cipherMethod == null) {
-                // Encrypt/decrypt packet flow, this behaviour is expected by the client
+            // Older servers accept the SecretKey directly. Modern servers
+            // accept AES/CFB8 ciphers, which are created without NMS classes.
+            if (encryptMethod.getParameterCount() == 1) {
                 encryptMethod.invoke(networkManager, loginKey);
             } else {
-                // Create ciphers from login key
-                Object decryptionCipher = cipherMethod.invoke(null, Cipher.DECRYPT_MODE, loginKey);
-                Object encryptionCipher = cipherMethod.invoke(null, Cipher.ENCRYPT_MODE, loginKey);
-
-                // Encrypt/decrypt packet flow, this behaviour is expected by the client
+                var decryptionCipher = EncryptionUtil.createCipher(Cipher.DECRYPT_MODE, loginKey);
+                var encryptionCipher = EncryptionUtil.createCipher(Cipher.ENCRYPT_MODE, loginKey);
                 encryptMethod.invoke(networkManager, decryptionCipher, encryptionCipher);
             }
         } catch (Exception ex) {

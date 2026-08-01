@@ -1,23 +1,21 @@
 steps:
-  shadowJar:
+  platformArtifacts:
     image: "eclipse-temurin:21-alpine"
     commands:
-      - "./gradlew licenseCheck shadowJar javadocJar"
+      - "./gradlew -PnoBump :Plugin:licenseCheck :Plugin:platformJars"
+      - "./gradlew :API:javadocJar"
 
-  setup-and-run-velocity:
+
+  verify-platform-artifacts:
     image: "eclipse-temurin:21-alpine"
     commands:
-      - "pwd"
-      - "apk update && apk add curl"
-      - "mkdir -p velocity/plugins"
-      - "ls -la"
-      - "cp Plugin/build/libs/LibreLogin.jar velocity/plugins/"
-      - "curl -sL https://api.papermc.io/v2/projects/velocity/versions/3.2.0-SNAPSHOT/builds/258/downloads/velocity-3.2.0-SNAPSHOT-258.jar -o velocity/velocity.jar"
-      - "cd velocity"
-      - "java -jar velocity.jar"
+      - "find Plugin/build/libs/platform -maxdepth 1 -type f -name '*.jar' -print"
+      - "test \"$(find Plugin/build/libs/platform -maxdepth 1 -type f -name 'LibreLogin-Paper-*.jar' | wc -l)\" -eq 1"
+      - "test \"$(find Plugin/build/libs/platform -maxdepth 1 -type f -name 'LibreLogin-Velocity-*.jar' | wc -l)\" -eq 1"
+      - "set -eu; paper=\"$(find Plugin/build/libs/platform -maxdepth 1 -type f -name 'LibreLogin-Paper-*.jar' | head -1)\"; velocity=\"$(find Plugin/build/libs/platform -maxdepth 1 -type f -name 'LibreLogin-Velocity-*.jar' | head -1)\"; test -f \"$paper\"; test -f \"$velocity\"; paper_list=\"$(mktemp)\"; velocity_list=\"$(mktemp)\"; trap 'rm -f \"$paper_list\" \"$velocity_list\"' EXIT; jar tf \"$paper\" > \"$paper_list\"; jar tf \"$velocity\" > \"$velocity_list\"; ! grep -q '^xyz/kyngs/librelogin/velocity/' \"$paper_list\"; ! grep -q '^xyz/kyngs/librelogin/paper/' \"$velocity_list\"; grep -q '^plugin.yml$' \"$paper_list\"; ! grep -q '^plugin.yml$' \"$velocity_list\"; grep -q '^paper-plugin.yml$' \"$paper_list\"; ! grep -q '^paper-plugin.yml$' \"$velocity_list\""
 
   publish:
-    image: "eclipse-temurin:17-alpine"
+    image: "eclipse-temurin:21-alpine"
     commands:
       - "./gradlew :API:publish -PkyngsRepoUsername=$${KYNGS_REPO_TOKEN} -PkyngsRepoPassword=$${KYNGS_REPO_SECRET}"
     when:
@@ -33,8 +31,8 @@ steps:
       - "apk update && apk add git"
       - "git clone https://github.com/kyngs/LibreLogin.wiki.git wiki"
       - "cd wiki"
-      - "echo '```hocon' > Config.md && cat ../velocity/plugins/librelogin/config.conf >> Config.md && echo '```' >> Config.md"
-      - "echo '```hocon' > Messages.md && cat ../velocity/plugins/librelogin/messages.conf >> Messages.md && echo '```' >> Messages.md"
+      - "if [ -f ../velocity/plugins/librelogin/config.yml ]; then echo '```yaml' > Config.md && cat ../velocity/plugins/librelogin/config.yml >> Config.md && echo '```' >> Config.md; else echo 'Configuration is generated on first plugin startup.' > Config.md; fi"
+      - "if [ -f ../velocity/plugins/librelogin/messages.yml ]; then echo '```yaml' > Messages.md && cat ../velocity/plugins/librelogin/messages.yml >> Messages.md && echo '```' >> Messages.md; else echo 'Messages are generated on first plugin startup.' > Messages.md; fi"
       - "git config --local user.email 'kyngs@users.noreply.github.com'"
       - "git config --local user.name 'Kyngs CI (ci.kyngs.xyz)'"
       - "git add ."
@@ -43,20 +41,3 @@ steps:
     when:
       - event: push
         branch: master
-  release:
-    image: "eclipse-temurin:21-alpine"
-    commands:
-      - "./gradlew :Plugin:release"
-    environment:
-      MODRINTH_TOKEN:
-        from_secret: modrinth_token
-      POLYMART_TOKEN:
-        from_secret: polymart_token
-      GITHUB_TOKEN:
-        from_secret: github_personal_token
-      DISCORD_WEBHOOK_URL:
-        from_secret: discord_webhook_url
-    secrets: [ modrinth_token, polymart_token, github_personal_token, discord_webhook_url ]
-    when:
-      event: tag
-      branch: master

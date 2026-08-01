@@ -14,6 +14,13 @@ import java.awt.image.BufferedImage;
  * @param qr     The QR code of the TOTP.
  * @param secret The secret of the TOTP.
  */
-public record TOTPData(BufferedImage qr, String secret) {
+public record TOTPData(BufferedImage qr, String secret, String provisioningUri) {
 
+    /**
+     * Keeps source compatibility for integrations that only provide an image
+     * and secret. New providers should include the complete otpauth URI.
+     */
+    public TOTPData(BufferedImage qr, String secret) {
+        this(qr, secret, null);
+    }
 }

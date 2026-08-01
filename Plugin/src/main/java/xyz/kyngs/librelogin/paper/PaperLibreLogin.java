@@ -122,6 +122,12 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
         super.disable();
     }
 
+    @SuppressWarnings("removal")
+    private boolean isProxyConfigured() {
+        return Bukkit.spigot().getSpigotConfig().getBoolean("settings.bungeecord")
+                || Bukkit.spigot().getPaperConfig().getBoolean("settings.velocity-support.enabled");
+    }
+
     @Override
     protected void enable() {
 
@@ -133,7 +139,7 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
             return;
         }
 
-        if (Bukkit.spigot().getSpigotConfig().getBoolean("settings.bungeecord") || Bukkit.spigot().getPaperConfig().getBoolean("settings.velocity-support.enabled")) {
+        if (isProxyConfigured()) {
             getLogger().error("!!!This server is running under a proxy, LibreLogin won't start!!!");
             getLogger().error("If you want to use LibreLogin under a proxy, place it on the proxy and remove it from the server.");
             disable();

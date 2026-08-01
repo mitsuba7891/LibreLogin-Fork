@@ -25,6 +25,7 @@ import java.util.Base64;
 import java.util.Random;
 import java.util.UUID;
 import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
@@ -40,21 +41,12 @@ public final class EncryptionUtil {
 
     private static final int RSA_LENGTH = 1_024;
 
-    private static final PublicKey MOJANG_SESSION_KEY;
     private static final int LINE_LENGTH = 76;
     private static final Base64.Encoder KEY_ENCODER = Base64.getMimeEncoder(
             LINE_LENGTH, "\n".getBytes(StandardCharsets.UTF_8)
     );
     private static final int MILLISECOND_SIZE = 8;
     private static final int UUID_SIZE = 2 * MILLISECOND_SIZE;
-
-    static {
-        try {
-            MOJANG_SESSION_KEY = loadMojangSessionKey();
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException ex) {
-            throw new RuntimeException("Failed to load Mojang session key", ex);
-        }
-    }
 
     private EncryptionUtil() {
         throw new RuntimeException("No instantiation of utility classes allowed");
@@ -116,6 +108,25 @@ public final class EncryptionUtil {
         return new SecretKeySpec(decrypt(privateKey, sharedKey), "AES");
     }
 
+    /**
+     * Creates the AES stream cipher used by the Minecraft login protocol.
+     * Minecraft uses CFB8 with the shared AES key as the IV. Keeping this in
+     * Java's crypto API avoids depending on version-specific NMS helpers such
+     * as {@code net.minecraft.util.MinecraftEncryption}, which is absent from
+     * newer Paper mappings.
+     *
+     * @param mode {@link Cipher#ENCRYPT_MODE} or {@link Cipher#DECRYPT_MODE}
+     * @param key  the shared login key
+     * @return an initialized Minecraft-compatible cipher
+     */
+    public static Cipher createCipher(int mode, SecretKey key)
+            throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException,
+            InvalidAlgorithmParameterException {
+        var cipher = Cipher.getInstance("AES/CFB8/NoPadding");
+        cipher.init(mode, key, new IvParameterSpec(key.getEncoded()));
+        return cipher;
+    }
+
     public static boolean verifyClientKey(ClientPublicKey clientKey, Instant verifyTimestamp, UUID premiumId)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         if (clientKey.expired(verifyTimestamp)) {
@@ -124,7 +135,7 @@ public final class EncryptionUtil {
 
         Signature verifier = Signature.getInstance("SHA1withRSA");
         // key of the signer
-        verifier.initVerify(MOJANG_SESSION_KEY);
+        verifier.initVerify(mojangSessionKey());
         verifier.update(toSignable(clientKey, premiumId));
         return verifier.verify(clientKey.signature());
     }
@@ -162,16 +173,38 @@ public final class EncryptionUtil {
         verifier.update(nonce);
         verifier.update(Longs.toByteArray(signatureSalt));
         return verifier.verify(signature);
+    }    private static PublicKey mojangSessionKey() {
+        try {
+            return MojangSessionKeyHolder.KEY;
+        } catch (ExceptionInInitializerError error) {
+            throw new IllegalStateException("Failed to load Mojang session key", error.getCause());
+        }
     }
 
     private static PublicKey loadMojangSessionKey()
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         var keyUrl = PaperBootstrap.class.getClassLoader().getResource("yggdrasil_session_pubkey.der");
+        if (keyUrl == null) {
+            throw new IOException("Missing yggdrasil_session_pubkey.der resource");
+        }
         var keyData = Resources.toByteArray(keyUrl);
         var keySpec = new X509EncodedKeySpec(keyData);
 
         return KeyFactory.getInstance("RSA").generatePublic(keySpec);
     }
+
+    private static final class MojangSessionKeyHolder {
+        private static final PublicKey KEY = loadKey();
+
+        private static PublicKey loadKey() {
+            try {
+                return loadMojangSessionKey();
+            } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException ex) {
+                throw new ExceptionInInitializerError(ex);
+            }
+        }
+    }
+
 
     private static byte[] decrypt(PrivateKey key, byte[] data)
             throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException,

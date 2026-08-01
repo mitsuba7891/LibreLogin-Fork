@@ -31,6 +31,25 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
     @Override
     public void onLoad() {
         getLogger().info("Analyzing server setup...");
+        initialize();
+    }
+
+    @Override
+    public void onEnable() {
+        getLogger().info("Bootstrapping LibreLogin...");
+        if (libreLogin == null) {
+            getLogger().warning("LibreLogin was not initialized during onLoad; initializing during onEnable.");
+        }
+        initialize();
+        libreLogin.enable();
+    }
+
+    private void initialize() {
+        if (libreLogin != null) {
+            return;
+        }
+
+        getLogger().info("Initializing LibreLogin...");
 
         try {
             var adventureClass = Class.forName("net.kyori.adventure.audience.Audience");
@@ -65,12 +84,6 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
         libreLogin = new PaperLibreLogin(this);
     }
 
-    @Override
-    public void onEnable() {
-        getLogger().info("Bootstrapping LibreLogin...");
-        libreLogin.enable();
-    }
-
     private void unsupportedSetup() {
         getLogger().severe("***********************************************************");
 
@@ -92,6 +105,10 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
 
     @Override
     public void onDisable() {
+        if (libreLogin == null) {
+            getLogger().warning("LibreLogin was not initialized, skipping disable.");
+            return;
+        }
         libreLogin.disable();
     }
 

@@ -28,7 +28,6 @@ import xyz.kyngs.librelogin.api.database.connector.DatabaseConnector;
 import xyz.kyngs.librelogin.api.database.connector.MySQLDatabaseConnector;
 import xyz.kyngs.librelogin.api.database.connector.PostgreSQLDatabaseConnector;
 import xyz.kyngs.librelogin.api.database.connector.SQLiteDatabaseConnector;
-import xyz.kyngs.librelogin.api.integration.LimboIntegration;
 import xyz.kyngs.librelogin.api.premium.PremiumException;
 import xyz.kyngs.librelogin.api.premium.PremiumUser;
 import xyz.kyngs.librelogin.api.server.ServerHandler;
@@ -142,12 +141,6 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
     @Override
     public AuthenticEMailHandler getEmailHandler() {
         return eMailHandler;
-    }
-
-    @Nullable
-    @Override
-    public LimboIntegration<S> getLimboIntegration() {
-        return null;
     }
 
     @Override
@@ -443,7 +436,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
 
             for (String value : lobby.values()) {
                 if (limbos.contains(value)) {
-                    throw new CorruptedConfigurationException("Lobby server/world %s is also a limbo server/world, this is not allowed".formatted(value));
+                    logger.warn("Server/world %s is configured as both lobby and limbo; this is allowed for shared auth/login backends.".formatted(value));
                 }
             }
         } catch (IOException e) {

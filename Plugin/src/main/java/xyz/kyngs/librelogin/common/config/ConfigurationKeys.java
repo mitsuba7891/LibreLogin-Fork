@@ -39,7 +39,7 @@ public class ConfigurationKeys {
     public static final ConfigurationKey<List<String>> LIMBO = new ConfigurationKey<>(
             "limbo",
             List.of("limbo0", "limbo1"),
-            "The authentication servers/worlds, players should be sent to, when not authenticated. On Paper, players will be spawned on the world spawn. THIS SERVERS MUST BE REGISTERED IN THE PROXY CONFIG. IN CASE OF PAPER, THE WORLDS MUST EXIST.",
+            "The registered Paper servers/worlds players are sent to while unauthenticated. On Velocity, each name must already exist in the proxy's [servers] configuration (for example auth). On Paper, each world is created automatically as a void limbo world if it does not exist.",
             ConfigurateHelper::getStringList
     );
 
@@ -379,7 +379,10 @@ public class ConfigurationKeys {
             ConfigurateHelper::getString
     );
 
-    private static final ConfigurationKey<?> MAIL = ConfigurationKey.getComment(
+    // Public so GeneralUtil.extractKeys() picks it up and the section guide
+    // comment is written into the generated YAML (extractKeys only reads
+    // public fields).
+    public static final ConfigurationKey<?> MAIL = ConfigurationKey.getComment(
             "mail",
             """
                     This section is used for configuring the email password recovery feature.
@@ -393,11 +396,5 @@ public class ConfigurationKeys {
                     Verifies whether the IP the players had used when authenticating to Mojang matches the IP they are connecting from. Disabling this may break LibreLogin if the server is running under a reverse proxy/VPN.
                     """,
             ConfigurateHelper::getBoolean
-    );
-    public static final ConfigurationKey<String> LIMBO_PORT_RANGE = new ConfigurationKey<>(
-            "limbo-port-range",
-            "30000-40000",
-            "!!THIS OPTION IS IRRELEVANT WHEN USING PAPER!! Defines port(s) that limbo server can be bounded to.",
-            ConfigurateHelper::getString
     );
 }

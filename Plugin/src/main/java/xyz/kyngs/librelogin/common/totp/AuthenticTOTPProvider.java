@@ -63,7 +63,7 @@ public class AuthenticTOTPProvider implements TOTPProvider {
         }
 
         try {
-            return new TOTPData(ImageIO.read(new ByteArrayInputStream(code)), secret);
+            return new TOTPData(ImageIO.read(new ByteArrayInputStream(code)), secret, data.getUri());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

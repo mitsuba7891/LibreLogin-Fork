@@ -26,12 +26,13 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S> implements AuthorizationProvider<P> {
 
-    private final Map<P, Boolean> unAuthorized;
+    private final Map<P, User> unAuthorized;
     private final Map<P, String> awaiting2FA;
     private final Cache<UUID, EmailVerifyData> emailConfirmCache;
     private final Cache<UUID, String> passwordResetCache;
@@ -116,11 +117,11 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
     public void startTracking(User user, P player) {
         var audience = platformHandle.getAudienceForPlayer(player);
 
-        unAuthorized.put(player, user.isRegistered());
+        unAuthorized.put(player, user);
 
         plugin.cancelOnExit(plugin.delay(() -> {
             if (!unAuthorized.containsKey(player)) return;
-            sendInfoMessage(user.isRegistered(), audience);
+            sendInfoMessage(player, user, audience);
         }, 250), player);
 
         var limit = plugin.getConfiguration().get(ConfigurationKeys.SECONDS_TO_AUTHORIZE);
@@ -132,12 +133,12 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
             }, limit * 1000L), player);
         }
 
-        sendInfoMessage(user.isRegistered(), audience);
+        sendInfoMessage(player, user, audience);
     }
 
     private void broadcastActionbars() {
         var wrong = new HashSet<P>();
-        unAuthorized.forEach((player, registered) -> {
+        unAuthorized.forEach((player, user) -> {
             var audience = platformHandle.getAudienceForPlayer(player);
 
             if (audience == null) {
@@ -145,28 +146,47 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
                 return;
             }
 
-            sendActionBar(registered, audience);
+            if (!isAwaiting2FA(player)) {
+                sendActionBar(user, audience);
+            }
 
         });
 
         wrong.forEach(unAuthorized::remove);
     }
 
-    private void sendActionBar(boolean registered, Audience audience) {
-        if (plugin.getConfiguration().get(ConfigurationKeys.USE_ACTION_BAR)) {
-            audience.sendActionBar(plugin.getMessages().getMessage(registered ? "action-bar-login" : "action-bar-register"));
-        }
+    private void sendActionBar(User user, Audience audience) {
+        if (!plugin.getConfiguration().get(ConfigurationKeys.USE_ACTION_BAR)) return;
+
+        var messageKey = user.isRegistered() ? "action-bar-login" : "action-bar-register";
+        var message = user.isRegistered()
+                ? plugin.getMessages().getMessage(messageKey,
+                "%2fa%", user.getSecret() == null ? "" : " <2fa_code>")
+                : plugin.getMessages().getMessage(messageKey);
+        audience.sendActionBar(message);
     }
 
-    private void sendInfoMessage(boolean registered, Audience audience) {
-        audience.sendMessage(plugin.getMessages().getMessage(registered ? "prompt-login" : "prompt-register"));
+    private void sendInfoMessage(P player, User user, Audience audience) {
+        if (audience == null || isAwaiting2FA(player)) return;
+
+        // While registering 2FA, the QR/setup instructions replace the normal
+        // login prompt. Repeating "Please login" makes the QR flow confusing
+        // and can overwrite the useful setup information on some clients.
+        var promptKey = user.isRegistered() ? "prompt-login" : "prompt-register";
+        var prompt = user.isRegistered()
+                ? plugin.getMessages().getMessage(promptKey,
+                "%2fa%", user.getSecret() == null ? "" : " <2fa_code>")
+                : plugin.getMessages().getMessage(promptKey);
+        audience.sendMessage(prompt);
         if (!plugin.getConfiguration().get(ConfigurationKeys.USE_TITLES)) return;
         var toRefresh = plugin.getConfiguration().get(ConfigurationKeys.MILLISECONDS_TO_REFRESH_NOTIFICATION);
         //noinspection UnstableApiUsage
         audience.showTitle(Title.title(
-                plugin.getMessages().getMessage(registered ? "title-login" : "title-register"),
-                plugin.getMessages().getMessage(registered ? "sub-title-login" : "sub-title-register"),
-                Title.Times.of(
+                plugin.getMessages().getMessage(user.isRegistered() ? "title-login" : "title-register"),
+                user.isRegistered()
+                        ? plugin.getMessages().getMessage("sub-title-login", "%2fa%", user.getSecret() == null ? "" : " <2fa_code>")
+                        : plugin.getMessages().getMessage("sub-title-register"),
+                Title.Times.times(
                         Duration.ofMillis(0),
                         Duration.ofMillis(toRefresh > 0 ?
                                 (long) (toRefresh * 1.1) :
@@ -183,7 +203,7 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
 
     public void notifyUnauthorized() {
         var wrong = new HashSet<P>();
-        unAuthorized.forEach((player, registered) -> {
+        unAuthorized.forEach((player, user) -> {
             var audience = platformHandle.getAudienceForPlayer(player);
 
             if (audience == null) {
@@ -191,7 +211,7 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
                 return;
             }
 
-            sendInfoMessage(registered, audience);
+            sendInfoMessage(player, user, audience);
 
         });
 
@@ -201,18 +221,44 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
     public record EmailVerifyData(String email, String token, UUID uuid) {
     }
 
+    /**
+     * Keeps the original API for integrations compiled against older releases.
+     * Use {@code beginTwoFactorAuthAsync} when the QR must be sent only after
+     * the limbo transfer completes.
+     */
     public void beginTwoFactorAuth(User user, P player, TOTPData data) {
+        beginTwoFactorAuthAsync(user, player, data);
+    }
+
+    public CompletableFuture<Throwable> beginTwoFactorAuthAsync(User user, P player, TOTPData data) {
         awaiting2FA.put(player, data.secret());
+
+        var audience = platformHandle.getAudienceForPlayer(player);
+        if (audience != null) {
+            audience.clearTitle();
+            audience.sendActionBar(Component.empty());
+        }
 
         var limbo = plugin.getServerHandler().chooseLimboServer(user, player);
 
         if (limbo == null) {
+            var failure = new IllegalStateException("No limbo server is available for 2FA");
+            plugin.getLogger().debug("Could not move " + platformHandle.getUsernameForPlayer(player) + " to a 2FA limbo", failure);
+            awaiting2FA.remove(player);
             platformHandle.kick(player, plugin.getMessages().getMessage("kick-no-limbo"));
-            return;
+            return CompletableFuture.completedFuture(failure);
         }
 
-        platformHandle.movePlayer(player, limbo).whenComplete((t, e) -> {
-            if (t != null || e != null) awaiting2FA.remove(player);
+        return platformHandle.movePlayer(player, limbo).whenComplete((t, e) -> {
+            if (t != null || e != null) {
+                awaiting2FA.remove(player);
+                plugin.getLogger().debug(
+                        "2FA limbo transfer failed for " + platformHandle.getUsernameForPlayer(player),
+                        e != null ? e : t
+                );
+            } else {
+                plugin.getLogger().debug("2FA limbo transfer completed for " + platformHandle.getUsernameForPlayer(player));
+            }
         });
     }
 }

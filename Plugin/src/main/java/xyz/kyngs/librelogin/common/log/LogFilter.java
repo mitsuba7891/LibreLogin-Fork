@@ -35,8 +35,7 @@ public abstract class LogFilter {
     }
 
     protected boolean checkMessage(String message) {
-        // This sucks, but it's the only way to filter out the spam from the plugin
-        if (message.contains("Plugin listener xyz.kyngs.librelogin.bungeecord.BungeeCordListener took")) return false;
+        // This is the only way to filter out command-related plugin spam.
         if (!message.contains("issued server command: /") && !message.contains("executed command /") && !message.contains("executed command: /") && !message.contains("Duplicate key name"))
             return true;
 

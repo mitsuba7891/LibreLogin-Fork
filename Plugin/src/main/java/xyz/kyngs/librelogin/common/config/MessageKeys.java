@@ -15,6 +15,13 @@ import xyz.kyngs.librelogin.common.config.key.ConfigurationKey;
 @SuppressWarnings("unused")
 public class MessageKeys {
 
+    public static final ConfigurationKey<String> PREFIX = new ConfigurationKey<>(
+            "prefix",
+            "",
+            "Optional global prefix prepended literally to chat, kick and command messages. Set it in messages.yml (for example, prefix: \"LibreLogin\"); leave it empty to disable it. It is not applied to titles, subtitles, actionbars or email templates.",
+            ConfigurateHelper::getString
+    );
+
     /*
     Kicks related to autologin
      */
@@ -119,7 +126,7 @@ public class MessageKeys {
 
     public static final ConfigurationKey<String> KICK_NO_LIMBO = new ConfigurationKey<>(
             "kick-no-limbo",
-            "There's no available limbo to connect you to. Please try again later. If you're the server administrator, please install NanoLimboPlugin.",
+            "There's no available limbo server to connect you to. Please try again later. If you're the server administrator, verify that the configured Paper server is registered in the proxy.",
             "This message is displayed when the player is kicked because there is not any limbo available.",
             ConfigurateHelper::getString
     );
@@ -235,7 +242,7 @@ public class MessageKeys {
 
     public static final ConfigurationKey<String> TOTP_NOT_PROVIDED = new ConfigurationKey<>(
             "totp-not-provided",
-            "You must provide a 2FA code! Use /login <password> <2FA code>, if you lost your code, contact the admins.",
+            "You must provide a 2FA code! Use /login <password> <2fa_code>, if you lost your code, contact the admins.",
             "This message is displayed when the player tries to authorize without providing a 2FA code.",
             ConfigurateHelper::getString
     );
@@ -350,7 +357,7 @@ public class MessageKeys {
     public static final ConfigurationKey<String> ERROR_CORRUPTED_MESSAGES = new ConfigurationKey<>(
             "error-corrupted-messages",
             "Messages are corrupted, old ones are going to be kept. Cause: %cause%",
-            "This message is displayed when the messages.conf file is corrupted.",
+            "This message is displayed when the messages.yml file is corrupted.",
             ConfigurateHelper::getString
     );
 
@@ -698,7 +705,7 @@ public class MessageKeys {
 
     public static final ConfigurationKey<String> PROMPT_LOGIN = new ConfigurationKey<>(
             "prompt-login",
-            "Please login using: &e/login &b<password> [2fa_code]",
+            "Please login using: &e/login &b<password>%2fa%",
             "This message is displayed when the player is prompted to login.",
             ConfigurateHelper::getString
     );
@@ -741,7 +748,7 @@ public class MessageKeys {
 
     public static final ConfigurationKey<String> SUB_TITLE_LOGIN = new ConfigurationKey<>(
             "sub-title-login",
-            "&e/login &b<password>",
+            "&e/login &b<password>%2fa%",
             "This subtitle is displayed when the player is prompted to login. Make sure that you have use-titles set to true in the configuration.",
             ConfigurateHelper::getString
     );
@@ -759,7 +766,7 @@ public class MessageKeys {
 
     public static final ConfigurationKey<String> ACTION_BAR_LOGIN = new ConfigurationKey<>(
             "action-bar-login",
-            "&e/login &b<password>",
+            "&e/login &b<password>%2fa%",
             "This actionbar is displayed when the player is prompted to login. Make sure that you have use-action-bar set to true in the configuration.",
             ConfigurateHelper::getString
     );
@@ -785,10 +792,17 @@ public class MessageKeys {
             ConfigurateHelper::getString
     );
 
+    public static final ConfigurationKey<String> TOTP_MANUAL_INFO = new ConfigurationKey<>(
+            "totp-manual-info",
+            "Manual setup: enter this secret in your authenticator: &e%secret%\n&fOr use this provisioning URI: &e%uri%",
+            "This message is displayed in chat as a fallback when the player cannot scan the 2FA QR map. The %secret% and %uri% placeholders are replaced automatically.",
+            ConfigurateHelper::getString
+    );
+
     public static final ConfigurationKey<String> TOTP_WRONG_VERSION = new ConfigurationKey<>(
             "totp-wrong-version",
             "You must connect with client version %low% - %high%, in order to enable 2FA. You can then connect back with old version again.",
-            "This message is displayed when the player attempts to enable 2FA with an old client.",
+            "This message is displayed when the player attempts to enable 2FA with a client version not supported by the configured image integration.",
             ConfigurateHelper::getString
     );
 

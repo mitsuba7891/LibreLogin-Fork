@@ -18,6 +18,7 @@ import xyz.kyngs.librelogin.api.configuration.Messages;
 import xyz.kyngs.librelogin.common.config.migrate.messages.FirstMessagesMigrator;
 import xyz.kyngs.librelogin.common.config.migrate.messages.SecondMessagesMigrator;
 import xyz.kyngs.librelogin.common.config.migrate.messages.ThirdMessagesMigrator;
+import xyz.kyngs.librelogin.common.config.migrate.messages.FourthMessagesMigrator;
 import xyz.kyngs.librelogin.common.util.GeneralUtil;
 import xyz.kyngs.utils.legacymessage.LegacyMessage;
 
@@ -25,6 +26,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import static xyz.kyngs.librelogin.common.config.MessageKeys.PREFIX;
 
 public class HoconMessages implements Messages {
 
@@ -48,6 +51,14 @@ public class HoconMessages implements Messages {
 
         var message = messages.get(key);
 
+        if (message != null && shouldApplyPrefix(key)) {
+            var prefix = messages.get(PREFIX.key());
+            var prefixed = Component.text();
+            if (prefix != null) prefixed.append(prefix);
+            prefixed.append(message);
+            message = prefixed.build();
+        }
+
         if (replacements.length == 0) return message;
 
         var replaceMap = new HashMap<String, String>();
@@ -69,13 +80,12 @@ public class HoconMessages implements Messages {
     public void reload(LibreLoginPlugin<?, ?> plugin) throws IOException, CorruptedConfigurationException {
         var adept = new ConfigurateConfiguration(
                 plugin.getDataFolder(),
-                "messages.conf",
+                "messages.yml",
                 Set.of(new BiHolder<>(MessageKeys.class, "")),
                 """
-                          !!THIS FILE IS WRITTEN IN THE HOCON FORMAT!!
-                          The hocon format is very similar to JSON, but it has some extra features.
-                          You can find more information about the format on the sponge wiki:
-                          https://docs.spongepowered.org/stable/en/server/getting-started/configuration/hocon.html
+                          !!THIS FILE IS WRITTEN IN YAML FORMAT!!
+                          Messages support legacy colour codes and MiniMessage syntax.
+                          Quote values when changing them if they contain YAML punctuation. YAML comments use '#'; '//' is not valid YAML comment syntax.
                           ----------------------------------------------------------------------------------------
                           LibreLogin Messages
                           ----------------------------------------------------------------------------------------
@@ -87,9 +97,11 @@ public class HoconMessages implements Messages {
                 logger,
                 new FirstMessagesMigrator(),
                 new SecondMessagesMigrator(),
-                new ThirdMessagesMigrator()
+                new ThirdMessagesMigrator(),
+                new FourthMessagesMigrator()
         );
 
+        messages.clear();
         extractKeys("", adept.getHelper().configuration());
         rawMessages = adept;
     }
@@ -108,6 +120,14 @@ public class HoconMessages implements Messages {
                 extractKeys(prefix + str + ".", value);
             }
         });
+    }
+
+    private boolean shouldApplyPrefix(String key) {
+        return !key.equals(PREFIX.key())
+                && !key.startsWith("title-")
+                && !key.startsWith("sub-title-")
+                && !key.startsWith("action-bar-")
+                && !key.startsWith("email-");
     }
 
     public String getRawMessage(String key) {

@@ -39,16 +39,13 @@ public class VelocityPlatformHandle implements PlatformHandle<Player, Registered
 
     @Override
     public CompletableFuture<Throwable> movePlayer(Player player, RegisteredServer to) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                var result = player.createConnectionRequest(to).connect().get();
-                var reason = result.getReasonComponent();
-                return result.isSuccessful() ? null : reason.map(component -> new RuntimeException("Failed to move player: " + Component.empty().append(component).content())).orElseGet(() -> new RuntimeException("Failed to move player"));
-            } catch (InterruptedException ignored) {
-                return null;
-            } catch (ExecutionException e) {
-                return e.getCause();
-            }
+        return player.createConnectionRequest(to).connect().thenApply(result -> {
+            var reason = result.getReasonComponent();
+            return result.isSuccessful()
+                    ? null
+                    : reason.map(component -> new RuntimeException(
+                            "Failed to move player: " + Component.empty().append(component).content()
+                    )).orElseGet(() -> new RuntimeException("Failed to move player"));
         });
     }
 
@@ -62,8 +59,9 @@ public class VelocityPlatformHandle implements PlatformHandle<Player, Registered
         Optional<RegisteredServer> serverOptional = plugin.getServer().getServer(name);
         if (serverOptional.isPresent())
             return serverOptional.get();
-        if (limbo && plugin.getLimboIntegration() != null)
-            return plugin.getLimboIntegration().createLimbo(name);
+        // Limbo entries are regular proxy backends. No limbo server is created
+        // dynamically: a Paper server must be registered in the
+        // proxy configuration and listed under `limbo`.
         return null;
     }
 

@@ -1,0 +1,5 @@
+name: AuthLimbo
+version: '1.0.0'
+main: xyz.kyngs.librelogin.paper.tinyauth.AuthLimboPlugin
+load: STARTUP
+api-version: '1.19'

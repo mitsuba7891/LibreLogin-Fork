@@ -29,18 +29,35 @@ public class AuthenticMySQLDatabaseConnector extends AuthenticDatabaseConnector<
         this.hikariConfig = new HikariConfig();
 
         hikariConfig.setPoolName("LibreLogin MySQL Pool");
-        hikariConfig.setDriverClassName("xyz.kyngs.librelogin.lib.mariadb.jdbc.Driver");
         hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
         hikariConfig.addDataSourceProperty("prepStmtCacheSize", "250");
         hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         hikariConfig.setUsername(get(Configuration.USER));
         hikariConfig.setPassword(get(Configuration.PASSWORD));
-        hikariConfig.setJdbcUrl(get(Configuration.JDBC_URL)
+
+        var jdbcUrl = get(Configuration.JDBC_URL)
                 .replace("%host%", get(Configuration.HOST))
                 .replace("%port%", String.valueOf(get(Configuration.PORT)))
-                .replace("%database%", get(Configuration.NAME))
-        );
+                .replace("%database%", get(Configuration.NAME));
+
+        // Keep both JDBC implementations available. The URL scheme is the
+        // explicit and backwards-compatible selector: jdbc:mariadb:// uses
+        // MariaDB Connector/J, while jdbc:mysql:// uses MySQL Connector/J.
+        hikariConfig.setDriverClassName(resolveDriverClassName(jdbcUrl));
+        hikariConfig.setJdbcUrl(jdbcUrl);
         hikariConfig.setMaxLifetime(get(Configuration.MAX_LIFE_TIME));
+    }
+
+    static String resolveDriverClassName(String jdbcUrl) {
+        if (jdbcUrl.startsWith("jdbc:mariadb:")) {
+            return "xyz.kyngs.librelogin.lib.mariadb.jdbc.Driver";
+        }
+        if (jdbcUrl.startsWith("jdbc:mysql:") || jdbcUrl.startsWith("jdbc:mysql+srv:")) {
+            return "xyz.kyngs.librelogin.lib.mysql.cj.jdbc.Driver";
+        }
+        throw new IllegalArgumentException(
+                "Unsupported MySQL JDBC URL scheme. Use jdbc:mariadb:// or jdbc:mysql://"
+        );
     }
 
     @Override
@@ -81,13 +98,7 @@ public class AuthenticMySQLDatabaseConnector extends AuthenticDatabaseConnector<
 
     public static final class Configuration {
 
-        public static final ConfigurationKey<String> HOST = new ConfigurationKey<>(
-                "host",
-                "localhost",
-                "The host of the database.",
-                ConfigurateHelper::getString
-        );
-
+        // Keep this declaration order: database name, host, port, user, password.
         public static final ConfigurationKey<String> NAME = new ConfigurationKey<>(
                 "database",
                 "librelogin",
@@ -95,10 +106,10 @@ public class AuthenticMySQLDatabaseConnector extends AuthenticDatabaseConnector<
                 ConfigurateHelper::getString
         );
 
-        public static final ConfigurationKey<String> PASSWORD = new ConfigurationKey<>(
-                "password",
-                "",
-                "The password of the database.",
+        public static final ConfigurationKey<String> HOST = new ConfigurationKey<>(
+                "host",
+                "localhost",
+                "The host of the database.",
                 ConfigurateHelper::getString
         );
 
@@ -116,6 +127,13 @@ public class AuthenticMySQLDatabaseConnector extends AuthenticDatabaseConnector<
                 ConfigurateHelper::getString
         );
 
+        public static final ConfigurationKey<String> PASSWORD = new ConfigurationKey<>(
+                "password",
+                "",
+                "The password of the database.",
+                ConfigurateHelper::getString
+        );
+
         public static final ConfigurationKey<Integer> MAX_LIFE_TIME = new ConfigurationKey<>(
                 "max-life-time",
                 600000,
@@ -126,7 +144,7 @@ public class AuthenticMySQLDatabaseConnector extends AuthenticDatabaseConnector<
         public static final ConfigurationKey<String> JDBC_URL = new ConfigurationKey<>(
                 "jdbc-url",
                 "jdbc:mariadb://%host%:%port%/%database%?autoReconnect=true&zeroDateTimeBehavior=convertToNull",
-                "The JDBC URL of the database. Don't touch this if you don't know what you're doing. (Using jdbc:mariadb also works for pure mysql)",
+                "The JDBC URL of the database. Use jdbc:mariadb:// for MariaDB or jdbc:mysql:// for official MySQL. Keep user/password in their separate fields.",
                 ConfigurateHelper::getString
         );
     }

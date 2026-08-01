@@ -80,13 +80,7 @@ public class AuthenticPostgreSQLDatabaseConnector extends AuthenticDatabaseConne
 
     public static final class Configuration {
 
-        public static final ConfigurationKey<String> HOST = new ConfigurationKey<>(
-                "host",
-                "localhost",
-                "The host of the database.",
-                ConfigurateHelper::getString
-        );
-
+        // Keep this declaration order: database name, host, port, user, password.
         public static final ConfigurationKey<String> NAME = new ConfigurationKey<>(
                 "database",
                 "librelogin",
@@ -94,10 +88,10 @@ public class AuthenticPostgreSQLDatabaseConnector extends AuthenticDatabaseConne
                 ConfigurateHelper::getString
         );
 
-        public static final ConfigurationKey<String> PASSWORD = new ConfigurationKey<>(
-                "password",
-                "",
-                "The password of the database.",
+        public static final ConfigurationKey<String> HOST = new ConfigurationKey<>(
+                "host",
+                "localhost",
+                "The host of the database.",
                 ConfigurateHelper::getString
         );
 
@@ -112,6 +106,13 @@ public class AuthenticPostgreSQLDatabaseConnector extends AuthenticDatabaseConne
                 "user",
                 "root",
                 "The user of the database.",
+                ConfigurateHelper::getString
+        );
+
+        public static final ConfigurationKey<String> PASSWORD = new ConfigurationKey<>(
+                "password",
+                "",
+                "The password of the database.",
                 ConfigurateHelper::getString
         );
 

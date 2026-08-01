@@ -244,14 +244,18 @@ public interface LibreLoginPlugin<P, S> {
     EmailHandler getEmailHandler();
 
     /**
-     * Gets the limbo provider integration.
-     * <br>
-     * <b>This can be used for creating limbo's</b>
+     * Gets the optional limbo provider integration.
      *
-     * @return The limbo provider, or null if no integration was found
+     * <p>LibreLogin uses registered Paper backends as limbos by default. This
+     * method remains for API compatibility with integrations that provide a
+     * custom limbo implementation.</p>
+     *
+     * @return a custom limbo provider, or null when none is installed
      */
     @Nullable
-    LimboIntegration<S> getLimboIntegration();
+    default LimboIntegration<S> getLimboIntegration() {
+        return null;
+    }
 
     /**
      * Gets the event types.

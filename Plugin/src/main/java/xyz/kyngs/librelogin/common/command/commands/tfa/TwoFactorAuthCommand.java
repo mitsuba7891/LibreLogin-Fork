@@ -29,28 +29,63 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
             var user = getUser(player);
             var auth = plugin.getAuthorizationProvider();
 
+            if (user.autoLoginEnabled()) {
+                throw new InvalidCommandArgument(getMessage("error-not-cracked"));
+            }
+
             if (auth.isAwaiting2FA(player)) {
                 throw new InvalidCommandArgument(getMessage("totp-show-info"));
             }
 
-            if (!plugin.getImageProjector().canProject(player)) {
+            var imageProjector = plugin.getImageProjector();
+            var totpProvider = plugin.getTOTPProvider();
+
+            if (imageProjector == null || totpProvider == null) {
+                throw new InvalidCommandArgument(getMessage("error-unknown"));
+            }
+
+            if (!imageProjector.canProject(player)) {
                 throw new InvalidCommandArgument(getMessage("totp-wrong-version",
                         "%low%", "1.13",
-                        "%high%", "1.21.1"
+                        "%high%", "26.2"
                 ));
             }
 
             sender.sendMessage(getMessage("totp-generating"));
 
-            var data = plugin.getTOTPProvider().generate(user);
+            var data = totpProvider.generate(user);
 
-            auth.beginTwoFactorAuth(user, player, data);
+            auth.beginTwoFactorAuthAsync(user, player, data).whenComplete((failure, transferError) -> {
+                if (failure != null || transferError != null) return;
 
-            plugin.cancelOnExit(plugin.delay(() -> {
-                plugin.getImageProjector().project(data.qr(), player);
+                plugin.cancelOnExit(plugin.delay(() -> {
+                    try {
+                        if (!auth.isAwaiting2FA(player)) return;
 
-                sender.sendMessage(getMessage("totp-show-info"));
-            }, plugin.getConfiguration().get(ConfigurationKeys.TOTP_DELAY)), player);
+                        var currentServer = plugin.getPlatformHandle().getPlayersServerName(player);
+                        var onLimbo = currentServer != null
+                                && plugin.getConfiguration().get(ConfigurationKeys.LIMBO).contains(currentServer);
+                        if (!onLimbo) {
+                            plugin.getLogger().debug("Skipping 2FA QR projection for " + player
+                                    + ": player is no longer on a limbo server (current=" + currentServer + ")");
+                            return;
+                        }
+
+                        imageProjector.project(data.qr(), player);
+                        plugin.getLogger().debug("2FA QR projected for " + player);
+                    } catch (Throwable throwable) {
+                        // QR delivery must never tear down the player's login
+                        // connection. The manual secret/URI remains usable.
+                        plugin.getLogger().debug("2FA QR projection failed for " + player, throwable);
+                    }
+
+                    sender.sendMessage(getMessage("totp-show-info"));
+                    sender.sendMessage(getMessage("totp-manual-info",
+                            "%secret%", data.secret(),
+                            "%uri%", data.provisioningUri() == null ? "unavailable" : data.provisioningUri()
+                    ));
+                }, plugin.getConfiguration().get(ConfigurationKeys.TOTP_DELAY)), player);
+            });
         });
     }
 }

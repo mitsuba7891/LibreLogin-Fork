@@ -32,6 +32,10 @@ public class TwoFactorConfirmCommand<P> extends Command<P> {
             var user = getUser(player);
             var auth = plugin.getAuthorizationProvider();
 
+            if (user.autoLoginEnabled()) {
+                throw new InvalidCommandArgument(getMessage("error-not-cracked"));
+            }
+
             if (!auth.isAwaiting2FA(player)) {
                 throw new InvalidCommandArgument(getMessage("totp-not-awaiting"));
             }

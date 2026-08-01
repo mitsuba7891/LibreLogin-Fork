@@ -11,7 +11,6 @@ import co.aikar.commands.CommandManager;
 import co.aikar.commands.VelocityCommandIssuer;
 import co.aikar.commands.VelocityCommandManager;
 import com.google.inject.Inject;
-import com.velocitypowered.api.network.ProtocolVersion;
 import com.velocitypowered.api.plugin.PluginDescription;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
@@ -26,14 +25,13 @@ import xyz.kyngs.librelogin.api.Logger;
 import xyz.kyngs.librelogin.api.PlatformHandle;
 import xyz.kyngs.librelogin.api.database.User;
 import xyz.kyngs.librelogin.api.event.exception.EventCancelledException;
-import xyz.kyngs.librelogin.api.integration.LimboIntegration;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
 import xyz.kyngs.librelogin.common.SLF4JLogger;
 import xyz.kyngs.librelogin.common.config.ConfigurationKeys;
 import xyz.kyngs.librelogin.common.image.AuthenticImageProjector;
-import xyz.kyngs.librelogin.common.image.protocolize.ProtocolizeImageProjector;
+import xyz.kyngs.librelogin.velocity.integration.packetevents.PacketEventsImageProjector;
+import xyz.kyngs.librelogin.velocity.integration.protocolize.ProtocolizeImageProjector;
 import xyz.kyngs.librelogin.common.util.CancellableTask;
-import xyz.kyngs.librelogin.velocity.integration.VelocityNanoLimboIntegration;
 
 import java.io.File;
 import java.io.InputStream;
@@ -59,8 +57,6 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
     private PluginDescription description;
     @Nullable
     private VelocityRedisBungeeIntegration redisBungee;
-    @Nullable
-    private LimboIntegration<RegisteredServer> limboIntegration;
 
     public VelocityLibreLogin(VelocityBootstrap bootstrap) {
         this.bootstrap = bootstrap;
@@ -149,35 +145,29 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
 
     @Override
     protected AuthenticImageProjector<Player, RegisteredServer> provideImageProjector() {
+        // PacketEvents is the maintained cross-version path and supports the
+        // current protocol line through Minecraft 26.2. It is installed as a
+        // separate Velocity plugin so its injector owns the player channels.
+        if (pluginPresent("packetevents")) {
+            getLogger().info("Detected PacketEvents, enabling cross-version 2FA (1.13-26.2)...");
+            return new PacketEventsImageProjector<>(this);
+        }
+
+        // Keep the Protocolize path as a compatibility fallback for proxies
+        // that have not installed PacketEvents yet. Its verified ceiling is
+        // 1.21.3 and it must not be advertised as supporting newer clients.
         if (pluginPresent("protocolize")) {
             var projector = new ProtocolizeImageProjector<>(this);
-            var maxProtocol = ProtocolVersion.MAXIMUM_VERSION.getProtocol();
-
-            if (maxProtocol == 760) {
-                // I hate this so much
-                try {
-                    var split = server.getVersion().getVersion().split("-");
-                    var build = Integer.parseInt(split[split.length - 1].replace("b", ""));
-
-                    if (build < 172) {
-                        logger.warn("Detected protocolize, but in order for the integration to work properly, you must be running Velocity build 172 or newer!");
-                        return null;
-                    }
-                } catch (Exception e) {
-                    // I guess it's probably fine
-                }
-            }
-
             if (!projector.compatible()) {
                 getLogger().warn("Detected protocolize, however, with incompatible version (2.2.2), please upgrade or downgrade.");
                 return null;
             }
-            getLogger().info("Detected Protocolize, enabling 2FA...");
+            getLogger().info("Detected Protocolize, enabling legacy 2FA (1.13-1.21.3)...");
             return projector;
-        } else {
-            logger.warn("Protocolize not found, some features (e.g. 2FA) will not work!");
-            return null;
         }
+
+        logger.warn("Neither PacketEvents nor Protocolize was found; 2FA image support is disabled. Install PacketEvents 2.13.0+ for Minecraft 1.13-26.2 support.");
+        return null;
     }
 
     @Override
@@ -232,16 +222,5 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
     public File getDataFolder() {
         return dataDir.toFile();
     }
-
-    @Nullable
-    @Override
-    public LimboIntegration<RegisteredServer> getLimboIntegration() {
-        if (pluginPresent("nanolimbovelocity") && limboIntegration == null) {
-            limboIntegration = new VelocityNanoLimboIntegration(server,
-                    getConfiguration().get(ConfigurationKeys.LIMBO_PORT_RANGE));
-        }
-        return limboIntegration;
-    }
-
 
 }
