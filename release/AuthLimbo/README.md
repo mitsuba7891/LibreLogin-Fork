@@ -1,6 +1,6 @@
 # AuthLimbo
 
-A small standalone Paper companion for the Velocity architecture, based on the LibreLogin fork and replacing the NanoLimbo integration.
+A small standalone Paper companion for the Velocity architecture, based on the LibreLogin fork and replacing the NanoLimbo integration. This artifact was reviewed and updated with AI assistance (Freebuff assistant, deepseek-v4-flash); see the repository `CHANGELOG.md` for the full change list.
 
 ## Responsibility
 

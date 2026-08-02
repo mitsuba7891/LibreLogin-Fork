@@ -2,15 +2,17 @@
 
 This is a maintained, customized distribution based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). It separates proxy authentication, standalone Paper authentication and the Paper limbo backend into three clearly named artifacts.
 
+> **AI-assisted update:** This release package and the fork changes it ships (release 0.24.7 and the message-formatting upgrade) were reviewed and updated with AI assistance (Freebuff assistant, deepseek-v4-flash). See `CHANGELOG.md` for the complete list of changes.
+
 ## Package contents
 
 ```text
 LibreLogin-Velocity/
-  LibreLogin-Velocity-0.24.6.jar
+  LibreLogin-Velocity-0.24.7.jar
   README.md
   CHANGELOG.md
 LibreLogin-Paper/
-  LibreLogin-Paper-0.24.6.jar
+  LibreLogin-Paper-0.24.7.jar
   README.md
   CHANGELOG.md
 AuthLimbo/
@@ -28,14 +30,14 @@ LICENSE
 
 Install:
 
-- `LibreLogin-Velocity-0.24.6.jar` on the Velocity proxy.
+- `LibreLogin-Velocity-0.24.7.jar` on the Velocity proxy.
 - `AuthLimbo-1.0.0.jar` on the Paper backend named `auth`.
 
 Do **not** install `LibreLogin-Paper` on that auth backend. LibreLogin-Velocity owns authentication and AuthLimbo only supplies the protected empty limbo world.
 
 ### Standalone Paper server
 
-Install only `LibreLogin-Paper-0.24.6.jar` on the Paper server. Do not install LibreLogin-Velocity unless the server is also part of a proxy architecture.
+Install only `LibreLogin-Paper-0.24.7.jar` on the Paper server. Do not install LibreLogin-Velocity unless the server is also part of a proxy architecture.
 
 ## Dependencies
 
@@ -63,19 +65,41 @@ Fork: <https://github.com/mitsuba7891/LibreLogin-Fork>
 
 Generated legacy HOCON files are converted automatically to YAML and retained as `.conf.pre-yaml.bak` backups.
 
-## Message prefix
+## Messages and prefix
 
-In `plugins/librelogin/messages.yml`:
+In `plugins/librelogin/messages.yml` every message value is written between double quotes and supports the fork formatting syntax:
 
 ```yaml
 prefix: "LibreLogin"
 ```
 
-Use an empty value to disable it:
+The value is literal; use an empty value to disable it:
 
 ```yaml
 prefix: ""
 ```
+
+**Line breaks** — use `\n` inside a value:
+
+```yaml
+info-user: "UUID: %uuid%\nJoined: %joined%"
+```
+
+**Centering** — start a line with `[center]` to center it in chat:
+
+```yaml
+sub-title-login: "[center]&e/login &b<password>"
+```
+
+**Multi-line messages** — a message may be a YAML list; every entry becomes one line:
+
+```yaml
+prompt-login:
+  - "Line one"
+  - "[center]&e&lLine two"
+```
+
+Legacy `&` colour codes and MiniMessage syntax (`<bold>`, `<gradient:red:blue>`, `<size:20>`) keep working inside quoted values.
 
 Reload messages with:
 

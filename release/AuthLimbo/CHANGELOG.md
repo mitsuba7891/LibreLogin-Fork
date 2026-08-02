@@ -1,5 +1,7 @@
 # AuthLimbo changelog
 
+This fork artifact was reviewed and updated with AI assistance (Freebuff assistant, deepseek-v4-flash).
+
 ## 1.0.0
 
 - Added a standalone Paper limbo companion for the Velocity architecture.

@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.24.7 — Message formatting upgrade (AI-assisted)
+
+This release was reviewed and updated with AI assistance (Freebuff assistant, deepseek-v4-flash) and applies to the LibreLogin fork.
+
+### Message formatting (messages.yml)
+
+- Every scalar message value in the generated `messages.yml` is now written between double quotes (`"..."`), including multiline values, list entries and single-quoted values the YAML serializer previously emitted unquoted or with single quotes.
+- Message values may be written as YAML lists; every list entry becomes one chat line:
+
+  ```yaml
+  prompt-login:
+    - "Line one"
+    - "[center]&e&lLine two"
+  ```
+
+- `\n` inside a value creates a line break (e.g. `"Line one\nLine two"`).
+- `[center]` at the start of a line centers that line using pixel-based measurement.
+- MiniMessage and legacy `&` colour codes keep working inside the quoted values.
+- Added a new header to the generated `messages.yml` documenting the new syntax and the AI-assisted review.
+
+### Configuration and messages (continued)
+
+- Configurable literal chat prefix from `messages.yml` (`prefix: "LibreLogin"`, empty to disable), excluded from titles, subtitles, action bars and emails.
+- `/login <password> <2fa_code>` guidance for users with TOTP enabled.
+- Premium/autologin accounts cannot enable 2FA until they switch back to cracked with `/cracked`.
+
 ## 0.24.6 fork release
 
 ### Major changes

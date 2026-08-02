@@ -1,5 +1,11 @@
 # LibreLogin-Velocity changelog
 
+This fork artifact was reviewed and updated with AI assistance (Freebuff assistant, deepseek-v4-flash).
+
+## 0.24.7
+
+- Every message value in the generated `messages.yml` is written between double quotes; messages may use `\n` line breaks, `[center]` centering and YAML list syntax for multi-line messages.
+
 ## 0.24.6
 
 - Proxy-side authentication artifact separated from the Paper artifact.

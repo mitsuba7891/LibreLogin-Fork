@@ -3,6 +3,8 @@
 A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/LibreLogin), an open-source authentication platform for Minecraft networks.
 
 > **Attribution and license:** This repository contains modifications of LibreLogin by kyngs and contributors. The upstream project is licensed under the **Mozilla Public License 2.0 (MPL-2.0)**; this fork retains that license and the original notices. The MIT license present under `licenses/FASTLOGIN_LICENSE` applies only to the relevant FastLogin-derived dependency, not to LibreLogin itself.
+>
+> **AI-assisted update:** The 0.24.7 release (and the message-formatting changes it ships) was reviewed and updated with AI assistance (Freebuff assistant, deepseek-v4-flash). See the `CHANGELOG.md` 0.24.7 section for the complete list of changes.
 
 ## Release 0.24.6
 

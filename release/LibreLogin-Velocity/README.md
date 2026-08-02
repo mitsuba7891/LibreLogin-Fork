@@ -1,6 +1,6 @@
 # LibreLogin-Velocity
 
-Proxy-side authentication for Velocity, based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin).
+Proxy-side authentication for Velocity, based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). This fork artifact was reviewed and updated with AI assistance (Freebuff assistant, deepseek-v4-flash); see the repository `CHANGELOG.md` for the full change list.
 
 ## Install
 
