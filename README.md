@@ -125,7 +125,7 @@ The QR/provisioning output must be treated as a secret. Never post a TOTP URI or
 
 ## Messages and prefix
 
-Edit `plugins/librelogin/messages.yml`:
+Edit `plugins/librelogin/messages.yml`. Every message value is written between double quotes and supports the fork formatting syntax:
 
 ```yaml
 prefix: "LibreLogin"
@@ -136,6 +136,28 @@ The value is literal. To disable the prefix completely:
 ```yaml
 prefix: ""
 ```
+
+**Line breaks** — use `\n` inside a value to create a line break:
+
+```yaml
+info-user: "UUID: %uuid%\nJoined: %joined%"
+```
+
+**Centering** — start a line with `[center]` to center it in chat using pixel-based measurement:
+
+```yaml
+sub-title-login: "[center]&e/login &b<password>"
+```
+
+**Multi-line messages** — a message may be a YAML list; every entry becomes one line (combine with `[center]` and `\n` freely):
+
+```yaml
+prompt-login:
+  - "Line one"
+  - "[center]&e&lLine two"
+```
+
+Legacy `&` colour codes and MiniMessage syntax (`<bold>`, `<gradient:red:blue>`, `<size:20>`) keep working inside quoted values.
 
 After editing messages:
 

@@ -115,13 +115,28 @@ class ConfigDumpTest {
                 "messages.yml",
                 Set.of(new BiHolder<>(MessageKeys.class, "")),
                 "LibreLogin messages",
-                new NoOpLogger()
+                new NoOpLogger(),
+                true // messages.yml: every scalar is written between double quotes
         );
 
         var yaml = Files.readString(temporaryDirectory.resolve("messages.yml"));
+        Files.createDirectories(Path.of("build"));
+        Files.writeString(Path.of("build/dump-messages.yml"), yaml);
         assertTrue(yaml.contains("prefix:"), "global prefix is missing");
         assertTrue(yaml.contains("# Optional global prefix prepended literally to chat"), "prefix documentation is missing");
         assertFalse(yaml.contains("prefix: &"), "prefix must not use YAML anchors");
+        assertTrue(yaml.contains("prefix: \"\""), "message scalars must be double-quoted (empty prefix stays disabled)");
+        assertTrue(yaml.contains("prompt-login: \""), "message scalar must be double-quoted");
+
+        // List values are written as quoted list entries and survive a reload.
+        var withList = yaml.replaceFirst("(?m)^prompt-login:.*$", "prompt-login:\n  - \"Line one\"\n  - \"[center]&e&lLine two\"");
+        Files.writeString(temporaryDirectory.resolve("messages.yml"), withList);
+        var listLoaded = org.spongepowered.configurate.yaml.YamlConfigurationLoader.builder()
+                .file(temporaryDirectory.resolve("messages.yml").toFile())
+                .build().load();
+        assertTrue(listLoaded.node("prompt-login").isList(), "list message values must load as lists");
+        assertTrue("Line one".equals(listLoaded.node("prompt-login").getList(String.class).get(0)), "first list line must load unchanged");
+        assertTrue("[center]&e&lLine two".equals(listLoaded.node("prompt-login").getList(String.class).get(1)), "centered list line must load unchanged");
 
         // Administrators may use ordinary YAML double quotes around messages;
         // the same loader must read them back as the original scalar value.

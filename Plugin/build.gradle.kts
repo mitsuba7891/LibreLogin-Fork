@@ -165,6 +165,10 @@ dependencies {
     testImplementation("dev.simplix:protocolize-api:2.4.2")
     testImplementation("org.spongepowered:configurate-yaml:4.1.2")
     testImplementation("org.spongepowered:configurate-hocon:4.1.2")
+    // Runtime deps needed by unit tests that instantiate HoconMessages
+    // (MiniMessage + LegacyMessage are compileOnly/libby at runtime).
+    testImplementation("net.kyori:adventure-text-minimessage:4.14.0")
+    testImplementation("com.github.kyngs:LegacyMessage:0.2.0")
 
     //API
     implementation(project(":API"))

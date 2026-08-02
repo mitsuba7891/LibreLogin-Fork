@@ -2,6 +2,35 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
+## 0.24.7 — Message formatting upgrade (AI-assisted)
+
+This release was reviewed and updated with AI assistance (Freebuff assistant, deepseek-v4-flash) and applies to the LibreLogin fork.
+
+### Message formatting (messages.yml)
+
+- Every scalar message value in the generated `messages.yml` is now written between double quotes (`"..."`), including multiline values, list entries and single-quoted values that the YAML serializer previously emitted unquoted or with single quotes.
+- Message values may be written as YAML lists; every list entry becomes one chat line:
+
+  ```yaml
+  prompt-login:
+    - "Line one"
+    - "[center]&e&lLine two"
+  ```
+
+- `\n` inside a value creates a line break (e.g. `"Line one\nLine two"`).
+- `[center]` at the start of a line centers that line using pixel-based measurement, so centered titles and prompts look right in chat.
+- MiniMessage and legacy `&` colour codes keep working inside the quoted values.
+- Added a new header to the generated `messages.yml` documenting the new syntax, the fork origin and the AI-assisted review.
+- Extended the YAML quoting engine so SnakeYAML-wrapped plain and single-quoted scalars, and `|-` block scalars, are all folded back into single-line double-quoted values, keeping the file valid and fully quoted.
+- Added `MessageFormattingTest` covering list values joined into lines, literal `\n` handling, `[center]` padding and centered list entries, plus updated `ConfigDumpTest` assertions for the quoted output.
+
+### Configuration and messages (continued)
+
+- Configurable literal chat prefix from `messages.yml` (`prefix: "LibreLogin"`, empty to disable), excluded from titles, subtitles, action bars and emails.
+- `/login <password> <2fa_code>` guidance for users with TOTP enabled.
+- Premium/autologin accounts cannot enable 2FA until they switch back to cracked with `/cracked`.
+- Throttled premium-validation messages use a quoted single-line scalar.
+
 ## 0.24.6 — Fork documentation and release update
 
 ### Major architecture and platform changes
