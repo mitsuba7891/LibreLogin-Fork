@@ -106,7 +106,7 @@ public class HoconMessages implements Messages {
                           - "[center]" at the start of a line centers that line using pixel-based measurement.
                           - MiniMessage tags keep working: <bold>, <italic>, <gradient:red:blue>, <size:20>.
                           ----------------------------------------------------------------------------------------
-                          CHANGES APPLIED TO THIS FILE (fork; reviewed and updated with AI assistance - GPT Luna 5.6):
+                          CHANGES APPLIED TO THIS FILE (fork; reviewed and updated with AI assistance - Freebuff assistant using GPT Luna 5.6):
                           - All scalar message values are emitted with double quotes.
                           - Messages may be written as lists of quoted strings (one line per entry).
                           - "\n" is accepted as an explicit line break.

@@ -4,7 +4,7 @@ All notable changes in this fork are documented here. This release is based on [
 
 ## 0.24.7 — Message formatting upgrade (AI-assisted)
 
-This release was reviewed and updated with AI assistance (GPT Luna 5.6) and applies to the LibreLogin fork.
+This release was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6) and applies to the LibreLogin fork.
 
 ### Message formatting (messages.yml)
 

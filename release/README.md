@@ -2,7 +2,7 @@
 
 This is a maintained, customized distribution based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). It separates proxy authentication, standalone Paper authentication and the Paper limbo backend into three clearly named artifacts.
 
-> **AI-assisted update:** This release package and the fork changes it ships (release 0.24.7 and the message-formatting upgrade) were reviewed and updated with AI assistance (GPT Luna 5.6). See `CHANGELOG.md` for the complete list of changes.
+> **AI-assisted update:** This release package and the fork changes it ships (release 0.24.7 and the message-formatting upgrade) were reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See `CHANGELOG.md` for the complete list of changes.
 
 ## Package contents
 
