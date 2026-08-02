@@ -1,6 +1,6 @@
 # LibreLogin-Paper
 
-Standalone Paper authentication based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). This fork artifact was reviewed and updated with AI assistance (Freebuff assistant, deepseek-v4-flash); see the repository `CHANGELOG.md` for the full change list.
+Standalone Paper authentication based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). This fork artifact was reviewed and updated with AI assistance (GPT Luna 5.6); see the repository `CHANGELOG.md` for the full change list.
 
 ## When to use it
 

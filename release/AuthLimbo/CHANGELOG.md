@@ -1,6 +1,6 @@
 # AuthLimbo changelog
 
-This fork artifact was reviewed and updated with AI assistance (Freebuff assistant, deepseek-v4-flash).
+This fork artifact was reviewed and updated with AI assistance (GPT Luna 5.6).
 
 ## 1.0.0
 
