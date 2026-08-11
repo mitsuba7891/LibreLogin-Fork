@@ -2,13 +2,13 @@
 
 **LibreLogin Fork** is a maintained fork of [LibreLogin](https://github.com/kyngs/LibreLogin), an open-source authentication plugin for Minecraft servers and networks. It protects your server with **registration, login, premium (autologin) support, sessions and 2FA (TOTP)** — and it is easy to install.
 
-> **AI-assisted update:** This plugin (release 0.24.8, including the message-formatting upgrade) was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See the [CHANGELOG](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.24.8/CHANGELOG.md) for the complete list of changes.
+> **AI-assisted update:** This plugin (release 0.24.9, including the message-formatting upgrade) was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See the [CHANGELOG](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.24.9/CHANGELOG.md) for the complete list of changes.
 
 ---
 
 ## Which file do you need?
 
-Download the **3-in-1 ZIP** (`LibreLogin-0.24.8.zip`) from the [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases) page and pick the files for your setup:
+Download the **3-in-1 ZIP** (`LibreLogin-0.24.9.zip`) from the [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases) page and pick the files for your setup:
 
 | Your setup | Files you need |
 |---|---|
@@ -211,13 +211,13 @@ Distributed under the **Mozilla Public License 2.0 (MPL-2.0)**, the same license
 
 **LibreLogin Fork** es un fork mantenido de [LibreLogin](https://github.com/kyngs/LibreLogin), un plugin de autenticación de código abierto para servidores y redes de Minecraft. Protege tu servidor con **registro, inicio de sesión, soporte premium (autologin), sesiones y 2FA (TOTP)** — y es fácil de instalar.
 
-> **Actualización con IA:** Este plugin (release 0.24.8, incluida la mejora de formato de mensajes) fue revisado y actualizado con asistencia de IA (Freebuff assistant usando GPT Luna 5.6). Consulta el [CHANGELOG](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.24.8/CHANGELOG.md) para la lista completa de cambios.
+> **Actualización con IA:** Este plugin (release 0.24.9, incluida la mejora de formato de mensajes) fue revisado y actualizado con asistencia de IA (Freebuff assistant usando GPT Luna 5.6). Consulta el [CHANGELOG](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.24.9/CHANGELOG.md) para la lista completa de cambios.
 
 ---
 
 ## ¿Qué archivo necesitas?
 
-Descarga el **ZIP 3-en-1** (`LibreLogin-0.24.8.zip`) desde la página de [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases) y elige los archivos según tu caso:
+Descarga el **ZIP 3-en-1** (`LibreLogin-0.24.9.zip`) desde la página de [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases) y elige los archivos según tu caso:
 
 | Tu configuración | Archivos que necesitas |
 |---|---|

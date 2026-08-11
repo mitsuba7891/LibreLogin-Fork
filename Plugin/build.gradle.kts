@@ -186,6 +186,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly("com.google.guava:guava:30.0-jre")
     testRuntimeOnly("org.bouncycastle:bcprov-jdk18on:1.80")
+    testImplementation("com.google.code.gson:gson:2.14.0")
     testImplementation("dev.simplix:protocolize-api:2.4.2")
     testImplementation("org.spongepowered:configurate-yaml:4.1.2")
     testImplementation("org.spongepowered:configurate-hocon:4.1.2")

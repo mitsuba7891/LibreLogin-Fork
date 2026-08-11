@@ -2,6 +2,11 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.24.9
+
+- Update notices now query `librelogin-fork` on Modrinth instead of the official LibreLogin GitHub repository.
+- The checker recommends the Velocity-specific stable file and never downloads or replaces the installed JAR.
+
 ## 0.24.8
 
 - Added shared session/password/attempt services, legacy-hash upgrades and account cooldowns that survive reconnects.

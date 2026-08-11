@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.24.9 — Modrinth update notifications
+
+- Replaced the official LibreLogin GitHub update source with the public `librelogin-fork` project on Modrinth.
+- Stable semantic releases are compared against the installed version and the Paper/Velocity-specific file is recommended.
+- Console notices include the direct download and project URLs; no file is downloaded or replaced automatically.
+- Added Modrinth API timeouts, an identifying `User-Agent` and regression tests for release/file selection.
+
 ## 0.24.8 — Security and Paper 26.2 update
 
 ### Authentication and security

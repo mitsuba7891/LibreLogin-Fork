@@ -2,6 +2,14 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
+## 0.24.9 — Modrinth update notifications
+
+- Replaced the upstream `kyngs/LibreLogin` GitHub release check with the public Modrinth API for [`librelogin-fork`](https://modrinth.com/plugin/librelogin-fork).
+- The checker considers stable releases only and selects the matching Paper or Velocity file when a newer semantic version is available.
+- Console notices now include the installed/latest versions, recommended filename, direct Modrinth download URL and project page.
+- Updates remain administrator-controlled: LibreLogin never downloads, replaces or executes a JAR automatically.
+- Added an identifying Modrinth `User-Agent`, connection/read timeouts, fail-safe error handling and regression tests for version/platform selection.
+
 ## 0.24.8 — Security, Paper 26.2 and architecture refactor
 
 ### Authentication and security

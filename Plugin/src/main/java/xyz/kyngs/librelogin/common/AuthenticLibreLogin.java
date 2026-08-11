@@ -12,8 +12,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import net.kyori.adventure.audience.Audience;
 import org.bstats.charts.CustomChart;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +31,6 @@ import xyz.kyngs.librelogin.api.premium.PremiumException;
 import xyz.kyngs.librelogin.api.premium.PremiumUser;
 import xyz.kyngs.librelogin.api.server.ServerHandler;
 import xyz.kyngs.librelogin.api.totp.TOTPProvider;
-import xyz.kyngs.librelogin.api.util.Release;
 import xyz.kyngs.librelogin.api.util.SemanticVersion;
 import xyz.kyngs.librelogin.api.util.ThrowableFunction;
 import xyz.kyngs.librelogin.common.authorization.AuthenticAuthorizationProvider;
@@ -68,6 +65,7 @@ import xyz.kyngs.librelogin.common.security.AuthenticationAttemptLimiter;
 import xyz.kyngs.librelogin.common.security.PasswordService;
 import xyz.kyngs.librelogin.common.session.UserSessionService;
 import xyz.kyngs.librelogin.common.totp.AuthenticTOTPProvider;
+import xyz.kyngs.librelogin.common.update.ModrinthUpdateChecker;
 import xyz.kyngs.librelogin.common.util.CancellableTask;
 import xyz.kyngs.librelogin.common.util.GeneralUtil;
 
@@ -661,56 +659,26 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         logger.info("Checking for updates...");
 
         try {
-            var connection = URI.create("https://api.github.com/repos/kyngs/LibreLogin/releases")
-                    .toURL()
-                    .openConnection();
-
-            connection.setRequestProperty("User-Agent", "LibreLogin");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(10000);
-
-            JsonArray root;
-            try (var in = connection.getInputStream();
-                 var reader = new InputStreamReader(in)) {
-                root = GSON.fromJson(reader, JsonArray.class);
+            var checker = new ModrinthUpdateChecker(GSON, getVersion());
+            var update = checker.findUpdate(version, platformHandle.getPlatformIdentifier());
+            if (update.isEmpty()) {
+                logger.info("You are running the latest public LibreLogin Fork release on Modrinth");
+                return;
             }
 
-            List<Release> behind = new ArrayList<>();
-            SemanticVersion latest = null;
-
-            for (JsonElement raw : root) {
-                var release = raw.getAsJsonObject();
-
-                var version = SemanticVersion.parse(release.get("tag_name").getAsString());
-
-                if (latest == null) latest = version;
-
-                var shouldBreak = switch (this.version.compare(version)) {
-                    case 0, 1 -> true;
-                    default -> {
-                        behind.add(new Release(version, release.get("name").getAsString()));
-                        yield false;
-                    }
-                };
-
-                if (shouldBreak) {
-                    break;
-                }
-            }
-
-            if (behind.isEmpty()) {
-                logger.info("You are running the latest version of LibreLogin");
-            } else {
-                Collections.reverse(behind);
-                logger.warn("!! YOU ARE RUNNING AN OUTDATED VERSION OF LIBRELOGIN !!");
-                logger.info("You are running version %s, the latest version is %s. You are running %s versions behind. Newer versions:".formatted(getVersion(), latest, behind.size()));
-                for (Release release : behind) {
-                    logger.info("- %s".formatted(release.name()));
-                }
-                logger.warn("!! PLEASE UPDATE TO THE LATEST VERSION !!");
-            }
+            var latest = update.get();
+            logger.warn("!! YOU ARE RUNNING AN OUTDATED VERSION OF LIBRELOGIN FORK !!");
+            logger.info("Installed version: %s; latest Modrinth version: %s (%s)".formatted(
+                    getVersion(), latest.version(), latest.name()
+            ));
+            logger.info("Recommended %s file: %s".formatted(
+                    platformHandle.getPlatformIdentifier(), latest.filename()
+            ));
+            logger.info("Download: " + latest.downloadUrl());
+            logger.info("Project: " + latest.projectUrl());
+            logger.warn("Stop the server/proxy and replace the JAR manually; automatic replacement is disabled");
         } catch (Exception e) {
-            logger.warn("Failed to check for updates", e);
+            logger.warn("Failed to check LibreLogin Fork updates on Modrinth; no files were changed", e);
         }
     }
 
