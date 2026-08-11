@@ -10,6 +10,7 @@ import xyz.kyngs.librelogin.api.crypto.CryptoProvider;
 import xyz.kyngs.librelogin.api.crypto.HashedPassword;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -17,7 +18,7 @@ import java.security.SecureRandom;
 public class MessageDigestCryptoProvider implements CryptoProvider {
 
     private final SecureRandom random;
-    private final MessageDigest sha256;
+    private final String algorithm;
     private final String identifier;
 
     public MessageDigestCryptoProvider(String identifier) {
@@ -29,11 +30,8 @@ public class MessageDigestCryptoProvider implements CryptoProvider {
 
         random = new SecureRandom();
 
-        try {
-            sha256 = MessageDigest.getInstance(md);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
+        this.algorithm = md;
+        createDigest();
     }
 
     protected String randomSalt() {
@@ -43,9 +41,17 @@ public class MessageDigestCryptoProvider implements CryptoProvider {
     }
 
     protected String plainHash(String input) {
-        byte[] inputBytes = input.getBytes();
-        byte[] hashedBytes = this.sha256.digest(inputBytes);
+        byte[] inputBytes = input.getBytes(StandardCharsets.UTF_8);
+        byte[] hashedBytes = createDigest().digest(inputBytes);
         return String.format("%064x", new BigInteger(1, hashedBytes));
+    }
+
+    private MessageDigest createDigest() {
+        try {
+            return MessageDigest.getInstance(algorithm);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Unsupported password digest: " + algorithm, e);
+        }
     }
 
     @Override
@@ -61,7 +67,10 @@ public class MessageDigestCryptoProvider implements CryptoProvider {
         var salt = password.salt();
         var hash = password.hash();
         var hashedInput = salt == null ? plainHash(input) : plainHash(plainHash(input) + salt);
-        return hashedInput.equals(hash);
+        return MessageDigest.isEqual(
+                hashedInput.getBytes(StandardCharsets.US_ASCII),
+                hash.getBytes(StandardCharsets.US_ASCII)
+        );
     }
 
     @Override

@@ -214,6 +214,11 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
     }
 
     @Override
+    public void executeOnPlatformThread(Runnable runnable) {
+        runnable.run();
+    }
+
+    @Override
     public InputStream getResourceAsStream(String name) {
         return getClass().getClassLoader().getResourceAsStream(name);
     }

@@ -2,6 +2,11 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## LibreLogin bundle 0.24.8
+
+- Expanded the unauthenticated lock to chat, commands, block/entity interaction, direct/projectile damage, inventory operations, pickup/drop, hand swaps and consumption.
+- Added Paper 26.2-compatible gamerule, PvP and spawn handling while preserving the existing `AuthLimbo-1.0.0.jar` companion version.
+
 ## 1.0.0
 
 - Added a standalone Paper limbo companion for the Velocity architecture.

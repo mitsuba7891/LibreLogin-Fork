@@ -25,9 +25,8 @@ public class DBASQLMigrateReadProvider extends SQLMigrateReadProvider {
     @Override
     public Collection<User> getAllUsers() {
         return connector.runQuery(connection -> {
-            var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
-
-            var rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
+                 var rs = ps.executeQuery()) {
 
             var users = new HashSet<User>();
 
@@ -66,12 +65,12 @@ public class DBASQLMigrateReadProvider extends SQLMigrateReadProvider {
                     );
 
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    logger.error("Failed to read user from DBA db, omitting");
+                    logger.error("Failed to read a user from the DBA database; omitting it", e);
                 }
             }
 
-            return users;
+                return users;
+            }
         });
     }
 }

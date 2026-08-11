@@ -47,8 +47,7 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(bootstrap));
 
         PacketEvents.getAPI().getSettings()
-                .checkForUpdates(false)
-                .bStats(false);
+                .checkForUpdates(false);
 
         PacketEvents.getAPI().load();
     }
@@ -69,7 +68,7 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
 
     @Override
     public String getVersion() {
-        return bootstrap.getDescription().getVersion();
+        return bootstrap.getPluginMeta().getVersion();
     }
 
     @Override
@@ -196,15 +195,19 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
 
     @Override
     public CancellableTask delay(Runnable runnable, long delayInMillis) {
-        var task = Bukkit.getScheduler().runTaskLaterAsynchronously(bootstrap, runnable, delayInMillis / 50);
+        var task = Bukkit.getScheduler().runTaskLater(bootstrap, runnable, millisecondsToTicks(delayInMillis));
         return task::cancel;
     }
 
     @Override
     public CancellableTask repeat(Runnable runnable, long delayInMillis, long repeatInMillis) {
         var task = Bukkit.getScheduler()
-                .runTaskTimerAsynchronously(bootstrap, runnable, delayInMillis / 50, repeatInMillis / 50);
+                .runTaskTimer(bootstrap, runnable, millisecondsToTicks(delayInMillis), millisecondsToTicks(repeatInMillis));
         return task::cancel;
+    }
+
+    private long millisecondsToTicks(long milliseconds) {
+        return Math.max(0L, (milliseconds + 49L) / 50L);
     }
 
     @Override
@@ -240,5 +243,14 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
     @Override
     public Audience getAudienceFromIssuer(CommandIssuer issuer) {
         return ((BukkitCommandIssuer) issuer).getIssuer();
+    }
+
+    @Override
+    public void executeOnPlatformThread(Runnable runnable) {
+        if (Bukkit.isPrimaryThread()) {
+            runnable.run();
+            return;
+        }
+        Bukkit.getScheduler().runTask(bootstrap, runnable);
     }
 }

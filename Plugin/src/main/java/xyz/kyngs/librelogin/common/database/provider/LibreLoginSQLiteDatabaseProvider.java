@@ -23,10 +23,11 @@ public class LibreLoginSQLiteDatabaseProvider extends LibreLoginSQLDatabaseProvi
     protected List<String> getColumnNames(Connection connection) throws SQLException {
         var columns = new ArrayList<String>();
 
-        var rs = connection.prepareStatement("PRAGMA table_info(librepremium_data)").executeQuery();
-
-        while (rs.next()) {
-            columns.add(rs.getString("name"));
+        try (var statement = connection.prepareStatement("PRAGMA table_info(librepremium_data)");
+             var result = statement.executeQuery()) {
+            while (result.next()) {
+                columns.add(result.getString("name"));
+            }
         }
 
         return columns;

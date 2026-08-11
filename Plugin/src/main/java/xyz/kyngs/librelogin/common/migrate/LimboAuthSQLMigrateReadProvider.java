@@ -13,7 +13,6 @@ import xyz.kyngs.librelogin.api.database.connector.SQLDatabaseConnector;
 import xyz.kyngs.librelogin.common.database.AuthenticUser;
 import xyz.kyngs.librelogin.common.util.CryptoUtil;
 
-import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashSet;
@@ -28,9 +27,8 @@ public class LimboAuthSQLMigrateReadProvider extends SQLMigrateReadProvider {
     @Override
     public Collection<User> getAllUsers() {
         return connector.runQuery(connection -> {
-            PreparedStatement ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
-
-            var rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
+                 var rs = ps.executeQuery()) {
 
             var users = new HashSet<User>();
 
@@ -50,7 +48,7 @@ public class LimboAuthSQLMigrateReadProvider extends SQLMigrateReadProvider {
                         uniqueIdString = UUID.nameUUIDFromBytes(("OfflinePlayer:" + lastNickname).getBytes()).toString();
                     }
 
-                    if (premiumIdString.isEmpty()) {
+                    if (premiumIdString != null && premiumIdString.isEmpty()) {
                         premiumIdString = null;
                     }
 
@@ -93,11 +91,12 @@ public class LimboAuthSQLMigrateReadProvider extends SQLMigrateReadProvider {
                     ));
 
                 } catch (Exception e) {
-                    logger.error("Failed to read user from LimboAuth db, omitting. Error: " + e.getMessage());
+                    logger.error("Failed to read a user from the LimboAuth database; omitting it", e);
                 }
             }
 
-            return users;
+                return users;
+            }
 
         });
     }

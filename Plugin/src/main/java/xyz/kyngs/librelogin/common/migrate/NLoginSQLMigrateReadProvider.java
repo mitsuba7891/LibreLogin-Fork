@@ -27,9 +27,8 @@ public class NLoginSQLMigrateReadProvider extends SQLMigrateReadProvider {
     @Override
     public Collection<User> getAllUsers() {
         return connector.runQuery(connection -> {
-            var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
-
-            var rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
+                 var rs = ps.executeQuery()) {
 
             var users = new HashSet<User>();
 
@@ -80,12 +79,12 @@ public class NLoginSQLMigrateReadProvider extends SQLMigrateReadProvider {
                     ));
 
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    logger.error("Error while reading user from database");
+                    logger.error("Error while reading a user from the nLogin database", e);
                 }
             }
 
-            return users;
+                return users;
+            }
         });
     }
 }

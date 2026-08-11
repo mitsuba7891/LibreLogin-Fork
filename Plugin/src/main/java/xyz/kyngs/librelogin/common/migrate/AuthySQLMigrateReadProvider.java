@@ -26,9 +26,8 @@ public class AuthySQLMigrateReadProvider extends SQLMigrateReadProvider {
     @Override
     public Collection<User> getAllUsers() {
         return connector.runQuery(connection -> {
-            var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
-
-            var rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
+                 var rs = ps.executeQuery()) {
 
             var users = new HashSet<User>();
 
@@ -57,11 +56,12 @@ public class AuthySQLMigrateReadProvider extends SQLMigrateReadProvider {
                             null
                     ));
                 } catch (Exception e) {
-                    logger.error("Error while migrating user from Authy db, omitting");
+                    logger.error("Error while migrating a user from the Authy database; omitting it", e);
                 }
             }
 
-            return users;
+                return users;
+            }
         });
     }
 }

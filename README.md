@@ -4,36 +4,36 @@ A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/Lib
 
 > **Attribution and license:** This repository contains modifications of LibreLogin by kyngs and contributors. The upstream project is licensed under the **Mozilla Public License 2.0 (MPL-2.0)**; this fork retains that license and the original notices. The MIT license present under `licenses/FASTLOGIN_LICENSE` applies only to the relevant FastLogin-derived dependency, not to LibreLogin itself.
 >
-> **AI-assisted update:** The 0.24.7 release (and the message-formatting changes it ships) was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See the `CHANGELOG.md` 0.24.7 section for the complete list of changes.
+> **AI-assisted update:** Release 0.24.8, including the message-formatting work introduced in 0.24.7, was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See the `CHANGELOG.md` 0.24.8 section for the complete security and platform changes.
 
-## Release 0.24.6
+## Release 0.24.8
 
 This release provides three clearly separated artifacts:
 
 | Artifact | Install on | Purpose |
 |---|---|---|
-| `LibreLogin-Velocity-0.24.6.jar` | Velocity proxy | Central authentication, sessions, premium login, commands and proxy-side 2FA |
-| `LibreLogin-Paper-0.24.6.jar` | Standalone Paper server | Authentication when no proxy-side LibreLogin is used |
+| `LibreLogin-Velocity-0.24.8.jar` | Velocity proxy | Central authentication, sessions, premium login, commands and proxy-side 2FA |
+| `LibreLogin-Paper-0.24.8.jar` | Standalone Paper server | Authentication when no proxy-side LibreLogin is used |
 | `AuthLimbo-1.0.0.jar` | Paper `auth` backend | Empty-world limbo protection for the Velocity architecture |
 
 For a Velocity network, install **LibreLogin-Velocity on the proxy** and **AuthLimbo on the Paper auth backend**. Do not install LibreLogin-Paper on that auth backend; it would create a second authentication pipeline.
 
-## Requirements
+## Requirements and compatibility
 
-- Java 21 or newer.
-- A supported Paper or Velocity build compatible with the selected Minecraft version.
+- JDK/Java 25 for builds and Paper 26.2 deployments.
+- Paper API 26.2 is the server API used for compilation. Velocity remains a separate artifact.
 - A database supported by the generated configuration when using persistent authentication data.
 - On Velocity, install PacketEvents 2.13.0+ separately for cross-version QR projection; it is compile-only and is not bundled in the Velocity JAR. The Paper artifact loads its PacketEvents runtime dependency through Libby.
 - Optional integrations: Protocolize, LuckPerms, Floodgate and RedisBungee, only when your network uses them.
 
-The build targets Java 21 bytecode. Running on a newer Java runtime does not automatically certify every newer Minecraft or proxy release; test the exact server/client matrix before production.
+The shared artifacts retain Java 21 bytecode while being compiled and tested with JDK 25. The **1.13-26.2 compatibility range refers to Minecraft client/protocol versions**, not to running this build on a Paper 1.13 server. A 26.2 server needs the network's ViaVersion/ViaBackwards-style translation layer to accept older clients; PacketEvents observes those protocols but does not replace protocol translation. Test the exact server, proxy and translation-plugin matrix before production.
 
 ## Installation: Velocity network
 
 ### 1. Install the artifacts
 
 ```text
-Velocity/plugins/LibreLogin-Velocity-0.24.6.jar
+Velocity/plugins/LibreLogin-Velocity-0.24.8.jar
 Paper-auth/plugins/AuthLimbo-1.0.0.jar
 ```
 
@@ -91,10 +91,10 @@ The exact generated keys and comments are authoritative for your installed revis
 
 ## Standalone Paper installation
 
-Use `LibreLogin-Paper-0.24.6.jar` only when authentication is handled directly by Paper:
+Use `LibreLogin-Paper-0.24.8.jar` only when authentication is handled directly by Paper:
 
 ```text
-Paper/plugins/LibreLogin-Paper-0.24.6.jar
+Paper/plugins/LibreLogin-Paper-0.24.8.jar
 ```
 
 Start the server, configure the generated `config.yml` and `messages.yml`, then restart after structural configuration changes. Do not run both the proxy and standalone Paper authentication flows for the same player path.
@@ -194,10 +194,10 @@ This fork removes the NanoLimbo integration from the supported release architect
 Outputs:
 
 ```text
-Plugin/build/libs/platform/LibreLogin-Velocity-0.24.6.jar
-Plugin/build/libs/platform/LibreLogin-Paper-0.24.6.jar
+Plugin/build/libs/platform/LibreLogin-Velocity-0.24.8.jar
+Plugin/build/libs/platform/LibreLogin-Paper-0.24.8.jar
 Plugin/build/libs/platform/AuthLimbo-1.0.0.jar
-Plugin/build/distributions/LibreLogin-0.24.6.zip
+Plugin/build/distributions/LibreLogin-0.24.8.zip
 ```
 
 The ZIP contains one folder per component, a README and component changelog for each plugin, the root changelog and the MPL-2.0 license.

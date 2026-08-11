@@ -28,23 +28,22 @@ public class AegisSQLMigrateReadProvider extends SQLMigrateReadProvider {
     @Override
     public Collection<User> getAllUsers() {
         return connector.runQuery(connection -> {
-            var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
-
-            var rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
+                 var rs = ps.executeQuery()) {
 
             var users = new HashSet<User>();
 
             while (rs.next()) {
 
                 try {
-                    var uuid = UUID.fromString(rs.getString("uuid").replace(".", "")); //Aegis at it again, this time with a dot.
+                    var uuid = UUID.fromString(rs.getString("uuid").replace(".", ""));
                     var onlineID = rs.getString("onlineId");
                     var nickname = rs.getString("name");
                     var passwordRaw = rs.getString("password");
 
                     HashedPassword password = null;
 
-                    if (passwordRaw != null && !passwordRaw.contentEquals("")) { //God-damn Aegis.
+                    if (passwordRaw != null && !passwordRaw.isEmpty()) {
                         if (passwordRaw.startsWith("$2a$")) {
                             password = CryptoUtil.convertFromBCryptRaw(passwordRaw);
                         } else {
@@ -54,7 +53,7 @@ public class AegisSQLMigrateReadProvider extends SQLMigrateReadProvider {
 
                     users.add(new AuthenticUser(
                             uuid,
-                            onlineID == null || !rs.getBoolean("premium") ? null : UUID.fromString(onlineID.replace(".", "")), //Aegis at it again, this time with a dot.
+                            onlineID == null || !rs.getBoolean("premium") ? null : UUID.fromString(onlineID.replace(".", "")),
                             password,
                             nickname,
                             Timestamp.valueOf(LocalDateTime.now()),
@@ -67,12 +66,13 @@ public class AegisSQLMigrateReadProvider extends SQLMigrateReadProvider {
                     ));
 
                 } catch (Exception e) {
-                    logger.error("Failed to read user from Aegis db, omitting");
+                    logger.error("Failed to read a user from the Aegis database; omitting it", e);
                 }
 
             }
 
-            return users;
+                return users;
+            }
         });
     }
 }

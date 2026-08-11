@@ -12,7 +12,6 @@ import xyz.kyngs.librelogin.api.event.EventType;
 import xyz.kyngs.librelogin.common.AuthenticHandler;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,8 +27,9 @@ public class AuthenticEventProvider<P, S> extends AuthenticHandler<P, S> impleme
     }
 
     @Override
+    @SuppressWarnings("unchecked") // EventType preserves E, but the heterogeneous registry erases it.
     public <E extends Event<P, S>> Consumer<E> subscribe(EventType<P, S, E> type, Consumer<E> handler) {
-        listeners.computeIfAbsent(type, x -> new HashSet<>()).add((Consumer<Event<P, S>>) handler);
+        listeners.computeIfAbsent(type, x -> ConcurrentHashMap.newKeySet()).add((Consumer<Event<P, S>>) handler);
         return handler;
     }
 
@@ -49,6 +49,7 @@ public class AuthenticEventProvider<P, S> extends AuthenticHandler<P, S> impleme
         }
     }
 
+    @SuppressWarnings("unchecked") // unsafeFire is the explicit compatibility escape hatch in the public API.
     public void unsafeFire(EventType<?, ?, ?> type, Event<?, ?> event) {
         var set = listeners.get(type);
 

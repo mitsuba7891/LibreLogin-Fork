@@ -63,14 +63,18 @@ public class AuthenticMySQLDatabaseConnector extends AuthenticDatabaseConnector<
     @Override
     public void connect() throws SQLException {
         dataSource = new HikariDataSource(hikariConfig);
-        obtainInterface().close(); //Verify connection
-        connected = true;
+        try (var ignored = dataSource.getConnection()) {
+            connected = true;
+        } catch (SQLException exception) {
+            dataSource.close();
+            throw exception;
+        }
     }
 
     @Override
     public void disconnect() throws SQLException {
         connected = false;
-        dataSource.close();
+        if (dataSource != null) dataSource.close();
     }
 
     @Override
@@ -86,8 +90,7 @@ public class AuthenticMySQLDatabaseConnector extends AuthenticDatabaseConnector<
                 return function.apply(connection);
             }
         } catch (SQLTransientConnectionException e) {
-            plugin.getLogger().error("!! LOST CONNECTION TO THE DATABASE, THE PROXY IS GOING TO SHUT DOWN TO PREVENT DAMAGE !!");
-            e.printStackTrace();
+            plugin.getLogger().error("Lost connection to the database; shutting down to prevent inconsistent authentication data", e);
             System.exit(1);
             //Won't return anyway
             return null;

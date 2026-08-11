@@ -6,6 +6,7 @@
 
 package xyz.kyngs.librelogin.paper.tinyauth;
 
+import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.World;
@@ -13,18 +14,19 @@ import org.bukkit.WorldCreator;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.generator.WorldInfo;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
@@ -68,17 +70,52 @@ public final class AuthLimboPlugin extends JavaPlugin implements Listener {
             return;
         }
 
-        limbo.setGameRule(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE, false);
-        limbo.setGameRule(org.bukkit.GameRule.DO_WEATHER_CYCLE, false);
-        limbo.setGameRule(org.bukkit.GameRule.DO_MOB_SPAWNING, false);
-        limbo.setGameRule(org.bukkit.GameRule.DO_INSOMNIA, false);
-        limbo.setPVP(false);
+        setBooleanGameRule("ADVANCE_TIME", "DO_DAYLIGHT_CYCLE", false);
+        setBooleanGameRule("ADVANCE_WEATHER", "DO_WEATHER_CYCLE", false);
+        setBooleanGameRule("SPAWN_MOBS", "DO_MOB_SPAWNING", false);
+        setBooleanGameRule("SPAWN_PHANTOMS", "DO_INSOMNIA", false);
+        setPvp(false);
         limbo.setSpawnLocation(0, 70, 0);
 
         getLogger().info("AuthLimbo enabled; players are locked in world " + LIMBO_WORLD);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             prepare(player);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setBooleanGameRule(String modernName, String legacyName, boolean value) {
+        try {
+            org.bukkit.GameRule<Boolean> rule;
+            try {
+                rule = (org.bukkit.GameRule<Boolean>) Class.forName("org.bukkit.GameRules")
+                        .getField(modernName)
+                        .get(null);
+            } catch (ClassNotFoundException | NoSuchFieldException ignored) {
+                rule = (org.bukkit.GameRule<Boolean>) org.bukkit.GameRule.class
+                        .getField(legacyName)
+                        .get(null);
+            }
+            limbo.setGameRule(rule, value);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Unable to configure limbo game rule " + legacyName, exception);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setPvp(boolean value) {
+        try {
+            try {
+                var rule = (org.bukkit.GameRule<Boolean>) Class.forName("org.bukkit.GameRules")
+                        .getField("PVP")
+                        .get(null);
+                limbo.setGameRule(rule, value);
+            } catch (ClassNotFoundException | NoSuchFieldException ignored) {
+                World.class.getMethod("setPVP", boolean.class).invoke(limbo, value);
+            }
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException("Unable to configure limbo PVP", exception);
         }
     }
 
@@ -95,43 +132,91 @@ public final class AuthLimboPlugin extends JavaPlugin implements Listener {
         event.getPlayer().setVelocity(new Vector(0, 0, 0));
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onTeleport(PlayerTeleportEvent event) {
         if (event.getTo() == null || !event.getTo().getWorld().equals(limbo)) {
             event.setCancelled(true);
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBreak(BlockBreakEvent event) {
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlace(BlockPlaceEvent event) {
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteract(PlayerInteractEvent event) {
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onChat(AsyncChatEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInteractEntity(PlayerInteractEntityEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player) {
             event.setCancelled(true);
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onDamageEntity(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player
+                || event.getDamager() instanceof Projectile projectile
+                && projectile.getShooter() instanceof Player) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onDrop(PlayerDropItemEvent event) {
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventory(InventoryClickEvent event) {
         event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPickup(EntityPickupItemEvent event) {
+        if (event.getEntity() instanceof Player) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onSwapHands(PlayerSwapHandItemsEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onConsume(PlayerItemConsumeEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onProjectileLaunch(ProjectileLaunchEvent event) {
+        if (event.getEntity().getShooter() instanceof Player) {
+            event.setCancelled(true);
+        }
     }
 
     private void prepare(Player player) {

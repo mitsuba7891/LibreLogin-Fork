@@ -6,7 +6,6 @@
 
 package xyz.kyngs.librelogin.velocity;
 
-import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
@@ -78,9 +77,9 @@ public class VelocityListeners extends AuthenticListeners<VelocityLibreLogin, Pl
         super(plugin);
     }
 
-    @Subscribe(order = PostOrder.LAST)
+    @Subscribe(priority = -100)
     public void onPostLogin(PostLoginEvent event) {
-        onPostLogin(event.getPlayer(), null);
+        onPostLogin(event.getPlayer(), plugin.getUserSessionService().findPending(event.getPlayer().getUniqueId()));
     }
 
     @Subscribe
@@ -88,20 +87,27 @@ public class VelocityListeners extends AuthenticListeners<VelocityLibreLogin, Pl
         onPlayerDisconnect(event.getPlayer());
     }
 
-    @Subscribe(order = PostOrder.NORMAL)
+    @Subscribe
     public void onProfileRequest(GameProfileRequestEvent event) {
         var existing = event.getGameProfile();
 
         if (existing != null && plugin.fromFloodgate(existing.getId())) return;
 
-        var profile = plugin.getDatabaseProvider().getByName(event.getUsername());
+        var profile = plugin.getUserSessionService().findPending(event.getUsername());
+        if (profile == null) {
+            profile = plugin.getDatabaseProvider().getByName(event.getUsername());
+        }
+        if (profile == null) {
+            throw new IllegalStateException("No database profile was resolved for " + event.getUsername());
+        }
+        plugin.getUserSessionService().stage(profile);
 
         var gProfile = event.getOriginalProfile();
 
         event.setGameProfile(new GameProfile(profile.getUuid(), gProfile.getName(), gProfile.getProperties()));
     }
 
-    @Subscribe(order = PostOrder.LAST)
+    @Subscribe(priority = -100)
     public void onPreLogin(PreLoginEvent event) {
 
         if (!event.getResult().isAllowed())
@@ -123,14 +129,16 @@ public class VelocityListeners extends AuthenticListeners<VelocityLibreLogin, Pl
                     return; // Player is coming from Floodgate
                 }
             } catch (Exception e) {
-                plugin.getLogger().warn("Failed to check if player is coming from Floodgate.");
-                e.printStackTrace();
+                plugin.getLogger().warn("Failed to check if player is coming from Floodgate", e);
                 event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("Internal LibreLogin error")));
                 return;
             }
         }
 
         var result = onPreLogin(event.getUsername(), event.getConnection().getRemoteAddress().getAddress());
+        if (result.user() != null) {
+            plugin.getUserSessionService().stage(result.user());
+        }
 
         event.setResult(
                 switch (result.state()) {
@@ -145,7 +153,7 @@ public class VelocityListeners extends AuthenticListeners<VelocityLibreLogin, Pl
 
     }
 
-    @Subscribe(order = PostOrder.LAST)
+    @Subscribe(priority = -100)
     public void chooseServer(PlayerChooseInitialServerEvent event) {
         var server = chooseServer(event.getPlayer(), null, null);
 
@@ -158,7 +166,7 @@ public class VelocityListeners extends AuthenticListeners<VelocityLibreLogin, Pl
 
     }
 
-    @Subscribe(order = PostOrder.EARLY)
+    @Subscribe(priority = 50)
     public void onKick(KickedFromServerEvent event) {
         var reason = event.getServerKickReason().orElse(Component.text("Backend connection closed without a reason"));
         var message = plugin.getMessages().getMessage("info-kick").replaceText(builder -> builder.matchLiteral("%reason%").replacement(reason));
@@ -171,7 +179,8 @@ public class VelocityListeners extends AuthenticListeners<VelocityLibreLogin, Pl
                 event.setResult(KickedFromServerEvent.DisconnectPlayer.create(message));
             } else {
                 try {
-                    var server = plugin.getServerHandler().chooseLobbyServer(plugin.getDatabaseProvider().getByUUID(player.getUniqueId()), player, false, true);
+                    var user = plugin.getUserSessionService().findActiveOrLoad(player.getUniqueId());
+                    var server = plugin.getServerHandler().chooseLobbyServer(user, player, false, true);
 
                     if (server == null) throw new NoSuchElementException();
 

@@ -19,8 +19,9 @@ import xyz.kyngs.librelogin.common.util.GeneralUtil;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.SocketTimeoutException;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +49,7 @@ public class AuthenticPremiumProvider implements PremiumProvider {
 
     @Override
     public PremiumUser getUserForName(String name) throws PremiumException {
-        name = name.toLowerCase();
+        name = name.toLowerCase(java.util.Locale.ROOT);
 
         var exceptionToThrow = new PremiumException[1];
 
@@ -89,13 +90,13 @@ public class AuthenticPremiumProvider implements PremiumProvider {
     private PremiumUser getUserFromAshcon(String name) throws PremiumException {
         try {
             plugin.reportMainThread();
-            var connection = (HttpURLConnection) new URL("https://api.ashcon.app/mojang/v2/user/" + name).openConnection();
+            var connection = openConnection("https://api.ashcon.app/mojang/v2/user/" + name);
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
 
             switch (connection.getResponseCode()) {
                 case 200 -> {
-                    var data = AuthenticLibreLogin.GSON.fromJson(new InputStreamReader(connection.getInputStream()), JsonObject.class);
+                    var data = readJson(connection);
 
                     var uuid = data.get("uuid");
                     var username = data.get("username").getAsString();
@@ -118,13 +119,13 @@ public class AuthenticPremiumProvider implements PremiumProvider {
     private PremiumUser getUserFromPlayerDB(String name) throws PremiumException {
         try {
             plugin.reportMainThread();
-            var connection = (HttpURLConnection) new URL("https://playerdb.co/api/player/minecraft/" + name).openConnection();
+            var connection = openConnection("https://playerdb.co/api/player/minecraft/" + name);
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
 
             switch (connection.getResponseCode()) {
                 case 200 -> {
-                    var data = AuthenticLibreLogin.GSON.fromJson(new InputStreamReader(connection.getInputStream()), JsonObject.class);
+                    var data = readJson(connection);
 
                     var id = data.get("data").getAsJsonObject().get("player").getAsJsonObject().get("id").getAsString();
                     var username = data.get("data").getAsJsonObject().get("player").getAsJsonObject().get("username").getAsString();
@@ -151,13 +152,13 @@ public class AuthenticPremiumProvider implements PremiumProvider {
     private PremiumUser getUserFromMinetools(String name) throws PremiumException {
         try {
             plugin.reportMainThread();
-            var connection = (HttpURLConnection) new URL("https://api.minetools.eu/uuid/" + name).openConnection();
+            var connection = openConnection("https://api.minetools.eu/uuid/" + name);
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
 
             switch (connection.getResponseCode()) {
                 case 200 -> {
-                    var data = AuthenticLibreLogin.GSON.fromJson(new InputStreamReader(connection.getInputStream()), JsonObject.class);
+                    var data = readJson(connection);
 
                     var rawId = data.get("id");
                     if (rawId == null || rawId.isJsonNull()) {
@@ -198,7 +199,7 @@ public class AuthenticPremiumProvider implements PremiumProvider {
     private PremiumUser getUserFromMojang(String name) throws PremiumException {
         try {
             plugin.reportMainThread();
-            var connection = (HttpURLConnection) new URL("https://api.mojang.com/users/profiles/minecraft/" + name).openConnection();
+            var connection = openConnection("https://api.mojang.com/users/profiles/minecraft/" + name);
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(5000);
 
@@ -207,7 +208,7 @@ public class AuthenticPremiumProvider implements PremiumProvider {
                         throw new PremiumException(PremiumException.Issue.THROTTLED, GeneralUtil.readInput(connection.getErrorStream()));
                 case 204, 404 -> null;
                 case 200 -> {
-                    var data = AuthenticLibreLogin.GSON.fromJson(new InputStreamReader(connection.getInputStream()), JsonObject.class);
+                    var data = readJson(connection);
 
                     var id = data.get("id").getAsString();
                     var demo = data.get("demo");
@@ -240,14 +241,14 @@ public class AuthenticPremiumProvider implements PremiumProvider {
     public PremiumUser getUserForUUID(UUID uuid) throws PremiumException {
         try {
             plugin.reportMainThread();
-            var connection = (HttpURLConnection) new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.toString()).openConnection();
+            var connection = openConnection("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid);
 
             return switch (connection.getResponseCode()) {
                 case 429 ->
                         throw new PremiumException(PremiumException.Issue.THROTTLED, GeneralUtil.readInput(connection.getErrorStream()));
                 case 204, 404 -> null;
                 case 200 -> {
-                    var data = AuthenticLibreLogin.GSON.fromJson(new InputStreamReader(connection.getInputStream()), JsonObject.class);
+                    var data = readJson(connection);
 
                     var name = data.get("name").getAsString();
 
@@ -260,6 +261,20 @@ public class AuthenticPremiumProvider implements PremiumProvider {
             };
         } catch (IOException e) {
             throw new PremiumException(PremiumException.Issue.UNDEFINED, e);
+        }
+    }
+
+    private HttpURLConnection openConnection(String url) throws IOException {
+        var connection = (HttpURLConnection) URI.create(url).toURL().openConnection();
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+        return connection;
+    }
+
+    private JsonObject readJson(HttpURLConnection connection) throws IOException {
+        try (var input = connection.getInputStream();
+             var reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
+            return AuthenticLibreLogin.GSON.fromJson(reader, JsonObject.class);
         }
     }
 }

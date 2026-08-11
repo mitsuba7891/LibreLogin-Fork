@@ -68,8 +68,18 @@ public class CryptoUtil {
         var iterations = Integer.parseInt(split[1]);
         var memory = Integer.parseInt(split[2]);
 
+        if (iterations < 1 || iterations > 16 || memory < 1024 || memory > 256 * 1024) {
+            throw new IllegalArgumentException("Argon2 parameters are outside the accepted safety bounds");
+        }
+        if (password.salt() == null || password.salt().length() > 128 || extracted.value().length() > 256) {
+            throw new IllegalArgumentException("Argon2 hash encoding is malformed");
+        }
+
         var salt = Base64.getDecoder().decode(password.salt());
         var hash = Base64.getDecoder().decode(extracted.value());
+        if (salt.length < 8 || salt.length > 64 || hash.length < 16 || hash.length > 128) {
+            throw new IllegalArgumentException("Argon2 salt or hash length is outside the accepted safety bounds");
+        }
 
         return new Argon2IDHashedPassword(hash, new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
                 .withVersion(version)

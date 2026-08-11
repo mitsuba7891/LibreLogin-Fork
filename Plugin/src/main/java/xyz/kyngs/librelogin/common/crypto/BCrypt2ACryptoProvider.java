@@ -15,9 +15,9 @@ import javax.annotation.Nullable;
 
 public class BCrypt2ACryptoProvider implements CryptoProvider {
 
-    public static final BCrypt.Hasher HASHER = BCrypt
+    private static final BCrypt.Hasher HASHER = BCrypt
             .with(BCrypt.Version.VERSION_2A);
-    public static final BCrypt.Verifyer VERIFIER = BCrypt
+    private static final BCrypt.Verifyer VERIFIER = BCrypt
             .verifyer(BCrypt.Version.VERSION_2A);
 
     @Override

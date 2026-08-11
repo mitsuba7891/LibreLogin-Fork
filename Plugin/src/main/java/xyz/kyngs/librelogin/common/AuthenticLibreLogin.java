@@ -10,6 +10,7 @@ import co.aikar.commands.CommandIssuer;
 import co.aikar.commands.CommandManager;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -57,19 +58,22 @@ import xyz.kyngs.librelogin.common.event.AuthenticEventProvider;
 import xyz.kyngs.librelogin.common.image.AuthenticImageProjector;
 import xyz.kyngs.librelogin.common.integration.FloodgateIntegration;
 import xyz.kyngs.librelogin.common.integration.luckperms.LuckPermsIntegration;
-import xyz.kyngs.librelogin.common.listener.LoginTryListener;
 import xyz.kyngs.librelogin.common.log.Log4JFilter;
 import xyz.kyngs.librelogin.common.log.SimpleLogFilter;
 import xyz.kyngs.librelogin.common.mail.AuthenticEMailHandler;
 import xyz.kyngs.librelogin.common.migrate.*;
 import xyz.kyngs.librelogin.common.premium.AuthenticPremiumProvider;
 import xyz.kyngs.librelogin.common.server.AuthenticServerHandler;
+import xyz.kyngs.librelogin.common.security.AuthenticationAttemptLimiter;
+import xyz.kyngs.librelogin.common.security.PasswordService;
+import xyz.kyngs.librelogin.common.session.UserSessionService;
 import xyz.kyngs.librelogin.common.totp.AuthenticTOTPProvider;
 import xyz.kyngs.librelogin.common.util.CancellableTask;
 import xyz.kyngs.librelogin.common.util.GeneralUtil;
 
 import java.io.*;
-import java.net.URL;
+import java.net.URI;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
@@ -96,7 +100,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
     private final Map<Class<?>, DatabaseConnectorRegistration<?, ?>> databaseConnectors;
     private final Multimap<P, CancellableTask> cancelOnExit;
     private final PlatformHandle<P, S> platformHandle;
-    private final Set<String> forbiddenPasswords;
+    private volatile Set<String> forbiddenPasswords;
     protected Logger logger;
     private AuthenticPremiumProvider premiumProvider;
     private AuthenticEventProvider<P, S> eventProvider;
@@ -113,15 +117,17 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
     private ReadWriteDatabaseProvider databaseProvider;
     private DatabaseConnector<?, ?> databaseConnector;
     private AuthenticEMailHandler eMailHandler;
-    private LoginTryListener<P, S> loginTryListener;
+    private AuthenticationAttemptLimiter<P, S> authenticationAttemptLimiter;
+    private PasswordService passwordService;
+    private UserSessionService userSessionService;
 
     protected AuthenticLibreLogin() {
         cryptoProviders = new ConcurrentHashMap<>();
         readProviders = new ConcurrentHashMap<>();
         databaseConnectors = new ConcurrentHashMap<>();
         platformHandle = providePlatformHandle();
-        forbiddenPasswords = new HashSet<>();
-        cancelOnExit = HashMultimap.create();
+        forbiddenPasswords = Set.of();
+        cancelOnExit = Multimaps.synchronizedSetMultimap(HashMultimap.create());
     }
 
     public Map<Class<?>, DatabaseConnectorRegistration<?, ?>> getDatabaseConnectors() {
@@ -269,13 +275,20 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
 
         loadConfigs();
 
+        if (getDefaultCryptoProvider() == null) {
+            logger.error("Unknown password hashing provider '%s'; refusing to start"
+                    .formatted(configuration.get(DEFAULT_CRYPTO_PROVIDER)));
+            shutdownProxy(1);
+            return;
+        }
+
         logger.info("Loading forbidden passwords...");
 
+        boolean refreshForbiddenPasswords = false;
         try {
-            loadForbiddenPasswords();
+            refreshForbiddenPasswords = loadForbiddenPasswords();
         } catch (IOException e) {
-            e.printStackTrace();
-            logger.info("An unknown exception occurred while attempting to load the forbidden passwords, this most likely isn't your fault");
+            logger.error("Failed to load the forbidden-password list", e);
             shutdownProxy(1);
         }
 
@@ -283,9 +296,12 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
 
         connectToDB();
 
+        passwordService = new PasswordService(this);
+        userSessionService = new UserSessionService(this);
+
         serverHandler = new AuthenticServerHandler<>(this);
 
-        this.loginTryListener = new LoginTryListener<>(this);
+        authenticationAttemptLimiter = new AuthenticationAttemptLimiter<>(this);
 
         // Moved to a different class to avoid class loading issues
         GeneralUtil.checkAndMigrate(configuration, logger, this);
@@ -314,7 +330,10 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
             initMetrics();
         }
 
-        delay(this::checkForUpdates, 1000);
+        delay(() -> executeAsync("checking for updates", this::checkForUpdates), 1000);
+        if (refreshForbiddenPasswords) {
+            executeAsync("refreshing the forbidden-password list", this::refreshForbiddenPasswords);
+        }
 
         if (pluginPresent("floodgate")) {
             logger.info("Floodgate detected, enabling bedrock support...");
@@ -332,7 +351,9 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
     }
 
     public <C extends DatabaseConnector<?, ?>> DatabaseConnectorRegistration<?, C> getDatabaseConnector(Class<C> clazz) {
-        return (DatabaseConnectorRegistration<?, C>) databaseConnectors.get(clazz);
+        @SuppressWarnings("unchecked")
+        var registration = (DatabaseConnectorRegistration<?, C>) databaseConnectors.get(clazz);
+        return registration;
     }
 
     private void connectToDB() {
@@ -403,8 +424,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         try {
             messages.reload(this);
         } catch (IOException e) {
-            e.printStackTrace();
-            logger.info("An unknown exception occurred while attempting to load the messages, this most likely isn't your fault");
+            logger.error("Failed to load messages", e);
             shutdownProxy(1);
         } catch (CorruptedConfigurationException e) {
             var cause = GeneralUtil.getFurthestCause(e);
@@ -440,8 +460,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            logger.info("An unknown exception occurred while attempting to load the configuration, this most likely isn't your fault");
+            logger.error("Failed to load configuration", e);
             shutdownProxy(1);
         } catch (CorruptedConfigurationException e) {
             var cause = GeneralUtil.getFurthestCause(e);
@@ -571,46 +590,70 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
                 "logit-mysql",
                 MySQLDatabaseConnector.class
         ));
-        // Currently disabled as crazylogin stores all names in lowercase
-        /*registerReadProvider(new ReadDatabaseProviderRegistration<>(
-                connector -> new CrazyLoginSQLMigrateReadProvider(configuration.get(MIGRATION_MYSQL_OLD_DATABASE_TABLE), logger, connector),
-                "crazylogin-mysql",
-                MySQLDatabaseConnector.class
-        ));*/
     }
 
-    private void loadForbiddenPasswords() throws IOException {
+    /**
+     * Loads local password policy data without performing network I/O. The
+     * return value indicates that the bundled bootstrap list was used and a
+     * background refresh should be scheduled once the plugin is enabled.
+     */
+    private boolean loadForbiddenPasswords() throws IOException {
         var file = new File(getDataFolder(), "forbidden-passwords.txt");
+        var createdFromTemplate = false;
 
         if (!file.exists()) {
-            logger.info("Forbidden passwords list doesn't exist, downloading...");
-            try (BufferedInputStream in = new BufferedInputStream(new URL("https://raw.githubusercontent.com/kyngs/LibreLogin/dev/forbidden-passwords.txt").openStream())) {
-                if (!file.createNewFile()) {
-                    throw new IOException("Failed to create file");
+            logger.info("Forbidden passwords list doesn't exist; using bundled policy until the background refresh completes");
+            try (var template = getResourceAsStream("forbidden-passwords-template.txt")) {
+                if (template == null) {
+                    throw new IOException("Bundled forbidden-password template is missing");
                 }
-                try (var fos = new FileOutputStream(file)) {
-                    var dataBuffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
-                        fos.write(dataBuffer, 0, bytesRead);
-                    }
-                }
-                logger.info("Successfully downloaded forbidden passwords list");
-            } catch (IOException e) {
-                e.printStackTrace();
-                logger.warn("Failed to download forbidden passwords list, using template instead");
-                Files.copy(getResourceAsStream("forbidden-passwords-template.txt"), file.toPath());
+                Files.copy(template, file.toPath());
             }
+            createdFromTemplate = true;
         }
 
-        try (var reader = new BufferedReader(new FileReader(file))) {
+        forbiddenPasswords = readForbiddenPasswords(file);
+        return createdFromTemplate;
+    }
+
+    private Set<String> readForbiddenPasswords(File file) throws IOException {
+        var loaded = new HashSet<String>();
+        try (var reader = Files.newBufferedReader(file.toPath())) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("# ")) {
+                var candidate = line.strip();
+                if (candidate.isEmpty() || candidate.startsWith("#")) {
                     continue;
                 }
-                forbiddenPasswords.add(line.toUpperCase(Locale.ROOT));
+                loaded.add(candidate.toUpperCase(Locale.ROOT));
             }
+        }
+        return Set.copyOf(loaded);
+    }
+
+    private void refreshForbiddenPasswords() {
+        var target = new File(getDataFolder(), "forbidden-passwords.txt").toPath();
+        try {
+            URLConnection connection = URI.create("https://raw.githubusercontent.com/kyngs/LibreLogin/dev/forbidden-passwords.txt")
+                    .toURL()
+                    .openConnection();
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(15000);
+
+            var temporary = Files.createTempFile(target.getParent(), "forbidden-passwords-", ".tmp");
+            try {
+                try (var input = new BufferedInputStream(connection.getInputStream())) {
+                    Files.copy(input, temporary, StandardCopyOption.REPLACE_EXISTING);
+                }
+                var refreshed = readForbiddenPasswords(temporary.toFile());
+                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+                forbiddenPasswords = refreshed;
+                logger.info("Forbidden passwords list refreshed (%s entries)".formatted(refreshed.size()));
+            } finally {
+                Files.deleteIfExists(temporary);
+            }
+        } catch (IOException e) {
+            logger.warn("Failed to refresh the forbidden-password list; keeping the bundled policy", e);
         }
     }
 
@@ -618,15 +661,19 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         logger.info("Checking for updates...");
 
         try {
-            var connection = new URL("https://api.github.com/repos/kyngs/LibreLogin/releases").openConnection();
+            var connection = URI.create("https://api.github.com/repos/kyngs/LibreLogin/releases")
+                    .toURL()
+                    .openConnection();
 
             connection.setRequestProperty("User-Agent", "LibreLogin");
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(10000);
 
-            var in = connection.getInputStream();
-
-            var root = GSON.fromJson(new InputStreamReader(in), JsonArray.class);
-
-            in.close(); //Not the safest way, but a slight leak isn't a big deal
+            JsonArray root;
+            try (var in = connection.getInputStream();
+                 var reader = new InputStreamReader(in)) {
+                root = GSON.fromJson(reader, JsonArray.class);
+            }
 
             List<Release> behind = new ArrayList<>();
             SemanticVersion latest = null;
@@ -680,8 +727,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
             try {
                 databaseConnector.disconnect();
             } catch (Exception e) {
-                e.printStackTrace();
-                logger.error("Failed to disconnect from database, ignoring...");
+                logger.error("Failed to disconnect from database", e);
             }
         }
         if (luckpermsApi != null) {
@@ -774,25 +820,54 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         return eventProvider;
     }
 
-    public LoginTryListener<P, S> getLoginTryListener() {
-        return loginTryListener;
+    public AuthenticationAttemptLimiter<P, S> getAuthenticationAttemptLimiter() {
+        return authenticationAttemptLimiter;
+    }
+
+    public PasswordService getPasswordService() {
+        return passwordService;
+    }
+
+    public UserSessionService getUserSessionService() {
+        return userSessionService;
+    }
+
+    public void executeAsync(String operation, Runnable task) {
+        GeneralUtil.runAsync(task).exceptionally(throwable -> {
+            logger.error("Failed while " + operation, throwable);
+            return null;
+        });
     }
 
     public void onExit(P player) {
-        cancelOnExit.removeAll(player).forEach(CancellableTask::cancel);
-        if (configuration.get(REMEMBER_LAST_SERVER)) {
-            var server = platformHandle.getPlayersServerName(player);
-            if (server == null) return;
-            var user = databaseProvider.getByUUID(platformHandle.getUUIDForPlayer(player));
-            if (user != null && !getConfiguration().get(LIMBO).contains(server)) {
-                user.setLastServer(server);
-                databaseProvider.updateUser(user);
-            }
+        synchronized (cancelOnExit) {
+            cancelOnExit.removeAll(player).forEach(CancellableTask::cancel);
         }
+
+        var uuid = platformHandle.getUUIDForPlayer(player);
+        userSessionService.disconnect(uuid);
+
+        if (!configuration.get(REMEMBER_LAST_SERVER)) {
+            return;
+        }
+
+        var server = platformHandle.getPlayersServerName(player);
+        if (server == null || getConfiguration().get(LIMBO).contains(server)) {
+            return;
+        }
+
+        executeAsync("persisting a disconnected player's last server", () -> {
+            var user = databaseProvider.getByUUID(uuid);
+            if (user == null) return;
+            user.setLastServer(server);
+            databaseProvider.updateUser(user);
+        });
     }
 
     public void cancelOnExit(CancellableTask task, P player) {
-        cancelOnExit.put(player, task);
+        synchronized (cancelOnExit) {
+            cancelOnExit.put(player, task);
+        }
     }
 
     public boolean floodgateEnabled() {
@@ -819,14 +894,23 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
 
     public abstract Audience getAudienceFromIssuer(CommandIssuer issuer);
 
+    /**
+     * Executes platform object mutations on the thread required by the
+     * platform. Velocity currently permits direct execution; Bukkit/Paper
+     * player and world mutations are marshalled to the primary thread.
+     */
+    public abstract void executeOnPlatformThread(Runnable runnable);
+
     protected boolean mainThread() {
         return false;
     }
 
     public void reportMainThread() {
         if (mainThread()) {
-            logger.error("AN IO OPERATION IS BEING PERFORMED ON THE MAIN THREAD! THIS IS A SERIOUS BUG!, PLEASE REPORT IT TO THE DEVELOPER OF THE PLUGIN AND ATTACH THE STACKTRACE BELOW!");
-            new Throwable().printStackTrace();
+            logger.error(
+                    "An I/O operation is being performed on the Paper primary thread",
+                    new IllegalStateException("Primary-thread I/O call site")
+            );
         }
     }
 

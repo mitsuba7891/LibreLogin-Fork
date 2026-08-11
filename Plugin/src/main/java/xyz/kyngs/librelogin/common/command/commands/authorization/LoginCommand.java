@@ -32,19 +32,13 @@ public class LoginCommand<P> extends AuthorizationCommand<P> {
             var user = getUser(player);
             if (!user.isRegistered()) throw new InvalidCommandArgument(getMessage("error-not-registered"));
 
+            if (plugin.getAuthenticationAttemptLimiter().isBlocked(user.getUuid())) {
+                throw new InvalidCommandArgument(getMessage("error-throttle"));
+            }
+
             sender.sendMessage(getMessage("info-logging-in"));
 
-            var hashed = user.getHashedPassword();
-            var crypto = getCrypto(hashed);
-
-            if (crypto == null) throw new InvalidCommandArgument(getMessage("error-password-corrupted"));
-
-            if (!crypto.matches(password, hashed)) {
-                plugin.getEventProvider()
-                        .unsafeFire(plugin.getEventTypes().wrongPassword,
-                                new AuthenticWrongPasswordEvent<>(user, player, plugin, AuthenticationSource.LOGIN));
-                throw new InvalidCommandArgument(getMessage("error-password-wrong"));
-            }
+            requirePassword(user, player, password, AuthenticationSource.LOGIN);
 
             var secret = user.getSecret();
 
@@ -59,13 +53,12 @@ public class LoginCommand<P> extends AuthorizationCommand<P> {
                     try {
                         parsedCode = Integer.parseInt(code.trim().replace(" ", ""));
                     } catch (NumberFormatException e) {
+                        recordWrongCredential(user, player, AuthenticationSource.TOTP);
                         throw new InvalidCommandArgument(getMessage("totp-wrong"));
                     }
 
                     if (!totp.verify(parsedCode, secret)) {
-                        plugin.getEventProvider()
-                                .unsafeFire(plugin.getEventTypes().wrongPassword,
-                                        new AuthenticWrongPasswordEvent<>(user, player, plugin, AuthenticationSource.TOTP));
+                        recordWrongCredential(user, player, AuthenticationSource.TOTP);
                         throw new InvalidCommandArgument(getMessage("totp-wrong"));
                     }
                 }
@@ -74,6 +67,15 @@ public class LoginCommand<P> extends AuthorizationCommand<P> {
             sender.sendMessage(getMessage("info-logged-in"));
             getAuthorizationProvider().authorize(user, player, AuthenticatedEvent.AuthenticationReason.LOGIN);
         });
+    }
+
+    private void recordWrongCredential(xyz.kyngs.librelogin.api.database.User user,
+                                       P player,
+                                       AuthenticationSource source) {
+        plugin.getEventProvider().unsafeFire(
+                plugin.getEventTypes().wrongPassword,
+                new AuthenticWrongPasswordEvent<>(user, player, plugin, source)
+        );
     }
 
 }

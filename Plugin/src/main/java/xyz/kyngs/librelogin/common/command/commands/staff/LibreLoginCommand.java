@@ -21,10 +21,12 @@ import xyz.kyngs.librelogin.common.event.events.AuthenticPremiumLoginSwitchEvent
 import xyz.kyngs.librelogin.common.util.GeneralUtil;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -70,22 +72,14 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
 
             var dumpFolder = new File(plugin.getDataFolder(), "dumps");
 
-            if (!dumpFolder.exists()) {
-                dumpFolder.mkdirs();
+            try {
+                Files.createDirectories(dumpFolder.toPath());
+            } catch (IOException e) {
+                plugin.getLogger().error("Failed to create the diagnostics dump directory", e);
+                throw new InvalidCommandArgument(getMessage("error-unknown"));
             }
 
             var dumpFile = new File(dumpFolder, "dump-%date%.json".replace("%date%", DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss").format(LocalDateTime.now())));
-
-            if (dumpFile.exists()) {
-                dumpFile.delete();
-            }
-
-            try {
-                dumpFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new InvalidCommandArgument(getMessage("error-unknown"));
-            }
 
             var dump = new JsonObject();
 
@@ -142,10 +136,15 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
 
             dump.add("server", server);
 
-            try (var writer = new FileWriter(dumpFile)) {
+            try (var writer = Files.newBufferedWriter(
+                    dumpFile.toPath(),
+                    StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING
+            )) {
                 writer.write(GSON.toJson(dump));
             } catch (IOException e) {
-                e.printStackTrace();
+                plugin.getLogger().error("Failed to write the diagnostics dump", e);
                 throw new InvalidCommandArgument(getMessage("error-unknown"));
             }
 
@@ -162,7 +161,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
             try {
                 plugin.getConfiguration().reload(plugin);
             } catch (IOException e) {
-                e.printStackTrace();
+                plugin.getLogger().error("Failed to reload configuration", e);
                 throw new InvalidCommandArgument(getMessage("error-unknown"));
             } catch (CorruptedConfigurationException e) {
                 var cause = GeneralUtil.getFurthestCause(e);
@@ -184,7 +183,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
             try {
                 plugin.getMessages().reload(plugin);
             } catch (IOException e) {
-                e.printStackTrace();
+                plugin.getLogger().error("Failed to reload messages", e);
                 throw new InvalidCommandArgument(getMessage("error-unknown"));
             } catch (CorruptedConfigurationException e) {
                 var cause = GeneralUtil.getFurthestCause(e);
@@ -228,7 +227,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
             throw new InvalidCommandArgument(plugin.getMessages().getMessage("error-not-paid"));
         }
 
-        // Users are stupid, and sometimes they connect with a differently cased name than the one they registered with at Mojang
+        // Mojang names are case-sensitive for this ownership check.
         if (id == null || !id.name().equals(user.getLastNickname())) {
             throw new InvalidCommandArgument(plugin.getMessages().getMessage("error-not-paid"));
         }

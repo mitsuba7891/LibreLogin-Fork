@@ -9,6 +9,7 @@ package xyz.kyngs.librelogin.paper;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -16,16 +17,20 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.*;
 import xyz.kyngs.librelogin.api.authorization.AuthorizationProvider;
 import xyz.kyngs.librelogin.api.server.ServerHandler;
 import xyz.kyngs.librelogin.common.config.HoconPluginConfiguration;
 
 import static xyz.kyngs.librelogin.common.config.ConfigurationKeys.ALLOWED_COMMANDS_WHILE_UNAUTHORIZED;
+import static xyz.kyngs.librelogin.common.util.CommandLineUtil.root;
 
 public class Blockers implements Listener {
 
@@ -53,7 +58,7 @@ public class Blockers implements Listener {
         return !authorizationProvider.isAuthorized(player) || authorizationProvider.isAwaiting2FA(player);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onTeleport(PlayerTeleportEvent event) {
         if (inLimbo(event.getPlayer())) {
             event.setCancelled(true);
@@ -64,91 +69,130 @@ public class Blockers implements Listener {
         }
     }
 
-    @EventHandler(priority = org.bukkit.event.EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onChat(AsyncChatEvent event) {
         cancelIfNeeded(event);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onCommand(PlayerCommandPreprocessEvent event) {
         if (authorizationProvider.isAuthorized(event.getPlayer()) && !authorizationProvider.isAwaiting2FA(event.getPlayer()))
             return;
 
-        var command = event.getMessage().substring(1).split(" ")[0];
+        var command = root(event.getMessage());
 
         for (String allowed : configuration.get(ALLOWED_COMMANDS_WHILE_UNAUTHORIZED)) {
-            if (command.equals(allowed)) return;
+            if (command.equals(root(allowed))) return;
         }
 
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onMove(PlayerMoveEvent event) {
         if (!event.hasChangedPosition()) return;
         cancelIfNeeded(event);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
         cancelIfNeeded(event.getPlayer(), event);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPlace(BlockPlaceEvent event) {
         cancelIfNeeded(event.getPlayer(), event);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player player) {
             cancelIfNeeded(player, event);
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onDamageEntity(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player player) {
+            cancelIfNeeded(player, event);
+        } else if (event.getDamager() instanceof Projectile projectile
+                && projectile.getShooter() instanceof Player player) {
+            cancelIfNeeded(player, event);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteract(PlayerInteractEvent event) {
         cancelIfNeeded(event);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onInteractEntity(PlayerInteractEntityEvent event) {
+        cancelIfNeeded(event);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityTarget(EntityTargetEvent event) {
         if (event.getTarget() instanceof Player player) {
             cancelIfNeeded(player, event);
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onProjectileLaunch(ProjectileLaunchEvent event) {
         if (event.getEntity().getShooter() instanceof Player player) {
             cancelIfNeeded(player, event);
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onShootBow(EntityShootBowEvent event) {
         if (event.getEntity() instanceof Player player) {
             cancelIfNeeded(player, event);
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onJoin(PlayerJoinEvent event) {
         if (inLimbo(event.getPlayer())) {
             event.getPlayer().setInvisible(true);
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onDrop(PlayerDropItemEvent event) {
         cancelIfNeeded(event);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onClick(InventoryClickEvent event) {
         if (event.getWhoClicked() instanceof Player player) {
             cancelIfNeeded(player, event);
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onDrag(InventoryDragEvent event) {
+        if (event.getWhoClicked() instanceof Player player) {
+            cancelIfNeeded(player, event);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPickup(EntityPickupItemEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            cancelIfNeeded(player, event);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onSwapHands(PlayerSwapHandItemsEvent event) {
+        cancelIfNeeded(event);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onConsume(PlayerItemConsumeEvent event) {
+        cancelIfNeeded(event);
     }
 
 }

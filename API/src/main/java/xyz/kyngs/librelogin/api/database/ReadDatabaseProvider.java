@@ -55,4 +55,15 @@ public interface ReadDatabaseProvider {
      */
     Collection<User> getByIP(String ip);
 
+    /**
+     * Counts profiles associated with an IP address. Providers should
+     * override this with a native count query when possible.
+     *
+     * @param ip IP address.
+     * @return number of matching profiles.
+     */
+    default long countByIP(String ip) {
+        return getByIP(ip).size();
+    }
+
 }

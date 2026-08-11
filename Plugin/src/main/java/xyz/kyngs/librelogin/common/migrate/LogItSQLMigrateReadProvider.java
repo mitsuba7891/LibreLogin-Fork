@@ -26,9 +26,8 @@ public class LogItSQLMigrateReadProvider extends SQLMigrateReadProvider {
     @Override
     public Collection<User> getAllUsers() {
         return connector.runQuery(connection -> {
-            var ps = connection.prepareStatement("SELECT * FROM %s".formatted(tableName));
-
-            var rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT * FROM %s".formatted(tableName));
+                 var rs = ps.executeQuery()) {
 
             var users = new HashSet<User>();
 
@@ -73,11 +72,12 @@ public class LogItSQLMigrateReadProvider extends SQLMigrateReadProvider {
                     );
 
                 } catch (Exception e) {
-                    logger.error("Failed to read user from LogIt db, omitting");
+                    logger.error("Failed to read a user from the LogIt database; omitting it", e);
                 }
             }
 
-            return users;
+                return users;
+            }
         });
     }
 }

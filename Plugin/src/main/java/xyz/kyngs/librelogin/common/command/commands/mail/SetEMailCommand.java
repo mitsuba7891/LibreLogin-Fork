@@ -13,7 +13,7 @@ import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
 import xyz.kyngs.librelogin.common.authorization.AuthenticAuthorizationProvider;
 import xyz.kyngs.librelogin.common.command.InvalidCommandArgument;
 import xyz.kyngs.librelogin.common.config.ConfigurationKeys;
-import xyz.kyngs.librelogin.common.event.events.AuthenticWrongPasswordEvent;
+import xyz.kyngs.librelogin.common.security.PasswordService;
 import xyz.kyngs.librelogin.common.util.GeneralUtil;
 import xyz.kyngs.librelogin.common.util.RateLimiter;
 
@@ -37,14 +37,9 @@ public class SetEMailCommand<P> extends EMailCommand<P> {
         return runAsync(() -> {
             var user = getUser(player);
 
-            var hashed = user.getHashedPassword();
-            var crypto = getCrypto(hashed);
-
-            if (!crypto.matches(password, hashed)) {
-                plugin.getEventProvider()
-                        .unsafeFire(plugin.getEventTypes().wrongPassword,
-                                new AuthenticWrongPasswordEvent<>(user, player, plugin, AuthenticationSource.SET_EMAIL));
-                throw new InvalidCommandArgument(getMessage("error-password-wrong"));
+            var verification = requirePassword(user, player, password, AuthenticationSource.SET_EMAIL);
+            if (verification == PasswordService.VerificationResult.VALID_AND_UPGRADED) {
+                getDatabaseProvider().updateUser(user);
             }
 
             if (limiter.tryAndLimit(uuid)) {
@@ -60,8 +55,7 @@ public class SetEMailCommand<P> extends EMailCommand<P> {
                 getAuthorizationProvider().getEmailConfirmCache().put(uuid, new AuthenticAuthorizationProvider.EmailVerifyData(mail, token, uuid));
             } catch (Exception e) {
                 if (plugin.getConfiguration().get(ConfigurationKeys.DEBUG)) {
-                    getLogger().debug("Cannot send verification mail to " + mail + " for " + player);
-                    e.printStackTrace();
+                    getLogger().debug("Cannot send verification mail (" + e.getClass().getSimpleName() + ")");
                 }
                 throw new InvalidCommandArgument(getMessage("error-mail-not-sent"));
             }

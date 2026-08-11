@@ -66,17 +66,20 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
                         var onLimbo = currentServer != null
                                 && plugin.getConfiguration().get(ConfigurationKeys.LIMBO).contains(currentServer);
                         if (!onLimbo) {
-                            plugin.getLogger().debug("Skipping 2FA QR projection for " + player
+                            plugin.getLogger().debug("Skipping 2FA QR projection for "
+                                    + plugin.getPlatformHandle().getUsernameForPlayer(player)
                                     + ": player is no longer on a limbo server (current=" + currentServer + ")");
                             return;
                         }
 
                         imageProjector.project(data.qr(), player);
-                        plugin.getLogger().debug("2FA QR projected for " + player);
+                        plugin.getLogger().debug("2FA QR projected for "
+                                + plugin.getPlatformHandle().getUsernameForPlayer(player));
                     } catch (Throwable throwable) {
                         // QR delivery must never tear down the player's login
                         // connection. The manual secret/URI remains usable.
-                        plugin.getLogger().debug("2FA QR projection failed for " + player, throwable);
+                        plugin.getLogger().debug("2FA QR projection failed for "
+                                + plugin.getPlatformHandle().getUsernameForPlayer(player), throwable);
                     }
 
                     sender.sendMessage(getMessage("totp-show-info"));

@@ -23,7 +23,6 @@ import xyz.kyngs.librelogin.common.event.events.AuthenticAuthenticatedEvent;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -86,29 +85,37 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
 
     @Override
     public void authorize(User user, P player, AuthenticatedEvent.AuthenticationReason reason) {
-        if (isAuthorized(player)) {
+        if (!unAuthorized.containsKey(player)) {
             throw new IllegalStateException("Player is already authorized");
         }
-        stopTracking(player);
 
         user.setLastAuthentication(Timestamp.valueOf(LocalDateTime.now()));
-        user.setIp(platformHandle.getIP(player));
         plugin.getDatabaseProvider().updateUser(user);
+        if (unAuthorized.remove(player) == null) {
+            throw new IllegalStateException("Player authorization was completed concurrently");
+        }
 
-        var audience = platformHandle.getAudienceForPlayer(player);
+        plugin.executeOnPlatformThread(() -> {
+            var audience = platformHandle.getAudienceForPlayer(player);
+            if (audience == null) return;
 
-        audience.clearTitle();
-        audience.sendActionBar(Component.empty());
-        plugin.getEventProvider().fire(plugin.getEventTypes().authenticated, new AuthenticAuthenticatedEvent<>(user, player, plugin, reason));
-        plugin.authorize(player, user, audience);
+            audience.clearTitle();
+            audience.sendActionBar(Component.empty());
+            plugin.getEventProvider().fire(
+                    plugin.getEventTypes().authenticated,
+                    new AuthenticAuthenticatedEvent<>(user, player, plugin, reason)
+            );
+            plugin.authorize(player, user, audience);
+        });
     }
 
     @Override
     public boolean confirmTwoFactorAuth(P player, Integer code, User user) {
         var secret = awaiting2FA.get(player);
-        if (plugin.getTOTPProvider().verify(code, secret)) {
+        if (secret != null && plugin.getTOTPProvider().verify(code, secret)) {
             user.setSecret(secret);
             plugin.getDatabaseProvider().updateUser(user);
+            awaiting2FA.remove(player, secret);
             return true;
         }
         return false;
@@ -137,12 +144,11 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
     }
 
     private void broadcastActionbars() {
-        var wrong = new HashSet<P>();
         unAuthorized.forEach((player, user) -> {
             var audience = platformHandle.getAudienceForPlayer(player);
 
             if (audience == null) {
-                wrong.add(player);
+                unAuthorized.remove(player, user);
                 return;
             }
 
@@ -151,8 +157,6 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
             }
 
         });
-
-        wrong.forEach(unAuthorized::remove);
     }
 
     private void sendActionBar(User user, Audience audience) {
@@ -202,20 +206,17 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
     }
 
     public void notifyUnauthorized() {
-        var wrong = new HashSet<P>();
         unAuthorized.forEach((player, user) -> {
             var audience = platformHandle.getAudienceForPlayer(player);
 
             if (audience == null) {
-                wrong.add(player);
+                unAuthorized.remove(player, user);
                 return;
             }
 
             sendInfoMessage(player, user, audience);
 
         });
-
-        wrong.forEach(unAuthorized::remove);
     }
 
     public record EmailVerifyData(String email, String token, UUID uuid) {

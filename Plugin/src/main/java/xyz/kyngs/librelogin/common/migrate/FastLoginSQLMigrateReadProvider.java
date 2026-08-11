@@ -32,9 +32,8 @@ public class FastLoginSQLMigrateReadProvider extends SQLMigrateReadProvider {
     @Override
     public Collection<User> getAllUsers() {
         return connector.runQuery(connection -> {
-            var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
-
-            var rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
+                 var rs = ps.executeQuery()) {
 
             Multimap<UUID, String> premiumUsers = HashMultimap.create();
 
@@ -80,8 +79,7 @@ public class FastLoginSQLMigrateReadProvider extends SQLMigrateReadProvider {
                                     throw new RuntimeException(interruptedException); //Probably should not continue when interrupted
                                 }
                             } else {
-                                logger.error("Cannot contact mojang to find the owner, omitting");
-                                e.printStackTrace();
+                                logger.error("Cannot contact Mojang to find the FastLogin profile owner; omitting it", e);
                                 break;
                             }
                         }
@@ -114,15 +112,17 @@ public class FastLoginSQLMigrateReadProvider extends SQLMigrateReadProvider {
                 if (main instanceof SQLDatabaseConnector sqlMain) {
                     String finalName = name;
                     sqlMain.runQuery(connection2 -> {
-                        var ps2 = connection2.prepareStatement("UPDATE librepremium_data SET premium_uuid=? WHERE last_nickname=?");
-                        ps2.setString(1, premiumUUID.toString());
-                        ps2.setString(2, finalName);
-                        ps2.executeUpdate();
+                        try (var ps2 = connection2.prepareStatement("UPDATE librepremium_data SET premium_uuid=? WHERE last_nickname=?")) {
+                            ps2.setString(1, premiumUUID.toString());
+                            ps2.setString(2, finalName);
+                            ps2.executeUpdate();
+                        }
                     });
                 }
             }
 
-            return List.of();
+                return List.of();
+            }
         });
     }
 }

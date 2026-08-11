@@ -15,12 +15,11 @@ import xyz.kyngs.librelogin.api.crypto.HashedPassword;
 import xyz.kyngs.librelogin.common.util.CryptoUtil;
 
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 public class Argon2IDCryptoProvider implements CryptoProvider {
 
     private final Logger logger;
-    private SecureRandom random;
+    private final SecureRandom random;
 
     public Argon2IDCryptoProvider(Logger logger) {
         this.logger = logger;
@@ -38,7 +37,7 @@ public class Argon2IDCryptoProvider implements CryptoProvider {
 
         var params = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
                 .withSalt(salt)
-                .withMemoryAsKB(1 << 14)
+                .withMemoryAsKB(19 * 1024)
                 .withIterations(2)
                 .build();
 
@@ -60,7 +59,7 @@ public class Argon2IDCryptoProvider implements CryptoProvider {
         generator.init(params.parameters());
         generator.generateBytes(input.toCharArray(), hashBytes);
 
-        return Arrays.equals(hashBytes, params.hash());
+        return java.security.MessageDigest.isEqual(hashBytes, params.hash());
     }
 
     @Override

@@ -12,7 +12,6 @@ import xyz.kyngs.librelogin.api.Logger;
 import xyz.kyngs.librelogin.api.database.ReadDatabaseProvider;
 import xyz.kyngs.librelogin.api.database.connector.DatabaseConnector;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
-import xyz.kyngs.librelogin.common.command.InvalidCommandArgument;
 import xyz.kyngs.librelogin.common.config.ConfigurationKeys;
 import xyz.kyngs.librelogin.common.config.HoconPluginConfiguration;
 import xyz.kyngs.librelogin.common.config.key.ConfigurationKey;
@@ -29,19 +28,18 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ForkJoinPool;
 
 import static xyz.kyngs.librelogin.common.config.ConfigurationKeys.DATABASE_TYPE;
 import static xyz.kyngs.librelogin.common.config.ConfigurationKeys.MIGRATION_TYPE;
 
 public class GeneralUtil {
 
-    public static final ForkJoinPool ASYNC_POOL = new ForkJoinPool(4);
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     public static String readInput(InputStream inputStream) throws IOException {
-        var input = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        inputStream.close();
-        return input;
+        try (inputStream) {
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
     public static Throwable getFurthestCause(Throwable throwable) {
@@ -133,8 +131,7 @@ public class GeneralUtil {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
-                logger.error("An unexpected exception occurred while performing database migration, aborting migration");
+                logger.error("An unexpected exception occurred while performing database migration; aborting migration", e);
             }
 
         }
@@ -146,10 +143,7 @@ public class GeneralUtil {
             try {
                 runnable.run();
                 future.complete(null);
-            } catch (InvalidCommandArgument e) {
-                future.completeExceptionally(e);
             } catch (Throwable e) {
-                e.printStackTrace();
                 future.completeExceptionally(e);
             }
         });
@@ -174,9 +168,7 @@ public class GeneralUtil {
     public static String generateAlphanumericText(int limit) {
         var leftLimit = 48; // numeral '0'
         var rightLimit = 122; // letter 'z'
-        var random = new SecureRandom();
-
-        return random.ints(leftLimit, rightLimit + 1)
+        return SECURE_RANDOM.ints(leftLimit, rightLimit + 1)
                 .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
                 .limit(limit)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)

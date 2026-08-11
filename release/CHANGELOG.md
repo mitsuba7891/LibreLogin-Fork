@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.24.8 — Security and Paper 26.2 update
+
+### Authentication and security
+
+- Added dedicated in-memory session caching, account-based brute-force cooldowns and centralized password verification with transparent legacy-hash upgrades.
+- New configurations default to Argon2id, five attempts, a 60-second cooldown, eight-character passwords and a 120-second authentication deadline; existing values are retained.
+- Fixed session IP validation, fail-open Mojang session responses, nonce replay paths, malformed TOTP attempt accounting and sensitive command logging.
+- Expanded Paper/AuthLimbo protection to block chat, movement, commands, interactions, damage/projectiles and inventory/item actions until authentication.
+
+### Performance and compatibility
+
+- Moved network and database work away from the Paper main thread and cached profiles throughout the login pipeline.
+- Closed JDBC resources deterministically and optimized per-IP account counting with database-side `COUNT(*)` queries.
+- Compiled and tested with JDK 25 and Paper API 26.2 while retaining Java 21 bytecode for shared artifacts.
+- Maintained client/protocol handling from 1.13 through 26.2; older clients require a protocol translation layer.
+- Updated PacketEvents to 2.13.0, removed dead code and added cryptography/logging regression tests.
+
 ## 0.24.7 — Message formatting upgrade (AI-assisted)
 
 This release was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6) and applies to the LibreLogin fork.

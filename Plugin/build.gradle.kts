@@ -42,7 +42,7 @@ val relocations = mapOf(
 // dependencies block with libby("group:name:version")). The former Gradle
 // plugin (xyz.kyngs.librelogin.libby.plugin, hosted on the now defunct
 // repo.kyngs.xyz/gradle-plugins) used to generate libby.json from these.
-val libby by configurations.creating {
+val libby = configurations.create("libby") {
     isCanBeConsumed = false
     isCanBeResolved = true
 }
@@ -52,6 +52,16 @@ val libby by configurations.creating {
 // by Libby). Replicate that here with compileOnly visibility.
 configurations.named("compileOnly") {
     extendsFrom(libby)
+}
+
+// The compiler itself is JDK 25 and can read Paper 26.2's class files. Keep
+// the emitted LibreLogin bytecode at Java 21, but advertise the compile
+// classpath's real toolchain level so Gradle selects Paper's Java 25 variant.
+configurations.matching { it.name.endsWith("compileClasspath", ignoreCase = true) }.configureEach {
+    attributes.attribute(
+        org.gradle.api.attributes.java.TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE,
+        25
+    )
 }
 
 // Dependency groups excluded from libby.json (replicated from the old DSL).
@@ -90,12 +100,24 @@ val libbyRepositories = listOf(
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.release.set(21)
+    options.compilerArgs.addAll(listOf("-parameters", "-Xlint:deprecation", "-Xlint:unchecked"))
 }
 
 repositories {
     // mavenLocal()
     maven { url = uri("https://repo.opencollab.dev/maven-snapshots/") }
-    maven { url = uri("https://repo.papermc.io/repository/maven-public/") }
+    maven {
+        url = uri("https://repo.papermc.io/repository/maven-public/")
+        // Paper 26.2 is compiled for Java 25, while LibreLogin deliberately
+        // keeps its own bytecode at Java 21 for the proxy/protocol range.
+        // Resolve the published POM/JAR instead of rejecting the dependency
+        // through Gradle's consumer target-JVM variant matching.
+        metadataSources {
+            mavenPom()
+            artifact()
+            ignoreGradleMetadataRedirection()
+        }
+    }
     maven { url = uri("https://hub.spigotmc.org/nexus/") }
     maven { url = uri("https://repo.kyngs.xyz/public/") }
     maven { url = uri("https://mvn.exceptionflug.de/repository/exceptionflug-public/") }
@@ -148,6 +170,7 @@ tasks.withType<ShadowJar> {
 }
 
 java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
@@ -162,6 +185,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testRuntimeOnly("com.google.guava:guava:30.0-jre")
+    testRuntimeOnly("org.bouncycastle:bcprov-jdk18on:1.80")
     testImplementation("dev.simplix:protocolize-api:2.4.2")
     testImplementation("org.spongepowered:configurate-yaml:4.1.2")
     testImplementation("org.spongepowered:configurate-hocon:4.1.2")
@@ -224,14 +248,14 @@ dependencies {
     libby("org.bstats:bstats-bukkit:3.0.2")
 
     //Paper
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.2.build.84-stable")
     //compileOnly "com.comphenix.protocol:ProtocolLib:5.1.0"
     // 2.13.0+ parses the new Paper 26.x version strings (e.g. '26.1.2.build.74')
     // and ships protocol mappings for the newest Minecraft lines. PacketEvents
     // is resolved from the Codemc repository listed below.
     libby("com.github.retrooper:packetevents-spigot:2.13.0")
     compileOnly("io.netty:netty-transport:4.1.108.Final")
-    compileOnly("com.mojang:datafixerupper:5.0.28") //I hate this so much
+    compileOnly("com.mojang:datafixerupper:5.0.28")
     compileOnly("org.apache.logging.log4j:log4j-core:2.23.1")
 
     //Libby
@@ -302,6 +326,7 @@ fun platformJar(name: String, excluded: List<String>) = tasks.register<Zip>(name
 val paperJar = platformJar("paperJar", listOf(
     "xyz/kyngs/librelogin/velocity/**",
     "xyz/kyngs/librelogin/paper/tinyauth/**",
+    "velocity-plugin.json",
     "authlimbo-plugin.yml"
 ))
 paperJar.configure {

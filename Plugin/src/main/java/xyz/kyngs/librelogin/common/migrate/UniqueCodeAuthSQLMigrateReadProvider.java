@@ -30,20 +30,20 @@ public class UniqueCodeAuthSQLMigrateReadProvider extends SQLMigrateReadProvider
     @Override
     public Collection<User> getAllUsers() {
         return connector.runQuery(connection -> {
-            var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
-
-            var rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
+                 var rs = ps.executeQuery()) {
 
             var users = new HashSet<User>();
 
             while (rs.next()) {
                 try {
                     var name = rs.getString("name");
-                    var password = rs.getString("password"); // Unfortunately, this godforsaken plugin stores passwords in plain text
+                    // The source plugin stores this value as plain text, so hash it immediately.
+                    var password = rs.getString("password");
                     var premium = rs.getBoolean("premium");
 
                     if (password.equals("n"))
-                        password = null; //The horrible plugin uses "n" as an indicator for null, makes me think what happens when someone uses "n" as a password
+                        password = null; // Source schema uses "n" as its null sentinel.
 
                     var hashed = password == null
                             ? null
@@ -81,12 +81,12 @@ public class UniqueCodeAuthSQLMigrateReadProvider extends SQLMigrateReadProvider
                             null
                     ));
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    logger.error("Error while reading user from database");
+                    logger.error("Error while reading a user from the UniqueCodeAuth database", e);
                 }
             }
 
-            return users;
+                return users;
+            }
         });
     }
 }

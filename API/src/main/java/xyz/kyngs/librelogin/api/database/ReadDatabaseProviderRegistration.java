@@ -32,6 +32,7 @@ public record ReadDatabaseProviderRegistration<R extends ReadDatabaseProvider, C
      * @throws E if an error occurs during the creation process
      */
     public R create(DatabaseConnector<?, ?> connector) throws E {
-        return factory.apply((C) connector);
+        C typedConnector = databaseConnector == null ? null : databaseConnector.cast(connector);
+        return factory.apply(typedConnector);
     }
 }

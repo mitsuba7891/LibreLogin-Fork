@@ -74,9 +74,9 @@ public class PaperPlatformHandle implements PlatformHandle<Player, World> {
 
         if (limbo) {
             world.setSpawnLocation(new Location(world, 0.5, world.getHighestBlockYAt(0, 0) + 1, 0.5));
-            world.setKeepSpawnInMemory(true);
-            world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-            world.setGameRule(GameRule.DO_INSOMNIA, false);
+            PaperCompatibility.keepSpawnChunkLoaded(world, plugin.getBootstrap());
+            PaperCompatibility.setBooleanGameRule(world, "ADVANCE_TIME", "DO_DAYLIGHT_CYCLE", false);
+            PaperCompatibility.setBooleanGameRule(world, "SPAWN_PHANTOMS", "DO_INSOMNIA", false);
         }
 
         return world;
@@ -145,8 +145,8 @@ public class PaperPlatformHandle implements PlatformHandle<Player, World> {
                 Arrays.stream(Bukkit.getPluginManager().getPlugins()).map(plugin ->
                         MoreObjects.toStringHelper(plugin)
                                 .add("name", plugin.getName())
-                                .add("version", plugin.getDescription().getVersion())
-                                .add("authors", plugin.getDescription().getAuthors())
+                                .add("version", plugin.getPluginMeta().getVersion())
+                                .add("authors", plugin.getPluginMeta().getAuthors())
                                 .toString()
                 ).toList(),
                 plugin.getServerHandler().getLimboServers().stream().map(this::fromWorld).toList(),

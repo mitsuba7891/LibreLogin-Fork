@@ -14,7 +14,7 @@ public abstract class AuthenticDatabaseConnector<E extends Exception, I> impleme
 
     protected final AuthenticLibreLogin<?, ?> plugin;
     private final String prefix;
-    protected boolean connected = true;
+    protected volatile boolean connected;
 
     public AuthenticDatabaseConnector(AuthenticLibreLogin<?, ?> plugin, String prefix) {
         this.plugin = plugin;

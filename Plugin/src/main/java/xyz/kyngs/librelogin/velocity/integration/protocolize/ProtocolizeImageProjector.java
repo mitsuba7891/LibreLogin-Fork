@@ -45,6 +45,7 @@ public class ProtocolizeImageProjector<P, S> extends AuthenticImageProjector<P, 
      * @param player The player to render the image to.
      */
     @Override
+    @SuppressWarnings("deprecation") // Required only for Protocolize's legacy 1.17-1.20.4 item representation.
     public void project(BufferedImage image, P player) {
         var id = platformHandle.getUUIDForPlayer(player);
 

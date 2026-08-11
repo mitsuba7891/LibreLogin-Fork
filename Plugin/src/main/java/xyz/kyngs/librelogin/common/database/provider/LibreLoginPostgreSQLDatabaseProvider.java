@@ -21,15 +21,14 @@ public class LibreLoginPostgreSQLDatabaseProvider extends LibreLoginSQLDatabaseP
 
     @Override
     protected List<String> getColumnNames(Connection connection) throws SQLException {
-        var resultSet = connection.prepareStatement("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='librepremium_data' and TABLE_SCHEMA='public'")
-                .executeQuery();
-
-        var columns = new ArrayList<String>();
-        while (resultSet.next()) {
-            columns.add(resultSet.getString("column_name"));
+        try (var statement = connection.prepareStatement("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='librepremium_data' AND TABLE_SCHEMA='public'");
+             var result = statement.executeQuery()) {
+            var columns = new ArrayList<String>();
+            while (result.next()) {
+                columns.add(result.getString("column_name"));
+            }
+            return columns;
         }
-
-        return columns;
     }
 
     @Override

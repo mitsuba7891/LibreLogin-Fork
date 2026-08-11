@@ -7,7 +7,7 @@ Proxy-side authentication for Velocity, based on [kyngs/LibreLogin](https://gith
 Copy the JAR into the Velocity proxy:
 
 ```text
-Velocity/plugins/LibreLogin-Velocity-0.24.6.jar
+Velocity/plugins/LibreLogin-Velocity-0.24.8.jar
 ```
 
 Install `PacketEvents 2.13.0+` separately when QR projection is required. It is compile-only and is not bundled. Keep only one active LibreLogin Velocity JAR.
@@ -79,12 +79,14 @@ The prefix is excluded from titles, subtitles, action bars and email templates.
 
 ## Dependencies
 
-- Java 21+.
+- Java 25 is the tested runtime for this release; the artifact retains Java 21 bytecode.
 - Compatible Velocity proxy.
 - PacketEvents 2.13.0+ as an external plugin for the preferred QR path.
 - Protocolize optional where its supported protocol range is appropriate.
 - Optional LuckPerms, Floodgate and RedisBungee integrations.
 - Database driver libraries loaded at runtime through Libby.
+
+Client/protocol handling is maintained from 1.13 through 26.2. Install the appropriate ViaVersion/ViaBackwards-style translation components for the actual backend versions; PacketEvents does not perform protocol translation by itself. AuthLimbo is required on the configured Paper authentication backend and performs the safe chat/interaction lock for modern signed-chat clients.
 
 ## Troubleshooting
 

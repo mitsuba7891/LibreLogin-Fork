@@ -14,7 +14,6 @@ import xyz.kyngs.librelogin.common.database.AuthenticUser;
 import xyz.kyngs.librelogin.common.util.CryptoUtil;
 import xyz.kyngs.librelogin.common.util.GeneralUtil;
 
-import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -27,9 +26,8 @@ public class JPremiumSQLMigrateReadProvider extends SQLMigrateReadProvider {
     @Override
     public Collection<User> getAllUsers() {
         return connector.runQuery(connection -> {
-            PreparedStatement ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
-
-            var rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
+                 var rs = ps.executeQuery()) {
 
             var users = new HashSet<User>();
 
@@ -78,11 +76,12 @@ public class JPremiumSQLMigrateReadProvider extends SQLMigrateReadProvider {
                     ));
 
                 } catch (Exception e) {
-                    logger.error("Failed to read user from JPremium db, omitting");
+                    logger.error("Failed to read a user from the JPremium database; omitting it", e);
                 }
             }
 
-            return users;
+                return users;
+            }
 
         });
     }

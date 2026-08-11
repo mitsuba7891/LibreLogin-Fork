@@ -83,7 +83,7 @@ public class VelocityBootstrap implements LibreLoginProvider<Player, RegisteredS
     public void onInitialization(ProxyInitializeEvent event) {
         libreLogin.enable();
 
-        server.getEventManager().register(this, new Blockers(libreLogin.getAuthorizationProvider(), libreLogin.getConfiguration(), libreLogin.getMessages()));
+        server.getEventManager().register(this, new Blockers(libreLogin.getAuthorizationProvider(), libreLogin.getConfiguration()));
         server.getEventManager().register(this, new VelocityListeners(libreLogin));
     }
 

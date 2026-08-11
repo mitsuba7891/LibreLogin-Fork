@@ -12,7 +12,7 @@ version = loadVersion()
 
 def javaHeader = { File headerFile ->
     def lines = headerFile.readLines('UTF-8')
-    (['/*'] + lines.collect { line -> line.isEmpty() ? ' *' : " * ${line}" } + [' */', '']).join(System.lineSeparator())
+    (['/*'] + lines.collect { line -> line.isEmpty() ? ' *' : " * ${line}" } + [' */', '']).join('\n')
 }
 
 def javaSourceFiles = { Project project ->
@@ -24,7 +24,9 @@ def javaSourceFiles = { Project project ->
 
 def checkJavaHeaders = { Project project, File headerFile ->
     def expected = javaHeader(headerFile)
-    def missing = javaSourceFiles(project).findAll { !it.getText('UTF-8').startsWith(expected) }
+    def missing = javaSourceFiles(project).findAll {
+        !it.getText('UTF-8').replace('\r\n', '\n').startsWith(expected)
+    }
 
     if (!missing.empty) {
         throw new GradleException("Missing or invalid license header in:\n" + missing.collect { " - ${project.relativePath(it)}" }.join('\n'))
@@ -37,7 +39,7 @@ def updateJavaHeaders = { Project project, File headerFile ->
 
     javaSourceFiles(project).each { file ->
         def source = file.getText('UTF-8')
-        if (source.startsWith(expected)) {
+        if (source.replace('\r\n', '\n').startsWith(expected)) {
             return
         }
         if (source.startsWith('/*')) {
@@ -80,6 +82,9 @@ tasks.register('bumpVersion') {
 }
 
 subprojects {
+    def targetProject = project
+    def licenseHeader = rootProject.file('HEADER.txt')
+
     version = rootProject.version
     group = 'xyz.kyngs.librelogin'
 
@@ -93,18 +98,18 @@ subprojects {
         mavenCentral()
 
         maven {
-            url 'https://jitpack.io'
+            url = uri('https://jitpack.io')
         }
     }
 
     tasks.register('checkLicenses') {
-        inputs.file rootProject.file('HEADER.txt')
+        inputs.file licenseHeader
         inputs.files fileTree(file('src')) {
             include '**/*.java'
             include '**/*.java.peb'
         }
         doLast {
-            checkJavaHeaders(project, rootProject.file('HEADER.txt'))
+            checkJavaHeaders(targetProject, licenseHeader)
         }
     }
 
@@ -113,14 +118,14 @@ subprojects {
     }
 
     tasks.register('updateLicenses') {
-        inputs.file rootProject.file('HEADER.txt')
+        inputs.file licenseHeader
         inputs.files fileTree(file('src')) {
             include '**/*.java'
             include '**/*.java.peb'
         }
         outputs.upToDateWhen { false }
         doLast {
-            updateJavaHeaders(project, rootProject.file('HEADER.txt'))
+            updateJavaHeaders(targetProject, licenseHeader)
         }
     }
 }

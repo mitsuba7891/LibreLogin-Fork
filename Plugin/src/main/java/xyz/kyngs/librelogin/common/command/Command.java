@@ -12,12 +12,13 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.TextComponent;
 import xyz.kyngs.librelogin.api.Logger;
 import xyz.kyngs.librelogin.api.configuration.Messages;
-import xyz.kyngs.librelogin.api.crypto.CryptoProvider;
-import xyz.kyngs.librelogin.api.crypto.HashedPassword;
 import xyz.kyngs.librelogin.api.database.ReadWriteDatabaseProvider;
 import xyz.kyngs.librelogin.api.database.User;
+import xyz.kyngs.librelogin.api.event.events.WrongPasswordEvent.AuthenticationSource;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
 import xyz.kyngs.librelogin.common.authorization.AuthenticAuthorizationProvider;
+import xyz.kyngs.librelogin.common.event.events.AuthenticWrongPasswordEvent;
+import xyz.kyngs.librelogin.common.security.PasswordService;
 import xyz.kyngs.librelogin.common.util.GeneralUtil;
 
 import java.util.concurrent.CompletionStage;
@@ -56,10 +57,6 @@ public class Command<P> extends BaseCommand {
         }
     }
 
-    protected CryptoProvider getCrypto(HashedPassword password) {
-        return plugin.getCryptoProvider(password.algo());
-    }
-
     public CompletionStage<Void> runAsync(Runnable runnable) {
         return GeneralUtil.runAsync(runnable);
     }
@@ -72,7 +69,7 @@ public class Command<P> extends BaseCommand {
 
         if (plugin.fromFloodgate(uuid)) throw new InvalidCommandArgument(getMessage("error-from-floodgate"));
 
-        return plugin.getDatabaseProvider().getByUUID(uuid);
+        return plugin.getUserSessionService().findActiveOrLoad(uuid);
     }
 
     protected void setPassword(Audience sender, User user, String password, String messageKey) {
@@ -81,15 +78,29 @@ public class Command<P> extends BaseCommand {
 
         sender.sendMessage(getMessage(messageKey));
 
-        var defaultProvider = plugin.getDefaultCryptoProvider();
-
-        var hash = defaultProvider.createHash(password);
+        var hash = plugin.getPasswordService().createHash(password);
 
         if (hash == null) {
             throw new InvalidCommandArgument(getMessage("error-password-too-long"));
         }
 
         user.setHashedPassword(hash);
+    }
+
+    protected PasswordService.VerificationResult requirePassword(User user, P player, String candidate, AuthenticationSource source) {
+        var result = plugin.getPasswordService().verify(user, candidate);
+        if (result == PasswordService.VerificationResult.CORRUPTED) {
+            throw new InvalidCommandArgument(getMessage("error-password-corrupted"));
+        }
+        if (result.isValid()) {
+            return result;
+        }
+
+        plugin.getEventProvider().unsafeFire(
+                plugin.getEventTypes().wrongPassword,
+                new AuthenticWrongPasswordEvent<>(user, player, plugin, source)
+        );
+        throw new InvalidCommandArgument(getMessage("error-password-wrong"));
     }
 
 }

@@ -11,7 +11,7 @@ Use this artifact when Paper itself handles authentication and no proxy-side Lib
 Copy the JAR into Paper:
 
 ```text
-Paper/plugins/LibreLogin-Paper-0.24.6.jar
+Paper/plugins/LibreLogin-Paper-0.24.8.jar
 ```
 
 Start once to generate `config.yml` and `messages.yml`, stop the server, configure them, then start again. Back up the database and plugin data before upgrades.
@@ -52,11 +52,13 @@ Use `prefix: ""` to disable it. Reload messages with `/librelogin reload message
 
 ## Dependencies
 
-- Java 21+.
-- Paper compatible with the selected Minecraft version.
+- Java 25 for Paper 26.2.
+- Compiled and tested against Paper API 26.2; the 1.13-26.2 range is a client/protocol range, not a Paper-server range.
 - Runtime libraries and database drivers loaded through Libby.
 - Optional LuckPerms and Floodgate integrations.
 - PacketEvents 2.13.0+ is declared as a runtime library for this Paper artifact and is loaded through Libby; do not install a second copy unless your server setup explicitly requires it.
+
+Older clients require the server/network's protocol translation layer. PacketEvents supplies packet compatibility to LibreLogin but does not translate a 1.13 client into the 26.2 server protocol by itself.
 
 ## License
 

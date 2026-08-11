@@ -2,6 +2,27 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
+## 0.24.8 — Security, Paper 26.2 and architecture refactor
+
+### Authentication and security
+
+- Refactored authentication into dedicated password, attempt-limiting and user-session services.
+- New installations use Argon2id, five failed-attempt protection with a reconnect-resistant 60-second cooldown, an eight-character minimum password and a 120-second authentication deadline. Existing configuration values are preserved.
+- Successful legacy SHA/BCrypt verification is upgraded transparently to the configured provider; legacy digests remain available only for verification and migration.
+- Added constant-time hash comparisons, Argon2 parameter safety bounds, malformed-hash rejection and secure random salts.
+- Fixed session IP validation, login nonce replay/continuation paths, unexpected Mojang session responses, malformed TOTP attempt accounting and sensitive command logging.
+- Expanded Paper/AuthLimbo protection to cover chat, movement, commands, block/entity interaction, damage/projectiles, inventory actions, pickup/drop, hand swaps and consumption while unauthenticated.
+
+### Performance, storage and platform support
+
+- Cached the resolved user across packet, pre-login, spawn, join and command phases to avoid repeated database reads.
+- Moved update/list downloads, session metadata writes and database work away from the Paper main thread.
+- Closed SQL statements/results deterministically and replaced per-login IP record loading with native `COUNT(*)` queries.
+- Updated compilation to JDK 25 and Paper API 26.2 while retaining Java 21 bytecode for shared artifacts.
+- Maintained client/protocol handling from 1.13 through 26.2; older clients still require the network's protocol translation layer.
+- Updated PacketEvents to 2.13.0, isolated current Paper compatibility bridges and removed dead listeners, helpers and an inactive CrazyLogin migrator.
+- Added cryptography and sensitive-log regression tests and verified platform-filtered Paper, Velocity and AuthLimbo artifacts.
+
 ## 0.24.7 — Message formatting upgrade (AI-assisted)
 
 This release was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6) and applies to the LibreLogin fork.

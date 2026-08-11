@@ -8,6 +8,9 @@ package xyz.kyngs.librelogin.common.crypto;
 
 import xyz.kyngs.librelogin.api.crypto.HashedPassword;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+
 public class LogITMessageDigestCryptoProvider extends MessageDigestCryptoProvider {
     public LogITMessageDigestCryptoProvider(String identifier, String md) {
         super(identifier, md);
@@ -18,7 +21,10 @@ public class LogITMessageDigestCryptoProvider extends MessageDigestCryptoProvide
         var salt = password.salt();
         var hash = password.hash();
         var hashedInput = salt == null ? plainHash(input) : plainHash(input + salt);
-        return hashedInput.equals(hash);
+        return MessageDigest.isEqual(
+                hashedInput.getBytes(StandardCharsets.US_ASCII),
+                hash.getBytes(StandardCharsets.US_ASCII)
+        );
     }
 
     @Override

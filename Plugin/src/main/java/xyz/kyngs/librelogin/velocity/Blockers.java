@@ -6,51 +6,44 @@
 
 package xyz.kyngs.librelogin.velocity;
 
-import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
-import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import xyz.kyngs.librelogin.api.authorization.AuthorizationProvider;
-import xyz.kyngs.librelogin.api.configuration.Messages;
 import xyz.kyngs.librelogin.common.config.ConfigurationKeys;
 import xyz.kyngs.librelogin.common.config.HoconPluginConfiguration;
+
+import static xyz.kyngs.librelogin.common.util.CommandLineUtil.root;
 
 public class Blockers {
 
     private final AuthorizationProvider<Player> authorizationProvider;
     private final HoconPluginConfiguration configuration;
 
-    public Blockers(AuthorizationProvider<Player> authorizationProvider, HoconPluginConfiguration configuration, Messages messages) {
+    public Blockers(AuthorizationProvider<Player> authorizationProvider, HoconPluginConfiguration configuration) {
         this.authorizationProvider = authorizationProvider;
         this.configuration = configuration;
     }
 
-    @Subscribe(order = PostOrder.FIRST)
-    public void onChat(PlayerChatEvent event) {
-        if (!authorizationProvider.isAuthorized(event.getPlayer()) || authorizationProvider.isAwaiting2FA(event.getPlayer()))
-            event.setResult(PlayerChatEvent.ChatResult.denied());
-    }
-
-    @Subscribe(order = PostOrder.FIRST)
+    @Subscribe(priority = 100)
     public void onCommand(CommandExecuteEvent event) {
         if (!(event.getCommandSource() instanceof Player player)) return;
         if (authorizationProvider.isAuthorized(player) && !authorizationProvider.isAwaiting2FA(player))
             return;
 
-        var command = event.getCommand().split(" ")[0];
+        var command = root(event.getCommand());
 
         for (String allowed : configuration.get(ConfigurationKeys.ALLOWED_COMMANDS_WHILE_UNAUTHORIZED)) {
-            if (command.equals(allowed)) return;
+            if (command.equals(root(allowed))) return;
         }
 
         event.setResult(CommandExecuteEvent.CommandResult.denied());
     }
 
-    @Subscribe(order = PostOrder.FIRST)
+    @Subscribe(priority = 100)
     public void onServerConnect(ServerPreConnectEvent event) {
         if (authorizationProvider.isAwaiting2FA(event.getPlayer())) {
             if (!configuration.get(ConfigurationKeys.LIMBO).contains(event.getOriginalServer().getServerInfo().getName())) {
@@ -59,7 +52,7 @@ public class Blockers {
         }
     }
 
-    @Subscribe(order = PostOrder.FIRST)
+    @Subscribe(priority = 100)
     public void onServerKick(KickedFromServerEvent event) {
         if (!authorizationProvider.isAuthorized(event.getPlayer()) || authorizationProvider.isAwaiting2FA(event.getPlayer())) {
             // Keep the event inside Velocity's kick pipeline. Calling

@@ -53,8 +53,7 @@ public class ResetPasswordViaEMailCommand<P> extends EMailCommand<P> {
                 getAuthorizationProvider().getPasswordResetCache().put(uuid, token);
             } catch (Exception e) {
                 if (plugin.getConfiguration().get(ConfigurationKeys.DEBUG)) {
-                    getLogger().debug("Cannot send verification mail to " + user.getEmail() + " for " + player);
-                    e.printStackTrace();
+                    getLogger().debug("Cannot send a password-reset message (" + e.getClass().getSimpleName() + ")");
                 }
                 throw new InvalidCommandArgument(getMessage("error-mail-not-sent"));
             }

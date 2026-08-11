@@ -2,6 +2,14 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.24.8
+
+- Added centralized Argon2id/legacy password handling, reconnect-resistant attempt cooldowns and session caching.
+- Moved recurring network/database work off the Paper thread and closed JDBC resources deterministically.
+- Added complete unauthenticated chat, movement, interaction, combat, inventory and item blocking.
+- Compiled/tested against Paper API 26.2 with JDK 25; 1.13-26.2 denotes client protocols, not Paper server versions.
+- Hardened Mojang session verification, login nonces, session IP checks and sensitive logging.
+
 ## 0.24.7
 
 - Every message value in the generated `messages.yml` is written between double quotes; messages may use `\n` line breaks, `[center]` centering and YAML list syntax for multi-line messages.

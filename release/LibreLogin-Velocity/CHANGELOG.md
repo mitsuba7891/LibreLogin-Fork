@@ -2,6 +2,13 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.24.8
+
+- Added shared session/password/attempt services, legacy-hash upgrades and account cooldowns that survive reconnects.
+- Replaced deprecated event ordering and moved signed-chat blocking to the required AuthLimbo backend to avoid modern client kicks.
+- Hardened premium/session validation and removed sensitive authentication data from logs.
+- Maintained client/protocol handling from 1.13 through 26.2; protocol translation remains the network's responsibility.
+
 ## 0.24.7
 
 - Every message value in the generated `messages.yml` is written between double quotes; messages may use `\n` line breaks, `[center]` centering and YAML list syntax for multi-line messages.

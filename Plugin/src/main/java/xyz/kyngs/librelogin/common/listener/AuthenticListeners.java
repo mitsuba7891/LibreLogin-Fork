@@ -22,7 +22,6 @@ import xyz.kyngs.librelogin.common.event.events.AuthenticAuthenticatedEvent;
 
 import java.net.InetAddress;
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
@@ -45,24 +44,34 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
         if (plugin.fromFloodgate(uuid)) return;
 
         if (user == null) {
-            user = plugin.getDatabaseProvider().getByUUID(uuid);
+            user = plugin.getUserSessionService().findPending(uuid);
         }
-        var sessionTime = Duration.ofSeconds(plugin.getConfiguration().get(ConfigurationKeys.SESSION_TIMEOUT));
+        if (user == null) {
+            user = plugin.getUserSessionService().findActiveOrLoad(uuid);
+        }
+        if (user == null) {
+            throw new IllegalStateException("No database profile was resolved for " + uuid);
+        }
+
+        plugin.getUserSessionService().connect(user);
+        var sessionIsValid = plugin.getUserSessionService().canAuthenticateAutomatically(user, ip);
 
         if (user.autoLoginEnabled()) {
             plugin.delay(() -> plugin.getPlatformHandle().getAudienceForPlayer(player).sendMessage(plugin.getMessages().getMessage("info-premium-logged-in")), 500);
             plugin.getEventProvider().fire(plugin.getEventTypes().authenticated, new AuthenticAuthenticatedEvent<>(user, player, plugin, AuthenticatedEvent.AuthenticationReason.PREMIUM));
-        } else if (sessionTime != null && user.getLastAuthentication() != null && ip.equals(user.getIp()) && user.getLastAuthentication().toLocalDateTime().plus(sessionTime).isAfter(LocalDateTime.now())) {
+        } else if (sessionIsValid) {
             plugin.delay(() -> plugin.getPlatformHandle().getAudienceForPlayer(player).sendMessage(plugin.getMessages().getMessage("info-session-logged-in")), 500);
             plugin.getEventProvider().fire(plugin.getEventTypes().authenticated, new AuthenticAuthenticatedEvent<>(user, player, plugin, AuthenticatedEvent.AuthenticationReason.SESSION));
         } else {
             plugin.getAuthorizationProvider().startTracking(user, player);
         }
 
+        user.setIp(ip);
         user.setLastSeen(Timestamp.valueOf(LocalDateTime.now()));
 
         var finalUser = user;
-        plugin.delay(() -> plugin.getDatabaseProvider().updateUser(finalUser), 0);
+        plugin.executeAsync("persisting player session metadata",
+                () -> plugin.getDatabaseProvider().updateUser(finalUser));
 
     }
 
@@ -77,6 +86,7 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
         }
 
         PremiumUser mojangData;
+        User resolvedUser = null;
 
         try {
             mojangData = plugin.getPremiumProvider().getUserForName(username);
@@ -84,8 +94,7 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
             var message = switch (e.getIssue()) {
                 case THROTTLED -> plugin.getMessages().getMessage("kick-premium-error-throttled");
                 default -> {
-                    plugin.getLogger().error("Encountered an exception while communicating with the Mojang API!");
-                    e.printStackTrace();
+                    plugin.getLogger().error("Encountered an exception while communicating with the Mojang API", e);
                     yield plugin.getMessages().getMessage("kick-premium-error-undefined");
                 }
             };
@@ -107,6 +116,7 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
                 // We will have to encrypt, otherwise someone could forcefully disable other user's premium autologin
                 return new PreLoginResult(PreLoginState.FORCE_ONLINE, null, user);
             }
+            resolvedUser = user;
         } else {
 
             // A user with this name exists in the Mojang database, we need to figure out whether to encrypt
@@ -125,6 +135,7 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
                 //noinspection ConstantConditions //kyngs: There's no way IntelliJ is right
                 if (userByName.autoLoginEnabled())
                     return new PreLoginResult(PreLoginState.FORCE_ONLINE, null, userByName);
+                resolvedUser = userByName;
             } else {
                 User byName;
                 try {
@@ -154,7 +165,7 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
             }
         }
 
-        return new PreLoginResult(PreLoginState.FORCE_OFFLINE, null, null);
+        return new PreLoginResult(PreLoginState.FORCE_OFFLINE, null, resolvedUser);
     }
 
     private PreLoginResult handleProfileConflict(User conflicting, User conflicted) {
@@ -204,7 +215,7 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
 
             var ipLimit = plugin.getConfiguration().get(ConfigurationKeys.IP_LIMIT);
             if (ipLimit > 0) {
-                var ipCount = plugin.getDatabaseProvider().getByIP(ip.getHostAddress()).size(); // Ideally, this should be a count query, but I'm too lazy to implement that and the performance impact is negligible.
+                var ipCount = plugin.getDatabaseProvider().countByIP(ip.getHostAddress());
 
                 if (ipCount >= ipLimit) {
                     throw new InvalidCommandArgument(plugin.getMessages().getMessage("kick-ip-limit",
@@ -274,19 +285,23 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
         var id = platformHandle.getUUIDForPlayer(player);
         var fromFloodgate = plugin.fromFloodgate(id);
 
-        var sessionTime = Duration.ofSeconds(plugin.getConfiguration().get(ConfigurationKeys.SESSION_TIMEOUT));
-
         if (fromFloodgate) {
             user = null;
         } else if (user == null) {
-            user = plugin.getDatabaseProvider().getByUUID(id);
+            user = plugin.getUserSessionService().findPending(id);
+        }
+        if (!fromFloodgate && user == null) {
+            user = plugin.getUserSessionService().findActiveOrLoad(id);
+        }
+        if (!fromFloodgate && user == null) {
+            throw new IllegalStateException("No database profile was resolved for " + id);
         }
 
         if (ip == null) {
             ip = platformHandle.getIP(player);
         }
 
-        if (fromFloodgate || user.autoLoginEnabled() || (sessionTime != null && user.getLastAuthentication() != null && ip.equals(user.getIp()) && user.getLastAuthentication().toLocalDateTime().plus(sessionTime).isAfter(LocalDateTime.now()))) {
+        if (fromFloodgate || plugin.getUserSessionService().canAuthenticateAutomatically(user, ip)) {
             return new BiHolder<>(true, plugin.getServerHandler().chooseLobbyServer(user, player, true, false));
         } else {
             return new BiHolder<>(false, plugin.getServerHandler().chooseLimboServer(user, player));

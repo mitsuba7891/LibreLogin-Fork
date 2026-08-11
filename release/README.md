@@ -2,17 +2,17 @@
 
 This is a maintained, customized distribution based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). It separates proxy authentication, standalone Paper authentication and the Paper limbo backend into three clearly named artifacts.
 
-> **AI-assisted update:** This release package and the fork changes it ships (release 0.24.7 and the message-formatting upgrade) were reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See `CHANGELOG.md` for the complete list of changes.
+> **AI-assisted update:** This release package and the fork changes it ships (release 0.24.8, including the message-formatting upgrade) were reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See `CHANGELOG.md` for the complete list of changes.
 
 ## Package contents
 
 ```text
 LibreLogin-Velocity/
-  LibreLogin-Velocity-0.24.7.jar
+  LibreLogin-Velocity-0.24.8.jar
   README.md
   CHANGELOG.md
 LibreLogin-Paper/
-  LibreLogin-Paper-0.24.7.jar
+  LibreLogin-Paper-0.24.8.jar
   README.md
   CHANGELOG.md
 AuthLimbo/
@@ -30,22 +30,24 @@ LICENSE
 
 Install:
 
-- `LibreLogin-Velocity-0.24.7.jar` on the Velocity proxy.
+- `LibreLogin-Velocity-0.24.8.jar` on the Velocity proxy.
 - `AuthLimbo-1.0.0.jar` on the Paper backend named `auth`.
 
 Do **not** install `LibreLogin-Paper` on that auth backend. LibreLogin-Velocity owns authentication and AuthLimbo only supplies the protected empty limbo world.
 
 ### Standalone Paper server
 
-Install only `LibreLogin-Paper-0.24.7.jar` on the Paper server. Do not install LibreLogin-Velocity unless the server is also part of a proxy architecture.
+Install only `LibreLogin-Paper-0.24.8.jar` on the Paper server. Do not install LibreLogin-Velocity unless the server is also part of a proxy architecture.
 
-## Dependencies
+## Dependencies and compatibility
 
-- Java 21 or newer.
-- Paper/Velocity versions compatible with your selected Minecraft release.
+- Java 25 for Paper 26.2 deployments and release builds. Shared bytecode remains Java 21.
+- Paper API 26.2 and a compatible Velocity proxy.
 - On Velocity, install PacketEvents 2.13.0+ separately for cross-version QR projection; it is not bundled in the Velocity JAR. The Paper artifact loads its PacketEvents runtime dependency through Libby.
 - Optional Protocolize, LuckPerms, Floodgate and RedisBungee integrations when used by your network.
 - A supported database for persistent authentication data. Drivers are loaded by Libby at runtime.
+
+The maintained 1.13-26.2 range is for client protocols. It does not mean the same JAR is certified as a Paper 1.13 server plugin. Older clients connecting to a newer backend require the appropriate ViaVersion/ViaBackwards-style translation layer.
 
 ## License and attribution
 
@@ -145,13 +147,13 @@ gh auth status
 Then create the release from the repository root:
 
 ```bash
-gh release create v0.24.6 \
-  Plugin/build/distributions/LibreLogin-0.24.6.zip \
-  Plugin/build/libs/platform/LibreLogin-Paper-0.24.6.jar \
-  Plugin/build/libs/platform/LibreLogin-Velocity-0.24.6.jar \
+gh release create v0.24.8 \
+  Plugin/build/distributions/LibreLogin-0.24.8.zip \
+  Plugin/build/libs/platform/LibreLogin-Paper-0.24.8.jar \
+  Plugin/build/libs/platform/LibreLogin-Velocity-0.24.8.jar \
   Plugin/build/libs/platform/AuthLimbo-1.0.0.jar \
   --repo mitsuba7891/LibreLogin-Fork \
-  --title "LibreLogin Fork 0.24.6" \
+  --title "LibreLogin Fork 0.24.8" \
   --notes-file release/CHANGELOG.md
 ```
 

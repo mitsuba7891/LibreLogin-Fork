@@ -25,9 +25,8 @@ public class LoginSecuritySQLMigrateReadProvider extends SQLMigrateReadProvider 
     @Override
     public Collection<User> getAllUsers() {
         return connector.runQuery(connection -> {
-            var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
-
-            var rs = ps.executeQuery();
+            try (var ps = connection.prepareStatement("SELECT * FROM `%s`".formatted(tableName));
+                 var rs = ps.executeQuery()) {
 
             var users = new HashSet<User>();
 
@@ -63,7 +62,8 @@ public class LoginSecuritySQLMigrateReadProvider extends SQLMigrateReadProvider 
                 ));
             }
 
-            return users;
+                return users;
+            }
         });
     }
 }

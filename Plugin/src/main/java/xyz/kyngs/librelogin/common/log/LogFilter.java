@@ -6,41 +6,45 @@
 
 package xyz.kyngs.librelogin.common.log;
 
-import java.util.HashSet;
 import java.util.Set;
+
+import static xyz.kyngs.librelogin.common.util.CommandLineUtil.normalize;
+import static xyz.kyngs.librelogin.common.util.CommandLineUtil.root;
 
 public abstract class LogFilter {
 
-    private static final Set<String> PROTECTED_COMMANDS;
-
-    static {
-        PROTECTED_COMMANDS = new HashSet<>();
-
-        PROTECTED_COMMANDS.add("login");
-        PROTECTED_COMMANDS.add("l");
-        PROTECTED_COMMANDS.add("log");
-        PROTECTED_COMMANDS.add("register");
-        PROTECTED_COMMANDS.add("reg");
-        PROTECTED_COMMANDS.add("premium");
-        PROTECTED_COMMANDS.add("autologin");
-        PROTECTED_COMMANDS.add("2faconfirm");
-        PROTECTED_COMMANDS.add("changepassword");
-        PROTECTED_COMMANDS.add("changepass");
-        PROTECTED_COMMANDS.add("passch");
-        PROTECTED_COMMANDS.add("passwd");
-        PROTECTED_COMMANDS.add("confirmpasswordreset");
-        PROTECTED_COMMANDS.add("setemail");
-        PROTECTED_COMMANDS.add("librelogin user register");
-        PROTECTED_COMMANDS.add("librelogin user pass-change");
-    }
+    private static final Set<String> PROTECTED_ROOT_COMMANDS = Set.of(
+            "login", "l", "log", "register", "reg", "premium", "autologin",
+            "2faconfirm", "changepassword", "changepass", "passch", "passwd",
+            "confirmpasswordreset", "setemail"
+    );
+    private static final Set<String> PROTECTED_STAFF_COMMANDS = Set.of(
+            "librelogin user register", "librelogin user pass-change"
+    );
+    private static final String[] COMMAND_LOG_MARKERS = {
+            "issued server command: /",
+            "executed command /",
+            "executed command: /"
+    };
 
     protected boolean checkMessage(String message) {
-        // This is the only way to filter out command-related plugin spam.
-        if (!message.contains("issued server command: /") && !message.contains("executed command /") && !message.contains("executed command: /") && !message.contains("Duplicate key name"))
-            return true;
+        if (message == null) return true;
 
-        for (String command : PROTECTED_COMMANDS) {
-            if (message.contains(command)) return false;
+        var normalized = message.toLowerCase(java.util.Locale.ROOT);
+        if (normalized.contains("duplicate key name")) return false;
+
+        for (String marker : COMMAND_LOG_MARKERS) {
+            var markerIndex = normalized.indexOf(marker);
+            if (markerIndex < 0) continue;
+
+            var commandLine = normalize(normalized.substring(markerIndex + marker.length()));
+
+            if (PROTECTED_ROOT_COMMANDS.contains(root(commandLine))) return false;
+            for (String protectedCommand : PROTECTED_STAFF_COMMANDS) {
+                if (commandLine.equals(protectedCommand) || commandLine.startsWith(protectedCommand + " ")) {
+                    return false;
+                }
+            }
         }
 
         return true;
