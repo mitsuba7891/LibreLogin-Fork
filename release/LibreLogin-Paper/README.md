@@ -11,7 +11,7 @@ Use this artifact when Paper itself handles authentication and no proxy-side Lib
 Copy the JAR into Paper:
 
 ```text
-Paper/plugins/LibreLogin-Paper-0.24.9.jar
+Paper/plugins/LibreLogin-Paper-0.24.10.jar
 ```
 
 Start once to generate `config.yml` and `messages.yml`, stop the server, configure them, then start again. Back up the database and plugin data before upgrades.

@@ -65,6 +65,8 @@ import xyz.kyngs.librelogin.common.security.AuthenticationAttemptLimiter;
 import xyz.kyngs.librelogin.common.security.PasswordService;
 import xyz.kyngs.librelogin.common.session.UserSessionService;
 import xyz.kyngs.librelogin.common.totp.AuthenticTOTPProvider;
+import xyz.kyngs.librelogin.common.update.FallbackUpdateChecker;
+import xyz.kyngs.librelogin.common.update.GitHubUpdateChecker;
 import xyz.kyngs.librelogin.common.update.ModrinthUpdateChecker;
 import xyz.kyngs.librelogin.common.util.CancellableTask;
 import xyz.kyngs.librelogin.common.util.GeneralUtil;
@@ -659,17 +661,26 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         logger.info("Checking for updates...");
 
         try {
-            var checker = new ModrinthUpdateChecker(GSON, getVersion());
-            var update = checker.findUpdate(version, platformHandle.getPlatformIdentifier());
-            if (update.isEmpty()) {
-                logger.info("You are running the latest public LibreLogin Fork release on Modrinth");
+            var checker = new FallbackUpdateChecker(
+                    new ModrinthUpdateChecker(GSON, getVersion()),
+                    new GitHubUpdateChecker(GSON, getVersion())
+            );
+            var result = checker.findUpdate(version, platformHandle.getPlatformIdentifier());
+            if (result.usedFallback()) {
+                logger.warn("Modrinth update check failed (%s); using the LibreLogin Fork GitHub releases fallback".formatted(
+                        result.primaryFailure().getMessage()
+                ));
+            }
+
+            if (result.update().isEmpty()) {
+                logger.info("You are running the latest public LibreLogin Fork release on " + result.source());
                 return;
             }
 
-            var latest = update.get();
+            var latest = result.update().get();
             logger.warn("!! YOU ARE RUNNING AN OUTDATED VERSION OF LIBRELOGIN FORK !!");
-            logger.info("Installed version: %s; latest Modrinth version: %s (%s)".formatted(
-                    getVersion(), latest.version(), latest.name()
+            logger.info("Installed version: %s; latest %s version: %s (%s)".formatted(
+                    getVersion(), result.source(), latest.version(), latest.name()
             ));
             logger.info("Recommended %s file: %s".formatted(
                     platformHandle.getPlatformIdentifier(), latest.filename()
@@ -678,7 +689,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
             logger.info("Project: " + latest.projectUrl());
             logger.warn("Stop the server/proxy and replace the JAR manually; automatic replacement is disabled");
         } catch (Exception e) {
-            logger.warn("Failed to check LibreLogin Fork updates on Modrinth; no files were changed", e);
+            logger.warn("Both Modrinth and GitHub update checks failed; no files were changed", e);
         }
     }
 

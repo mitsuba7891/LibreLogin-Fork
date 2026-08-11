@@ -4,21 +4,21 @@ A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/Lib
 
 > **Attribution and license:** This repository contains modifications of LibreLogin by kyngs and contributors. The upstream project is licensed under the **Mozilla Public License 2.0 (MPL-2.0)**; this fork retains that license and the original notices. The MIT license present under `licenses/FASTLOGIN_LICENSE` applies only to the relevant FastLogin-derived dependency, not to LibreLogin itself.
 >
-> **AI-assisted update:** Release 0.24.9, including the message-formatting work introduced in 0.24.7, was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See the `CHANGELOG.md` 0.24.9 section for the latest changes.
+> **AI-assisted update:** Release 0.24.10, including the message-formatting work introduced in 0.24.7, was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See the `CHANGELOG.md` 0.24.10 section for the latest changes.
 
-## Release 0.24.9
+## Release 0.24.10
 
 This release provides three clearly separated artifacts:
 
 | Artifact | Install on | Purpose |
 |---|---|---|
-| `LibreLogin-Velocity-0.24.9.jar` | Velocity proxy | Central authentication, sessions, premium login, commands and proxy-side 2FA |
-| `LibreLogin-Paper-0.24.9.jar` | Standalone Paper server | Authentication when no proxy-side LibreLogin is used |
+| `LibreLogin-Velocity-0.24.10.jar` | Velocity proxy | Central authentication, sessions, premium login, commands and proxy-side 2FA |
+| `LibreLogin-Paper-0.24.10.jar` | Standalone Paper server | Authentication when no proxy-side LibreLogin is used |
 | `AuthLimbo-1.0.0.jar` | Paper `auth` backend | Empty-world limbo protection for the Velocity architecture |
 
 For a Velocity network, install **LibreLogin-Velocity on the proxy** and **AuthLimbo on the Paper auth backend**. Do not install LibreLogin-Paper on that auth backend; it would create a second authentication pipeline.
 
-At startup, LibreLogin checks the public [`librelogin-fork` Modrinth project](https://modrinth.com/plugin/librelogin-fork) for a newer stable release and prints the correct Paper or Velocity download link. It only notifies: JAR downloads and replacement remain manual administrator actions.
+At startup, LibreLogin checks the public [`librelogin-fork` Modrinth project](https://modrinth.com/plugin/librelogin-fork) for a newer stable release and prints the correct Paper or Velocity download link. If Modrinth is unavailable, it falls back exclusively to the fork's [GitHub releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases). It only notifies: JAR downloads and replacement remain manual administrator actions.
 
 ## Requirements and compatibility
 
@@ -35,7 +35,7 @@ The shared artifacts retain Java 21 bytecode while being compiled and tested wit
 ### 1. Install the artifacts
 
 ```text
-Velocity/plugins/LibreLogin-Velocity-0.24.9.jar
+Velocity/plugins/LibreLogin-Velocity-0.24.10.jar
 Paper-auth/plugins/AuthLimbo-1.0.0.jar
 ```
 
@@ -93,10 +93,10 @@ The exact generated keys and comments are authoritative for your installed revis
 
 ## Standalone Paper installation
 
-Use `LibreLogin-Paper-0.24.9.jar` only when authentication is handled directly by Paper:
+Use `LibreLogin-Paper-0.24.10.jar` only when authentication is handled directly by Paper:
 
 ```text
-Paper/plugins/LibreLogin-Paper-0.24.9.jar
+Paper/plugins/LibreLogin-Paper-0.24.10.jar
 ```
 
 Start the server, configure the generated `config.yml` and `messages.yml`, then restart after structural configuration changes. Do not run both the proxy and standalone Paper authentication flows for the same player path.
@@ -196,10 +196,10 @@ This fork removes the NanoLimbo integration from the supported release architect
 Outputs:
 
 ```text
-Plugin/build/libs/platform/LibreLogin-Velocity-0.24.9.jar
-Plugin/build/libs/platform/LibreLogin-Paper-0.24.9.jar
+Plugin/build/libs/platform/LibreLogin-Velocity-0.24.10.jar
+Plugin/build/libs/platform/LibreLogin-Paper-0.24.10.jar
 Plugin/build/libs/platform/AuthLimbo-1.0.0.jar
-Plugin/build/distributions/LibreLogin-0.24.9.zip
+Plugin/build/distributions/LibreLogin-0.24.10.zip
 ```
 
 The ZIP contains one folder per component, a README and component changelog for each plugin, the root changelog and the MPL-2.0 license.

@@ -2,17 +2,17 @@
 
 This is a maintained, customized distribution based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). It separates proxy authentication, standalone Paper authentication and the Paper limbo backend into three clearly named artifacts.
 
-> **AI-assisted update:** This release package and the fork changes it ships (release 0.24.9, including the message-formatting upgrade) were reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See `CHANGELOG.md` for the complete list of changes.
+> **AI-assisted update:** This release package and the fork changes it ships (release 0.24.10, including the message-formatting upgrade) were reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See `CHANGELOG.md` for the complete list of changes.
 
 ## Package contents
 
 ```text
 LibreLogin-Velocity/
-  LibreLogin-Velocity-0.24.9.jar
+  LibreLogin-Velocity-0.24.10.jar
   README.md
   CHANGELOG.md
 LibreLogin-Paper/
-  LibreLogin-Paper-0.24.9.jar
+  LibreLogin-Paper-0.24.10.jar
   README.md
   CHANGELOG.md
 AuthLimbo/
@@ -30,14 +30,14 @@ LICENSE
 
 Install:
 
-- `LibreLogin-Velocity-0.24.9.jar` on the Velocity proxy.
+- `LibreLogin-Velocity-0.24.10.jar` on the Velocity proxy.
 - `AuthLimbo-1.0.0.jar` on the Paper backend named `auth`.
 
 Do **not** install `LibreLogin-Paper` on that auth backend. LibreLogin-Velocity owns authentication and AuthLimbo only supplies the protected empty limbo world.
 
 ### Standalone Paper server
 
-Install only `LibreLogin-Paper-0.24.9.jar` on the Paper server. Do not install LibreLogin-Velocity unless the server is also part of a proxy architecture.
+Install only `LibreLogin-Paper-0.24.10.jar` on the Paper server. Do not install LibreLogin-Velocity unless the server is also part of a proxy architecture.
 
 ## Dependencies and compatibility
 
@@ -147,13 +147,13 @@ gh auth status
 Then create the release from the repository root:
 
 ```bash
-gh release create v0.24.9 \
-  Plugin/build/distributions/LibreLogin-0.24.9.zip \
-  Plugin/build/libs/platform/LibreLogin-Paper-0.24.9.jar \
-  Plugin/build/libs/platform/LibreLogin-Velocity-0.24.9.jar \
+gh release create v0.24.10 \
+  Plugin/build/distributions/LibreLogin-0.24.10.zip \
+  Plugin/build/libs/platform/LibreLogin-Paper-0.24.10.jar \
+  Plugin/build/libs/platform/LibreLogin-Velocity-0.24.10.jar \
   Plugin/build/libs/platform/AuthLimbo-1.0.0.jar \
   --repo mitsuba7891/LibreLogin-Fork \
-  --title "LibreLogin Fork 0.24.9" \
+  --title "LibreLogin Fork 0.24.10" \
   --notes-file release/CHANGELOG.md
 ```
 

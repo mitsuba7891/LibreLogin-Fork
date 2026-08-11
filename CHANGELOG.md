@@ -2,6 +2,14 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
+## 0.24.10 — GitHub update-check fallback
+
+- Added a resilient update-source chain: Modrinth remains primary and the public `mitsuba7891/LibreLogin-Fork` GitHub releases API is used only when Modrinth fails through network, HTTP or malformed-response errors.
+- The fallback never queries the official `kyngs/LibreLogin` repository and selects only the matching Paper or Velocity asset from stable fork releases.
+- A successful Modrinth response does not trigger an unnecessary GitHub request, even when the installed version is already current.
+- Console output identifies the source used and reports when fallback activation was necessary; if both services fail, neither downloads nor changes any file.
+- Added regression tests for primary success, fallback activation, dual-source failure preservation and GitHub platform-asset selection.
+
 ## 0.24.9 — Modrinth update notifications
 
 - Replaced the upstream `kyngs/LibreLogin` GitHub release check with the public Modrinth API for [`librelogin-fork`](https://modrinth.com/plugin/librelogin-fork).

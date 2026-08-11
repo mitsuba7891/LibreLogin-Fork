@@ -7,7 +7,7 @@ Proxy-side authentication for Velocity, based on [kyngs/LibreLogin](https://gith
 Copy the JAR into the Velocity proxy:
 
 ```text
-Velocity/plugins/LibreLogin-Velocity-0.24.9.jar
+Velocity/plugins/LibreLogin-Velocity-0.24.10.jar
 ```
 
 Install `PacketEvents 2.13.0+` separately when QR projection is required. It is compile-only and is not bundled. Keep only one active LibreLogin Velocity JAR.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.24.10 — GitHub update-check fallback
+
+- Modrinth remains the primary update source; failures now fall back to public releases from `mitsuba7891/LibreLogin-Fork` on GitHub.
+- The fallback never queries the official LibreLogin repository and recommends only the matching Paper or Velocity stable artifact.
+- GitHub is not queried when Modrinth responds successfully, and neither source can download or replace the installed JAR.
+- Added tests for fallback activation, primary short-circuiting, dual failures and GitHub asset selection.
+
 ## 0.24.9 — Modrinth update notifications
 
 - Replaced the official LibreLogin GitHub update source with the public `librelogin-fork` project on Modrinth.

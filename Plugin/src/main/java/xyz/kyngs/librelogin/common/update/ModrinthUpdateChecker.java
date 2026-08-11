@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * Checks the public LibreLogin Fork project on Modrinth without downloading
  * or replacing the installed plugin.
  */
-public final class ModrinthUpdateChecker {
+public final class ModrinthUpdateChecker implements UpdateSource {
 
     public static final String PROJECT_PAGE = "https://modrinth.com/plugin/librelogin-fork";
     private static final String VERSIONS_ENDPOINT =
@@ -41,7 +41,14 @@ public final class ModrinthUpdateChecker {
         this.userAgent = "mitsuba7891/LibreLogin-Fork/%s (%s)".formatted(installedVersion, PROJECT_PAGE);
     }
 
-    public Optional<Update> findUpdate(SemanticVersion currentVersion, String platform) throws IOException {
+    @Override
+    public String name() {
+        return "Modrinth";
+    }
+
+    @Override
+    public Optional<UpdateCandidate> findUpdate(SemanticVersion currentVersion, String platform)
+            throws IOException {
         var connection = (HttpURLConnection) URI.create(VERSIONS_ENDPOINT).toURL().openConnection();
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("User-Agent", userAgent);
@@ -63,12 +70,14 @@ public final class ModrinthUpdateChecker {
         }
     }
 
-    static Optional<Update> selectUpdate(JsonArray versions, SemanticVersion currentVersion, String platform) {
+    static Optional<UpdateCandidate> selectUpdate(
+            JsonArray versions, SemanticVersion currentVersion, String platform
+    ) {
         if (versions == null) {
             return Optional.empty();
         }
 
-        Update latest = null;
+        UpdateCandidate latest = null;
         for (var rawVersion : versions) {
             if (!rawVersion.isJsonObject()) {
                 continue;
@@ -91,7 +100,7 @@ public final class ModrinthUpdateChecker {
 
             var selectedFile = file.get();
             var releaseName = stringValue(version, "name");
-            var candidate = new Update(
+            var candidate = new UpdateCandidate(
                     parsedVersion.get(),
                     releaseName == null || releaseName.isBlank()
                             ? "LibreLogin Fork " + parsedVersion.get()
@@ -167,7 +176,7 @@ public final class ModrinthUpdateChecker {
         return Optional.ofNullable(primary != null ? primary : first);
     }
 
-    private static Optional<SemanticVersion> parseVersion(String value) {
+    static Optional<SemanticVersion> parseVersion(String value) {
         if (value == null) {
             return Optional.empty();
         }
@@ -189,14 +198,5 @@ public final class ModrinthUpdateChecker {
             return null;
         }
         return object.get(key).getAsString();
-    }
-
-    public record Update(
-            SemanticVersion version,
-            String name,
-            String filename,
-            String downloadUrl,
-            String projectUrl
-    ) {
     }
 }

@@ -2,6 +2,11 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.24.10
+
+- Added a Paper-asset-aware fallback to the fork's GitHub releases when the primary Modrinth update check fails.
+- The checker remains notification-only and never contacts the official LibreLogin release feed.
+
 ## 0.24.9
 
 - Update notices now query `librelogin-fork` on Modrinth instead of the official LibreLogin GitHub repository.
