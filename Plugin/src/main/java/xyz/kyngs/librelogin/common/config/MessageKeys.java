@@ -145,6 +145,13 @@ public class MessageKeys {
             ConfigurateHelper::getString
     );
 
+    public static final ConfigurationKey<String> KICK_ERROR_TOO_MANY_ATTEMPTS = new ConfigurationKey<>(
+            "kick-error-too-many-attempts",
+            "Too many wrong attempts! You have been temporarily blocked, please wait %seconds% seconds before trying again.",
+            "This message is displayed when the player is kicked after reaching the maximum amount of failed login/TOTP attempts. See the configuration keys \"max-login-attempts\" and \"milliseconds-to-refresh-login-attempts\" for more information.",
+            ConfigurateHelper::getString
+    );
+
     public static final ConfigurationKey<String> KICK_2FA_ENABLED = new ConfigurationKey<>(
             "kick-2fa-enabled",
             "Two-factor has been enabled! Please reconnect.",
@@ -230,6 +237,13 @@ public class MessageKeys {
             "error-password-wrong",
             "Wrong password!",
             "This message is displayed when the player tries to authorize with wrong password.",
+            ConfigurateHelper::getString
+    );
+
+    public static final ConfigurationKey<String> ERROR_TOO_MANY_ATTEMPTS = new ConfigurationKey<>(
+            "error-too-many-attempts",
+            "Too many wrong attempts! Please wait %seconds% seconds before trying again.",
+            "This message is displayed when the player tries to log in while being temporarily blocked. See the configuration keys \"max-login-attempts\" and \"milliseconds-to-refresh-login-attempts\" for more information.",
             ConfigurateHelper::getString
     );
 
@@ -768,6 +782,24 @@ public class MessageKeys {
             "action-bar-login",
             "&e/login &b<password>%2fa%",
             "This actionbar is displayed when the player is prompted to login. Make sure that you have use-action-bar set to true in the configuration.",
+            ConfigurateHelper::getString
+    );
+
+    /*
+    Bossbar
+     */
+
+    public static final ConfigurationKey<String> BOSS_BAR_LOGIN = new ConfigurationKey<>(
+            "bossbar-login",
+            "&eTime left to log in: &c%time%",
+            "This bossbar message is displayed while the player is awaiting authentication. The %time% placeholder is replaced with the remaining time. Make sure that you have use-boss-bar set to true in the configuration.",
+            ConfigurateHelper::getString
+    );
+
+    public static final ConfigurationKey<String> BOSS_BAR_REGISTER = new ConfigurationKey<>(
+            "bossbar-register",
+            "&eTime left to register: &c%time%",
+            "This bossbar message is displayed while the player is awaiting registration. The %time% placeholder is replaced with the remaining time. Make sure that you have use-boss-bar set to true in the configuration.",
             ConfigurateHelper::getString
     );
 

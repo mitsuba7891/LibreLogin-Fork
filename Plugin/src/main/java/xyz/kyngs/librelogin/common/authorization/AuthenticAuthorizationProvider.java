@@ -9,6 +9,7 @@ package xyz.kyngs.librelogin.common.authorization;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import xyz.kyngs.librelogin.api.authorization.AuthorizationProvider;
@@ -23,6 +24,7 @@ import xyz.kyngs.librelogin.common.event.events.AuthenticAuthenticatedEvent;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -33,6 +35,7 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
 
     private final Map<P, User> unAuthorized;
     private final Map<P, String> awaiting2FA;
+    private final Map<P, BossBarData> bossBars;
     private final Cache<UUID, EmailVerifyData> emailConfirmCache;
     private final Cache<UUID, String> passwordResetCache;
 
@@ -40,6 +43,7 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
         super(plugin);
         unAuthorized = new ConcurrentHashMap<>();
         awaiting2FA = new ConcurrentHashMap<>();
+        bossBars = new ConcurrentHashMap<>();
 
         var millis = plugin.getConfiguration().get(ConfigurationKeys.MILLISECONDS_TO_REFRESH_NOTIFICATION);
 
@@ -47,7 +51,10 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
             plugin.repeat(this::notifyUnauthorized, 0, millis);
         }
 
-        plugin.repeat(this::broadcastActionbars, 0, 1000);
+        plugin.repeat(() -> {
+            broadcastActionbars();
+            updateBossBars();
+        }, 0, 1000);
 
         emailConfirmCache = Caffeine.newBuilder()
                 .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -69,6 +76,7 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
     public void onExit(P player) {
         stopTracking(player);
         awaiting2FA.remove(player);
+        hideBossBar(player);
         emailConfirmCache.invalidate(platformHandle.getUUIDForPlayer(player));
         passwordResetCache.invalidate(platformHandle.getUUIDForPlayer(player));
     }
@@ -101,6 +109,7 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
 
             audience.clearTitle();
             audience.sendActionBar(Component.empty());
+            hideBossBar(player);
             plugin.getEventProvider().fire(
                     plugin.getEventTypes().authenticated,
                     new AuthenticAuthenticatedEvent<>(user, player, plugin, reason)
@@ -141,6 +150,7 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
         }
 
         sendInfoMessage(player, user, audience);
+        startBossBar(player, user, audience);
     }
 
     private void broadcastActionbars() {
@@ -201,6 +211,81 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
         ));
     }
 
+    private void startBossBar(P player, User user, Audience audience) {
+        if (!plugin.getConfiguration().get(ConfigurationKeys.USE_BOSS_BAR)) return;
+        var limit = plugin.getConfiguration().get(ConfigurationKeys.SECONDS_TO_AUTHORIZE);
+        if (limit <= 0 || audience == null || bossBars.containsKey(player)) return;
+
+        var totalMillis = limit * 1000L;
+        var bar = BossBar.bossBar(
+                bossBarMessage(user, limit),
+                1.0f,
+                bossBarColor(),
+                bossBarStyle()
+        );
+        bossBars.put(player, new BossBarData(bar, System.currentTimeMillis() + totalMillis, totalMillis));
+        audience.showBossBar(bar);
+    }
+
+    private void updateBossBars() {
+        bossBars.forEach((player, data) -> {
+            var audience = platformHandle.getAudienceForPlayer(player);
+            var user = unAuthorized.get(player);
+
+            if (audience == null || user == null) {
+                hideBossBar(player);
+                return;
+            }
+
+            var remainingMillis = data.deadlineMillis() - System.currentTimeMillis();
+            if (remainingMillis <= 0) {
+                hideBossBar(player);
+                return;
+            }
+
+            var remainingSeconds = (long) Math.ceil(remainingMillis / 1000.0);
+            data.bossBar().progress((float) Math.min(1.0, remainingMillis / (double) data.totalMillis()));
+            data.bossBar().name(bossBarMessage(user, remainingSeconds));
+        });
+    }
+
+    private void hideBossBar(P player) {
+        var data = bossBars.remove(player);
+        if (data == null) return;
+        var audience = platformHandle.getAudienceForPlayer(player);
+        if (audience != null) {
+            audience.hideBossBar(data.bossBar());
+        }
+    }
+
+    private Component bossBarMessage(User user, long seconds) {
+        var key = user.isRegistered() ? "bossbar-login" : "bossbar-register";
+        return plugin.getMessages().getMessage(key, "%time%", formatTime(seconds));
+    }
+
+    private static String formatTime(long seconds) {
+        var safeSeconds = Math.max(0L, seconds);
+        var minutes = safeSeconds / 60;
+        var remainder = safeSeconds % 60;
+        return minutes > 0 ? "%d:%02d".formatted(minutes, remainder) : "%ds".formatted(remainder);
+    }
+
+    private BossBar.Color bossBarColor() {
+        try {
+            return BossBar.Color.valueOf(plugin.getConfiguration().get(ConfigurationKeys.BOSS_BAR_COLOR).toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return BossBar.Color.GREEN;
+        }
+    }
+
+    private BossBar.Overlay bossBarStyle() {
+        try {
+            return BossBar.Overlay.valueOf(plugin.getConfiguration().get(ConfigurationKeys.BOSS_BAR_STYLE).toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return BossBar.Overlay.PROGRESS;
+        }
+    }
+
     public void stopTracking(P player) {
         unAuthorized.remove(player);
     }
@@ -220,6 +305,9 @@ public class AuthenticAuthorizationProvider<P, S> extends AuthenticHandler<P, S>
     }
 
     public record EmailVerifyData(String email, String token, UUID uuid) {
+    }
+
+    private record BossBarData(BossBar bossBar, long deadlineMillis, long totalMillis) {
     }
 
     /**

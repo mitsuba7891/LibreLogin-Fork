@@ -2,6 +2,26 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
+## 0.24.12 — Login brute-force protection & authentication bossbar
+
+### Brute-force protection
+
+- Failed login/TOTP attempts are counted per account and reset after a configurable cooldown window, configurable from `config.yml`:
+  - `max-login-attempts` — how many failed attempts are allowed (default `5`, `0` or less disables the protection).
+  - `milliseconds-to-refresh-login-attempts` — the time window in milliseconds before the attempts expire (default `60000`).
+- Once the limit is reached the player is kicked with a dedicated, configurable message that includes the remaining cooldown, and `/login` is refused with the remaining wait time while the account is blocked.
+- New messages in `messages.yml`: `kick-error-too-many-attempts` and `error-too-many-attempts` (both accept the `%seconds%` placeholder).
+
+### Authentication bossbar
+
+- While a player is awaiting login/registration a bossbar counts down the remaining authentication time (`seconds-to-authorize`).
+- New configuration keys in `config.yml`:
+  - `use-boss-bar` — enable/disable the countdown bossbar (default `true`).
+  - `bossbar-color` — color of the bossbar (default `GREEN`).
+  - `bossbar-style` — style of the bossbar (default `PROGRESS`).
+- New messages in `messages.yml`: `bossbar-login` and `bossbar-register` (both accept the `%time%` placeholder, formatted as `MM:SS`).
+- The bossbar is removed automatically when the player authenticates, disconnects or is kicked by the time limit, and the global chat prefix is not applied to it.
+
 ## 0.24.10 — GitHub update-check fallback
 
 - Added a resilient update-source chain: Modrinth remains primary and the public `mitsuba7891/LibreLogin-Fork` GitHub releases API is used only when Modrinth fails through network, HTTP or malformed-response errors.

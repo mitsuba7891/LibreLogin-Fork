@@ -125,6 +125,27 @@ public class ConfigurationKeys {
             ConfigurateHelper::getBoolean
     );
 
+    public static final ConfigurationKey<Boolean> USE_BOSS_BAR = new ConfigurationKey<>(
+            "use-boss-bar",
+            true,
+            "Whether or not to show a bossbar counting down the remaining authentication time when the player is awaiting login/registration.",
+            ConfigurateHelper::getBoolean
+    );
+
+    public static final ConfigurationKey<String> BOSS_BAR_COLOR = new ConfigurationKey<>(
+            "bossbar-color",
+            "GREEN",
+            "The color of the authentication bossbar. Available colors: PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE.",
+            ConfigurateHelper::getString
+    );
+
+    public static final ConfigurationKey<String> BOSS_BAR_STYLE = new ConfigurationKey<>(
+            "bossbar-style",
+            "PROGRESS",
+            "The style of the authentication bossbar. Available styles: PROGRESS, NOTCHED_6, NOTCHED_10, NOTCHED_12, NOTCHED_20.",
+            ConfigurateHelper::getString
+    );
+
     public static final ConfigurationKey<String> NEW_UUID_CREATOR = new ConfigurationKey<>(
             "new-uuid-creator",
             "CRACKED",

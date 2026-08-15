@@ -220,6 +220,7 @@ public class HoconMessages implements Messages {
                 && !key.startsWith("title-")
                 && !key.startsWith("sub-title-")
                 && !key.startsWith("action-bar-")
+                && !key.startsWith("bossbar-")
                 && !key.startsWith("email-");
     }
 

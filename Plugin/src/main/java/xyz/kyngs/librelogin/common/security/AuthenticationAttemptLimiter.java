@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public final class AuthenticationAttemptLimiter<P, S> {
 
     private final AuthenticLibreLogin<P, S> plugin;
-    private final Cache<UUID, Integer> attempts;
+    private final Cache<UUID, AttemptEntry> attempts;
 
     public AuthenticationAttemptLimiter(AuthenticLibreLogin<P, S> plugin) {
         this.plugin = plugin;
@@ -41,7 +41,19 @@ public final class AuthenticationAttemptLimiter<P, S> {
     public boolean isBlocked(UUID uuid) {
         var maximum = maximumAttempts();
         var current = attempts.getIfPresent(uuid);
-        return maximum > 0 && current != null && current >= maximum;
+        return maximum > 0 && current != null && current.count() >= maximum;
+    }
+
+    /**
+     * @return the milliseconds left until the failed attempts expire and the
+     * player can try logging in again, or {@code 0} when the player is not
+     * blocked.
+     */
+    public long getBlockedRemainingMillis(UUID uuid) {
+        var entry = attempts.getIfPresent(uuid);
+        if (entry == null) return 0;
+        var window = Math.max(1L, plugin.getConfiguration().get(ConfigurationKeys.MILLISECONDS_TO_EXPIRE_LOGIN_ATTEMPTS));
+        return Math.max(0L, entry.lastAttemptMillis() + window - System.currentTimeMillis());
     }
 
     private void onWrongPassword(WrongPasswordEvent<P, S> event) {
@@ -49,12 +61,15 @@ public final class AuthenticationAttemptLimiter<P, S> {
             return;
         }
 
-        var current = attempts.asMap().merge(event.getUUID(), 1, Integer::sum);
-        if (current >= maximumAttempts() && event.getPlayer() != null) {
-            var messageKey = event.getSource() == WrongPasswordEvent.AuthenticationSource.LOGIN
-                    ? "kick-error-password-wrong"
-                    : "totp-wrong";
-            plugin.getPlatformHandle().kick(event.getPlayer(), plugin.getMessages().getMessage(messageKey));
+        var uuid = event.getUUID();
+        var entry = attempts.asMap().compute(uuid, (key, current) ->
+                new AttemptEntry(current == null ? 1 : current.count() + 1, System.currentTimeMillis()));
+
+        if (entry.count() >= maximumAttempts() && event.getPlayer() != null) {
+            var seconds = (long) Math.ceil(getBlockedRemainingMillis(uuid) / 1000.0);
+            plugin.getPlatformHandle().kick(event.getPlayer(),
+                    plugin.getMessages().getMessage("kick-error-too-many-attempts",
+                            "%seconds%", String.valueOf(seconds)));
         }
     }
 
@@ -71,5 +86,8 @@ public final class AuthenticationAttemptLimiter<P, S> {
     private boolean isLoginCredential(WrongPasswordEvent.AuthenticationSource source) {
         return source == WrongPasswordEvent.AuthenticationSource.LOGIN
                 || source == WrongPasswordEvent.AuthenticationSource.TOTP;
+    }
+
+    private record AttemptEntry(int count, long lastAttemptMillis) {
     }
 }

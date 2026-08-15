@@ -33,7 +33,10 @@ public class LoginCommand<P> extends AuthorizationCommand<P> {
             if (!user.isRegistered()) throw new InvalidCommandArgument(getMessage("error-not-registered"));
 
             if (plugin.getAuthenticationAttemptLimiter().isBlocked(user.getUuid())) {
-                throw new InvalidCommandArgument(getMessage("error-throttle"));
+                var remaining = plugin.getAuthenticationAttemptLimiter().getBlockedRemainingMillis(user.getUuid());
+                var seconds = (long) Math.ceil(remaining / 1000.0);
+                throw new InvalidCommandArgument(getMessage("error-too-many-attempts",
+                        "%seconds%", String.valueOf(seconds)));
             }
 
             sender.sendMessage(getMessage("info-logging-in"));
