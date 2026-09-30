@@ -82,12 +82,36 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
+import java.util.zip.GZIPInputStream;
 
 import static xyz.kyngs.librelogin.common.config.ConfigurationKeys.*;
 
 public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S> {
 
     public static final Gson GSON = new Gson();
+
+    /**
+     * Gzipped copy of the complete forbidden-password list, generated at build
+     * time from {@code forbidden-passwords.txt}. Shipping it keeps a fresh or
+     * offline installation from starting with the two-entry placeholder.
+     */
+    private static final String BUNDLED_FORBIDDEN_PASSWORDS = "forbidden-passwords.txt.gz";
+    private static final String FORBIDDEN_PASSWORDS_TEMPLATE = "forbidden-passwords-template.txt";
+
+    /**
+     * Both endpoints below belong to this fork. Fetching the policy from the
+     * upstream repository made every installation depend on a third party that
+     * this project does not control.
+     */
+    private static final String FORBIDDEN_PASSWORDS_REMOTE_URL =
+            "https://raw.githubusercontent.com/mitsuba7891/LibreLogin-Fork/master/forbidden-passwords.txt";
+
+    /**
+     * A downloaded list below this size is rejected as truncated or as an error
+     * page. Replacing the local policy with garbage would silently remove the
+     * protection it provides.
+     */
+    private static final int MINIMUM_REMOTE_FORBIDDEN_PASSWORDS = 100_000;
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd. MM. yyyy HH:mm");
     public static final ExecutorService EXECUTOR;
 
@@ -593,27 +617,42 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
     }
 
     /**
-     * Loads local password policy data without performing network I/O. The
-     * return value indicates that the bundled bootstrap list was used and a
-     * background refresh should be scheduled once the plugin is enabled.
+     * Loads local password policy data without performing network I/O.
+     *
+     * @return {@code true} when only the two-entry placeholder template was
+     * available, so a background refresh should be scheduled. A full bundled
+     * list needs no refresh.
      */
     private boolean loadForbiddenPasswords() throws IOException {
         var file = new File(getDataFolder(), "forbidden-passwords.txt");
-        var createdFromTemplate = false;
 
-        if (!file.exists()) {
-            logger.info("Forbidden passwords list doesn't exist; using bundled policy until the background refresh completes");
-            try (var template = getResourceAsStream("forbidden-passwords-template.txt")) {
-                if (template == null) {
-                    throw new IOException("Bundled forbidden-password template is missing");
+        if (file.exists()) {
+            forbiddenPasswords = readForbiddenPasswords(file);
+            return false;
+        }
+
+        try (var bundled = getResourceAsStream(BUNDLED_FORBIDDEN_PASSWORDS)) {
+            if (bundled != null) {
+                try (var gzip = new GZIPInputStream(bundled)) {
+                    Files.copy(gzip, file.toPath());
                 }
-                Files.copy(template, file.toPath());
+                forbiddenPasswords = readForbiddenPasswords(file);
+                logger.info("Installed the bundled forbidden-password list (%s entries)".formatted(forbiddenPasswords.size()));
+                return false;
             }
-            createdFromTemplate = true;
+        }
+
+        logger.warn("The bundled forbidden-password list is missing; using the placeholder policy until the background refresh completes");
+
+        try (var template = getResourceAsStream(FORBIDDEN_PASSWORDS_TEMPLATE)) {
+            if (template == null) {
+                throw new IOException("Bundled forbidden-password template is missing");
+            }
+            Files.copy(template, file.toPath());
         }
 
         forbiddenPasswords = readForbiddenPasswords(file);
-        return createdFromTemplate;
+        return true;
     }
 
     private Set<String> readForbiddenPasswords(File file) throws IOException {
@@ -634,7 +673,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
     private void refreshForbiddenPasswords() {
         var target = new File(getDataFolder(), "forbidden-passwords.txt").toPath();
         try {
-            URLConnection connection = URI.create("https://raw.githubusercontent.com/kyngs/LibreLogin/dev/forbidden-passwords.txt")
+            URLConnection connection = URI.create(FORBIDDEN_PASSWORDS_REMOTE_URL)
                     .toURL()
                     .openConnection();
             connection.setConnectTimeout(5000);
@@ -645,7 +684,14 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
                 try (var input = new BufferedInputStream(connection.getInputStream())) {
                     Files.copy(input, temporary, StandardCopyOption.REPLACE_EXISTING);
                 }
+
                 var refreshed = readForbiddenPasswords(temporary.toFile());
+
+                if (refreshed.size() < MINIMUM_REMOTE_FORBIDDEN_PASSWORDS) {
+                    logger.warn("Ignoring the downloaded forbidden-password list; it only contains %s entries".formatted(refreshed.size()));
+                    return;
+                }
+
                 Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
                 forbiddenPasswords = refreshed;
                 logger.info("Forbidden passwords list refreshed (%s entries)".formatted(refreshed.size()));
@@ -653,7 +699,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
                 Files.deleteIfExists(temporary);
             }
         } catch (IOException e) {
-            logger.warn("Failed to refresh the forbidden-password list; keeping the bundled policy", e);
+            logger.warn("Failed to refresh the forbidden-password list; keeping the local policy", e);
         }
     }
 

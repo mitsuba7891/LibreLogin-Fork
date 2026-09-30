@@ -5,6 +5,7 @@ import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.bundling.Zip
 import java.security.MessageDigest
 import java.util.Base64
+import java.util.zip.GZIPOutputStream
 
 plugins {
     id("java")
@@ -131,6 +132,25 @@ repositories {
 val generatedSources = layout.buildDirectory.dir("generated/sources/versioned/main")
 val generatedLibbyDir = layout.buildDirectory.dir("generated/libby/main")
 val generatedLicenseDir = layout.buildDirectory.dir("generated/licenses/main")
+val generatedForbiddenPasswordsDir = layout.buildDirectory.dir("generated/forbidden-passwords/main")
+
+// Ships the complete forbidden-password list inside the jar (gzipped) instead of
+// relying on a download performed on first startup. The bundled placeholder
+// template only carries two entries, so a fresh or offline installation used to
+// start with an effectively empty password policy.
+val generateForbiddenPasswords = tasks.register("generateForbiddenPasswords") {
+    val source = rootProject.layout.projectDirectory.file("forbidden-passwords.txt")
+    inputs.file(source)
+    outputs.dir(generatedForbiddenPasswordsDir)
+
+    doLast {
+        val output = generatedForbiddenPasswordsDir.get().file("forbidden-passwords.txt.gz").asFile
+        output.parentFile.mkdirs()
+        GZIPOutputStream(output.outputStream().buffered()).use { gzip ->
+            source.asFile.inputStream().use { input -> input.copyTo(gzip) }
+        }
+    }
+}
 
 // The license texts are copied into the jar from their canonical locations in
 // the repository root. They used to be committed as symlinks, which Git
@@ -171,6 +191,7 @@ sourceSets {
         java.srcDir(generatedSources)
         resources.srcDir(generatedLibbyDir)
         resources.srcDir(generatedLicenseDir)
+        resources.srcDir(generatedForbiddenPasswordsDir)
     }
 }
 
@@ -433,6 +454,7 @@ tasks.named<ProcessResources>("processResources") {
     dependsOn(rootProject.tasks.named("bumpVersion"))
     dependsOn(generateLibbyJson)
     dependsOn(generateLicenseResources)
+    dependsOn(generateForbiddenPasswords)
 }
 
 tasks.withType<ProcessResources> {
