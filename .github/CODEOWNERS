@@ -1,0 +1,24 @@
+# Review requirements for the files that can reach the CI secrets or change what
+# ships to users. A pull request touching any of these cannot be merged without
+# the owner's review, which is what keeps a contribution from rewriting the
+# pipeline into a secret-exfiltration step.
+#
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Receives kyngs_repo_token and kyngs_repo_secret.
+/.woodpecker/            @mitsuba7891
+
+# Dependabot configuration and this file.
+/.github/                @mitsuba7891
+
+# Build scripts decide what is compiled, shaded, relocated and downloaded at
+# runtime (Libby), so they define the shipped artifact.
+/build.gradle            @mitsuba7891
+/settings.gradle         @mitsuba7891
+/Plugin/build.gradle.kts @mitsuba7891
+/API/build.gradle.kts    @mitsuba7891
+
+# License and notice material must not be silently changed.
+/LICENSE                 @mitsuba7891
+/HEADER.txt              @mitsuba7891
+/licenses/               @mitsuba7891
