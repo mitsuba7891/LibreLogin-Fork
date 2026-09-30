@@ -175,7 +175,14 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
         if (pluginPresent("redisbungee")) {
             redisBungee = new VelocityRedisBungeeIntegration();
         }
+
         super.enable();
+
+        if (isDisabledByFailure()) {
+            getLogger().error("LibreLogin refuses every connection until the problem reported above is fixed.");
+            return;
+        }
+
         getLogger().info("LibreLogin version " + getVersion() + " enabled!");
     }
 

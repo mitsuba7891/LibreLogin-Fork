@@ -132,22 +132,33 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
 
         logger = provideLogger();
 
+        // Both of the branches below used to call disable(), which returned early
+        // whenever the database provider was still null, leaving the plugin
+        // "enabled" after announcing that it would not start. Disable the plugin
+        // itself so the message and the state agree.
         if (Bukkit.getOnlineMode()) {
             getLogger().error("!!!The server is running in online mode! LibreLogin won't start unless you set it to false!!!");
-            disable();
+            bootstrap.disable();
             return;
         }
 
         if (isProxyConfigured()) {
             getLogger().error("!!!This server is running under a proxy, LibreLogin won't start!!!");
             getLogger().error("If you want to use LibreLogin under a proxy, place it on the proxy and remove it from the server.");
-            disable();
+            bootstrap.disable();
             return;
         }
 
-        try {
-            super.enable();
-        } catch (ShutdownException e) {
+        super.enable();
+
+        // Initialisation failed. Registering only the connection handlers keeps
+        // the server running while every login is refused, which is the whole
+        // point of not terminating the process. The blocking listeners are left
+        // out because they depend on the state that failed to initialise.
+        if (isDisabledByFailure()) {
+            listeners = new PaperListeners(this);
+            Bukkit.getPluginManager().registerEvents(listeners, bootstrap);
+            getLogger().error("LibreLogin refuses every connection until the problem reported above is fixed.");
             return;
         }
 
@@ -231,13 +242,6 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
         var isVelocity = new SimplePie("is_velocity", () -> "Paper");
 
         metrics.addCustomChart(isVelocity);
-    }
-
-    @Override
-    protected void shutdownProxy(int code) {
-        bootstrap.disable();
-        bootstrap.getServer().shutdown();
-        throw new ShutdownException();
     }
 
     @Override

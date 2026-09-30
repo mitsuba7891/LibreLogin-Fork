@@ -84,6 +84,7 @@ public class VelocityListeners extends AuthenticListeners<VelocityLibreLogin, Pl
 
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
+        if (plugin.isDisabledByFailure()) return;
         onPlayerDisconnect(event.getPlayer());
     }
 
@@ -112,6 +113,16 @@ public class VelocityListeners extends AuthenticListeners<VelocityLibreLogin, Pl
 
         if (!event.getResult().isAllowed())
             return;
+
+        // Fail closed. Initialisation problems no longer terminate the proxy,
+        // so refusing every connection here is what keeps an incomplete
+        // authentication setup from letting players through unverified.
+        if (plugin.isDisabledByFailure()) {
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(
+                    Component.text("LibreLogin is disabled, contact the server administrator.")
+            ));
+            return;
+        }
 
         // If floodgate is present, attempt to extract the floodgate player from the connection channel.
         if (plugin.floodgateEnabled()) {

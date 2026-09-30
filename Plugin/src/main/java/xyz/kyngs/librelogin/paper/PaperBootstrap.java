@@ -21,6 +21,12 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
 
     private PaperLibreLogin libreLogin;
 
+    /**
+     * Set when the server distribution cannot run LibreLogin at all. The plugin
+     * is disabled in {@link #onEnable()} instead of terminating the server.
+     */
+    private boolean unusable;
+
     @Override
     public @Nullable ChunkGenerator getDefaultWorldGenerator(@NotNull String worldName, @Nullable String id) {
         return id == null ?
@@ -41,11 +47,18 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
             getLogger().warning("LibreLogin was not initialized during onLoad; initializing during onEnable.");
         }
         initialize();
+
+        if (libreLogin == null) {
+            getLogger().severe("LibreLogin could not be initialised and stays disabled; see the errors above.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         libreLogin.enable();
     }
 
     private void initialize() {
-        if (libreLogin != null) {
+        if (unusable || libreLogin != null) {
             return;
         }
 
@@ -59,6 +72,7 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
             }
         } catch (ClassNotFoundException e) {
             unsupportedSetup();
+            return;
         }
 
         getLogger().info("Detected Adventure-compatible server distribution - " + getServer().getName() + " " + getServer().getVersion());
@@ -77,8 +91,12 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
         try {
             libraryManager.configureFromJSON();
         } catch (Exception e) {
-            getSLF4JLogger().error("Failed to load libraries, stopping server to prevent damage", e);
-            stopServer();
+            // Library loading needs outbound HTTPS. Refusing to start is correct,
+            // but terminating the server over it is not: the operator may be
+            // running behind a firewall that has nothing to do with LibreLogin.
+            getSLF4JLogger().error("Failed to load libraries; LibreLogin will stay disabled", e);
+            unusable = true;
+            return;
         }
 
         libreLogin = new PaperLibreLogin(this);
@@ -91,16 +109,9 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
 
         getLogger().severe("***********************************************************");
 
-        stopServer();
-    }
+        getLogger().severe("LibreLogin is disabled and will not authenticate anyone.");
 
-    private void stopServer() {
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException ignored) {
-        }
-
-        System.exit(1);
+        unusable = true;
     }
 
     @Override

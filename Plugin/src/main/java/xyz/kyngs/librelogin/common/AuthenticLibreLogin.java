@@ -112,6 +112,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
      * protection it provides.
      */
     private static final int MINIMUM_REMOTE_FORBIDDEN_PASSWORDS = 100_000;
+
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd. MM. yyyy HH:mm");
     public static final ExecutorService EXECUTOR;
 
@@ -144,6 +145,12 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
     private AuthenticationAttemptLimiter<P, S> authenticationAttemptLimiter;
     private PasswordService passwordService;
     private UserSessionService userSessionService;
+
+    /**
+     * Non-null once initialisation gave up. Every incoming connection is refused
+     * while it is set, which is what makes it safe to keep the process alive.
+     */
+    private volatile String fatalFailure;
 
     protected AuthenticLibreLogin() {
         cryptoProviders = new ConcurrentHashMap<>();
@@ -242,7 +249,23 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         return serverHandler;
     }
 
+    /**
+     * Runs initialisation and, when it cannot complete, keeps the plugin loaded
+     * but refusing every connection.
+     */
     protected void enable() {
+        try {
+            enableInternal();
+        } catch (PluginDisabledException disabled) {
+            fatalFailure = disabled.getMessage();
+            if (logger != null) {
+                logger.error("LibreLogin is disabled and refuses every login until the reported problem is fixed: " + fatalFailure);
+                logger.error("The server/proxy was deliberately left running. Fix the problem above and restart it.");
+            }
+        }
+    }
+
+    private void enableInternal() {
         version = SemanticVersion.parse(getVersion());
         if (logger == null) logger = provideLogger();
 
@@ -302,7 +325,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         if (getDefaultCryptoProvider() == null) {
             logger.error("Unknown password hashing provider '%s'; refusing to start"
                     .formatted(configuration.get(DEFAULT_CRYPTO_PROVIDER)));
-            shutdownProxy(1);
+            abortStartup(1);
             return;
         }
 
@@ -313,7 +336,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
             refreshForbiddenPasswords = loadForbiddenPasswords();
         } catch (IOException e) {
             logger.error("Failed to load the forbidden-password list", e);
-            shutdownProxy(1);
+            abortStartup(1);
         }
 
         logger.info("Loaded %s forbidden passwords".formatted(forbiddenPasswords.size()));
@@ -387,7 +410,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
             var registration = readProviders.get(configuration.get(DATABASE_TYPE));
             if (registration == null) {
                 logger.error("Database type %s doesn't exist, please check your configuration".formatted(configuration.get(DATABASE_TYPE)));
-                shutdownProxy(1);
+                abortStartup(1);
             }
 
             DatabaseConnector<?, ?> connector = null;
@@ -397,7 +420,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
 
                 if (connectorRegistration == null) {
                     logger.error("Database type %s is corrupted, please use a different one".formatted(configuration.get(DATABASE_TYPE)));
-                    shutdownProxy(1);
+                    abortStartup(1);
                 }
 
                 connector = connectorRegistration.factory().apply("database.properties." + connectorRegistration.id() + ".");
@@ -412,14 +435,17 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
                 databaseConnector = connector;
             } else {
                 logger.error("Database type %s cannot be used for writing, please use a different one".formatted(configuration.get(DATABASE_TYPE)));
-                shutdownProxy(1);
+                abortStartup(1);
             }
 
+        } catch (PluginDisabledException disabled) {
+            // Do not report the deliberate abort as a connection failure.
+            throw disabled;
         } catch (Exception e) {
             var cause = GeneralUtil.getFurthestCause(e);
             logger.error("!! THIS IS MOST LIKELY NOT AN ERROR CAUSED BY LIBRELOGIN !!");
             logger.error("Failed to connect to the database, this most likely is caused by wrong credentials. Cause: %s: %s".formatted(cause.getClass().getSimpleName(), cause.getMessage()));
-            shutdownProxy(1);
+            abortStartup(1);
         }
 
         logger.info("Successfully connected to the database");
@@ -433,7 +459,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
                 var cause = GeneralUtil.getFurthestCause(e);
                 logger.error("Failed to validate schema! Cause: %s: %s".formatted(cause.getClass().getSimpleName(), cause.getMessage()));
                 logger.error("Please open an issue on our GitHub, or visit Discord support");
-                shutdownProxy(1);
+                abortStartup(1);
             }
 
             logger.info("Schema validated");
@@ -449,12 +475,12 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
             messages.reload(this);
         } catch (IOException e) {
             logger.error("Failed to load messages", e);
-            shutdownProxy(1);
+            abortStartup(1);
         } catch (CorruptedConfigurationException e) {
             var cause = GeneralUtil.getFurthestCause(e);
             logger.error("!! THIS IS MOST LIKELY NOT AN ERROR CAUSED BY LIBRELOGIN !!");
             logger.error("!!The messages are corrupted, please look below for further clues. If you are clueless, delete the messages and a new ones will be created for you. Cause: %s: %s".formatted(cause.getClass().getSimpleName(), cause.getMessage()));
-            shutdownProxy(1);
+            abortStartup(1);
         }
 
         logger.info("Loading configuration...");
@@ -472,7 +498,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         try {
             if (configuration.reload(this)) {
                 logger.warn("!! A new configuration was generated, please fill it out, if in doubt, see the wiki !!");
-                shutdownProxy(0);
+                abortStartup(0);
             }
 
             var limbos = configuration.get(LIMBO);
@@ -485,12 +511,12 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
             }
         } catch (IOException e) {
             logger.error("Failed to load configuration", e);
-            shutdownProxy(1);
+            abortStartup(1);
         } catch (CorruptedConfigurationException e) {
             var cause = GeneralUtil.getFurthestCause(e);
             logger.error("!! THIS IS MOST LIKELY NOT AN ERROR CAUSED BY LIBRELOGIN !!");
             logger.error("!!The configuration is corrupted, please look below for further clues. If you are clueless, delete the config and a new one will be created for you. Cause: %s: %s".formatted(cause.getClass().getSimpleName(), cause.getMessage()));
-            shutdownProxy(1);
+            abortStartup(1);
         }
     }
 
@@ -907,14 +933,31 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         return floodgateApi != null && uuid != null && floodgateApi.isFloodgateId(uuid);
     }
 
-    protected void shutdownProxy(int code) {
-        //noinspection finally
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException ignored) {
-        } finally {
-            System.exit(code);
-        }
+    /**
+     * Aborts initialisation without terminating the JVM. This used to sleep for
+     * five seconds and then call {@code System.exit}, which took the entire
+     * network, and every unrelated plugin on it, down over a configuration or
+     * database problem that only concerns authentication.
+     */
+    protected void abortStartup(int code) {
+        throw new PluginDisabledException(code == 0
+                ? "a new configuration was generated and has to be filled in"
+                : "initialisation failed (exit code " + code + ")");
+    }
+
+    /**
+     * @return true when initialisation failed and every connection must be
+     * refused.
+     */
+    public boolean isDisabledByFailure() {
+        return fatalFailure != null;
+    }
+
+    /**
+     * @return the reason initialisation failed, or null when it succeeded.
+     */
+    public String getFatalFailureReason() {
+        return fatalFailure;
     }
 
     public abstract Audience getAudienceFromIssuer(CommandIssuer issuer);

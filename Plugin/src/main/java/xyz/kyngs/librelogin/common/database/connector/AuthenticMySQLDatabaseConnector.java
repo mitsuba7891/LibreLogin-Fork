@@ -154,10 +154,11 @@ public class AuthenticMySQLDatabaseConnector extends AuthenticDatabaseConnector<
                 return function.apply(connection);
             }
         } catch (SQLTransientConnectionException e) {
-            plugin.getLogger().error("Lost connection to the database; shutting down to prevent inconsistent authentication data", e);
-            System.exit(1);
-            //Won't return anyway
-            return null;
+            // Fail closed instead of terminating the process. The operation that
+            // needed the database is refused, so authentication data stays
+            // consistent, but the server and every other plugin keep running.
+            plugin.getLogger().error("Lost connection to the database; refusing the operation to keep authentication data consistent", e);
+            throw new IllegalStateException("Lost connection to the database", e);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

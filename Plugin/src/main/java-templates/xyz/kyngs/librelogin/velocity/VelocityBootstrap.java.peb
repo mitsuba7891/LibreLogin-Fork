@@ -83,6 +83,14 @@ public class VelocityBootstrap implements LibreLoginProvider<Player, RegisteredS
     public void onInitialization(ProxyInitializeEvent event) {
         libreLogin.enable();
 
+        // When initialisation fails only the connection handlers are registered.
+        // They refuse every login and do not depend on the state that failed to
+        // load, so the proxy keeps running instead of being terminated.
+        if (libreLogin.isDisabledByFailure()) {
+            server.getEventManager().register(this, new VelocityListeners(libreLogin));
+            return;
+        }
+
         server.getEventManager().register(this, new Blockers(libreLogin.getAuthorizationProvider(), libreLogin.getConfiguration()));
         server.getEventManager().register(this, new VelocityListeners(libreLogin));
     }

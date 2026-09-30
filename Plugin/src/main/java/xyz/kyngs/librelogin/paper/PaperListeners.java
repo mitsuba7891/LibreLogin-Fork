@@ -90,6 +90,10 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent event) {
+        if (plugin.isDisabledByFailure()) {
+            event.getPlayer().kick(Component.text("LibreLogin is disabled, contact the server administrator."));
+            return;
+        }
         var data = plugin.getUserSessionService().findPending(event.getPlayer().getUniqueId());
         if (data == null && !plugin.fromFloodgate(event.getPlayer().getName())) {
             event.getPlayer().kick(Component.text("Internal error, please try again later."));
@@ -100,6 +104,17 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
+        // Fail closed. Initialisation problems no longer terminate the server,
+        // so refusing every connection here is what keeps an incomplete
+        // authentication setup from letting players through unverified.
+        if (plugin.isDisabledByFailure()) {
+            event.disallow(
+                    AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                    Component.text("LibreLogin is disabled, contact the server administrator.")
+            );
+            return;
+        }
+
         if (plugin.fromFloodgate(event.getName())) {
             ipCache.put(event.getUniqueId(), event.getAddress().getHostAddress());
             return;
