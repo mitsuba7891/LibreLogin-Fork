@@ -9,7 +9,9 @@ package xyz.kyngs.librelogin.common.database.connector;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthenticMySQLDatabaseConnectorTest {
 
@@ -51,5 +53,49 @@ class AuthenticMySQLDatabaseConnectorTest {
                         "jdbc:postgresql://localhost:5432/librelogin"
                 )
         );
+    }
+
+    @Test
+    void detectsExplicitlyEncryptedUrls() {
+        assertFalse(AuthenticMySQLDatabaseConnector.requestsEncryption(
+                "jdbc:mariadb://db:3306/librelogin?autoReconnect=true"
+        ));
+        assertFalse(AuthenticMySQLDatabaseConnector.requestsEncryption(
+                "jdbc:mariadb://db:3306/librelogin?sslMode=disable"
+        ));
+        assertFalse(AuthenticMySQLDatabaseConnector.requestsEncryption(
+                "jdbc:postgresql://db:5432/librelogin?ssl=false"
+        ));
+
+        assertTrue(AuthenticMySQLDatabaseConnector.requestsEncryption(
+                "jdbc:mariadb://db:3306/librelogin?sslMode=verify-full"
+        ));
+        assertTrue(AuthenticMySQLDatabaseConnector.requestsEncryption(
+                "jdbc:mysql://db:3306/librelogin?sslMode=VERIFY_IDENTITY"
+        ));
+        assertTrue(AuthenticMySQLDatabaseConnector.requestsEncryption(
+                "jdbc:postgresql://db:5432/librelogin?sslmode=verify-full"
+        ));
+        assertTrue(AuthenticMySQLDatabaseConnector.requestsEncryption(
+                "jdbc:mariadb://db:3306/librelogin?useSsl=true"
+        ));
+    }
+
+    @Test
+    void recognisesLoopbackHosts() {
+        assertTrue(AuthenticMySQLDatabaseConnector.isLoopbackJdbcUrl("jdbc:mariadb://localhost:3306/librelogin"));
+        assertTrue(AuthenticMySQLDatabaseConnector.isLoopbackJdbcUrl("jdbc:mariadb://127.0.0.1:3306/librelogin?sslMode=disable"));
+        assertTrue(AuthenticMySQLDatabaseConnector.isLoopbackJdbcUrl("jdbc:postgresql://[::1]:5432/librelogin"));
+
+        assertFalse(AuthenticMySQLDatabaseConnector.isLoopbackJdbcUrl("jdbc:mariadb://db.internal:3306/librelogin"));
+        assertFalse(AuthenticMySQLDatabaseConnector.isLoopbackJdbcUrl("jdbc:mariadb://localhost.example.com:3306/librelogin"));
+        assertFalse(AuthenticMySQLDatabaseConnector.isLoopbackJdbcUrl("not-a-jdbc-url"));
+    }
+
+    @Test
+    void defaultMariaDbUrlRequiresVerifiedTls() {
+        var url = AuthenticMySQLDatabaseConnector.Configuration.JDBC_URL.defaultValue();
+
+        assertTrue(AuthenticMySQLDatabaseConnector.requestsEncryption(url));
     }
 }

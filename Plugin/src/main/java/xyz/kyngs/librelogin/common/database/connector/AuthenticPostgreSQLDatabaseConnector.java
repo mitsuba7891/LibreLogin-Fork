@@ -33,13 +33,25 @@ public class AuthenticPostgreSQLDatabaseConnector extends AuthenticDatabaseConne
         hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
         hikariConfig.addDataSourceProperty("prepStmtCacheSize", "250");
         hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-        hikariConfig.addDataSourceProperty("ssl", "false");
-        hikariConfig.addDataSourceProperty("sslmode", "disable");
 
         hikariConfig.setUsername(get(Configuration.USER));
         hikariConfig.setPassword(get(Configuration.PASSWORD));
-        hikariConfig.setJdbcUrl("jdbc:postgresql://" + get(Configuration.HOST) + ":" + get(Configuration.PORT) + "/" + get(Configuration.NAME) + "?sslmode=disable&autoReconnect=true&zeroDateTimeBehavior=convertToNull&ssl=false");
+
+        var jdbcUrl = get(Configuration.JDBC_URL)
+                .replace("%host%", get(Configuration.HOST))
+                .replace("%port%", String.valueOf(get(Configuration.PORT)))
+                .replace("%database%", get(Configuration.NAME));
+
+        hikariConfig.setJdbcUrl(jdbcUrl);
         hikariConfig.setMaxLifetime(get(Configuration.MAX_LIFE_TIME));
+
+        // The transport was previously pinned to sslmode=disable, which made
+        // encryption impossible even for administrators who wanted it.
+        if (!AuthenticMySQLDatabaseConnector.isLoopbackJdbcUrl(jdbcUrl)
+                && !AuthenticMySQLDatabaseConnector.requestsEncryption(jdbcUrl)) {
+            plugin.getLogger().warn("The database connection is not encrypted: '" + jdbcUrl + "' does not enable TLS.");
+            plugin.getLogger().warn("Password hashes and the database credentials travel in clear text. Add sslmode=verify-full to the JDBC URL.");
+        }
     }
 
     @Override
@@ -124,6 +136,19 @@ public class AuthenticPostgreSQLDatabaseConnector extends AuthenticDatabaseConne
                 600000,
                 "The maximum lifetime of a database connection in milliseconds. Don't touch this if you don't know what you're doing.",
                 ConfigurateHelper::getInt
+        );
+
+        public static final ConfigurationKey<String> JDBC_URL = new ConfigurationKey<>(
+                "jdbc-url",
+                "jdbc:postgresql://%host%:%port%/%database%?sslmode=verify-full",
+                """
+                        The JDBC URL of the database. Keep user/password in their separate fields.
+                        The default enables TLS (sslmode=verify-full) and validates the server certificate against the JVM trust store.
+                        Using a self-signed certificate? Point sslrootcert at your CA file, or relax to sslmode=verify-ca.
+                        sslmode=prefer and sslmode=require encrypt the connection without authenticating the server, so prefer the verifying modes.
+                        Loopback hosts are exempt and warn instead of failing.
+                        """,
+                ConfigurateHelper::getString
         );
     }
 }

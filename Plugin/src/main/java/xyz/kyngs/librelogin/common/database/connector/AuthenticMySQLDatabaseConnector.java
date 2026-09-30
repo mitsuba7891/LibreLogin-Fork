@@ -46,6 +46,70 @@ public class AuthenticMySQLDatabaseConnector extends AuthenticDatabaseConnector<
         hikariConfig.setDriverClassName(resolveDriverClassName(jdbcUrl));
         hikariConfig.setJdbcUrl(jdbcUrl);
         hikariConfig.setMaxLifetime(get(Configuration.MAX_LIFE_TIME));
+
+        if (!isLoopbackJdbcUrl(jdbcUrl) && !requestsEncryption(jdbcUrl)) {
+            plugin.getLogger().warn("The database connection is not encrypted: '" + jdbcUrl + "' does not enable TLS.");
+            plugin.getLogger().warn("Password hashes and the database credentials travel in clear text. Add sslMode=verify-full to the JDBC URL (or sslMode=VERIFY_IDENTITY with jdbc:mysql://).");
+        }
+    }
+
+    /**
+     * Reports whether the URL explicitly asks for an encrypted connection.
+     * Relying on the driver default is not enough: MariaDB Connector/J 3.x
+     * defaults to {@code sslMode=disable}, which sends password hashes and the
+     * database credentials over the network unencrypted.
+     */
+    static boolean requestsEncryption(String jdbcUrl) {
+        var queryStart = jdbcUrl.indexOf('?');
+        if (queryStart < 0) {
+            return false;
+        }
+
+        var query = jdbcUrl.substring(queryStart + 1).toLowerCase(java.util.Locale.ROOT);
+
+        for (String parameter : query.split("&")) {
+            var separator = parameter.indexOf('=');
+            if (separator <= 0) continue;
+
+            var key = parameter.substring(0, separator);
+            var value = parameter.substring(separator + 1);
+
+            switch (key) {
+                case "sslmode", "ssl-mode" -> {
+                    // MariaDB: disable|trust|verify-ca|verify-full
+                    // MySQL:   DISABLE|PREFERRED|REQUIRED|VERIFY_CA|VERIFY_IDENTITY
+                    if (!value.equals("disable")) return true;
+                }
+                case "usessl", "use-ssl", "requiresecuretransport" -> {
+                    if (value.equals("true")) return true;
+                }
+                default -> {
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /** Loopback connections never leave the host, so transport encryption is not required there. */
+    static boolean isLoopbackJdbcUrl(String jdbcUrl) {
+        var schemeEnd = jdbcUrl.indexOf("://");
+        if (schemeEnd < 0) return false;
+
+        var authority = jdbcUrl.substring(schemeEnd + 3);
+        var pathStart = authority.indexOf('/');
+        if (pathStart >= 0) authority = authority.substring(0, pathStart);
+
+        String host;
+        if (authority.startsWith("[")) {
+            var end = authority.indexOf(']');
+            host = end < 0 ? authority.substring(1) : authority.substring(1, end);
+        } else {
+            var portStart = authority.indexOf(':');
+            host = portStart < 0 ? authority : authority.substring(0, portStart);
+        }
+
+        return host.equalsIgnoreCase("localhost") || host.equals("127.0.0.1") || host.equals("::1");
     }
 
     static String resolveDriverClassName(String jdbcUrl) {
@@ -146,8 +210,15 @@ public class AuthenticMySQLDatabaseConnector extends AuthenticDatabaseConnector<
 
         public static final ConfigurationKey<String> JDBC_URL = new ConfigurationKey<>(
                 "jdbc-url",
-                "jdbc:mariadb://%host%:%port%/%database%?autoReconnect=true&zeroDateTimeBehavior=convertToNull",
-                "The JDBC URL of the database. Use jdbc:mariadb:// for MariaDB or jdbc:mysql:// for official MySQL. Keep user/password in their separate fields.",
+                "jdbc:mariadb://%host%:%port%/%database%?autoReconnect=true&zeroDateTimeBehavior=convertToNull&sslMode=verify-full",
+                """
+                        The JDBC URL of the database. Use jdbc:mariadb:// for MariaDB or jdbc:mysql:// for official MySQL. Keep user/password in their separate fields.
+                        The default enables TLS (sslMode=verify-full) and validates the server certificate against the JVM trust store.
+                        The MariaDB driver defaults to sslMode=disable, which would send password hashes and the database credentials in clear text.
+                        Using a self-signed certificate? Point serverSslCert to your CA file, or relax to sslMode=verify-ca.
+                        sslMode=trust encrypts the connection without authenticating the server, so only use it as a last resort.
+                        With jdbc:mysql:// the equivalent value is sslMode=VERIFY_IDENTITY. Loopback hosts are exempt and warn instead of failing.
+                        """,
                 ConfigurateHelper::getString
         );
     }
