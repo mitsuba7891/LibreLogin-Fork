@@ -15,6 +15,9 @@
 #  * The former `update-wiki` step pushed to `kyngs/LibreLogin.wiki` using a
 #    personal access token. A fork must not hold write access to another
 #    maintainer's repository, so the step has been removed.
+#  * There is deliberately no step-level `secrets:` list. That was the legacy
+#    0.x syntax and is absent from the current workflow schema; secrets reach a
+#    step only through `from_secret`, which is what the publish step uses.
 
 steps:
   platformArtifacts:
@@ -47,4 +50,3 @@ steps:
           - master
           - dev
       - event: tag
-    secrets: [ kyngs_repo_token, kyngs_repo_secret ]
