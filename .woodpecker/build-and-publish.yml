@@ -1,23 +1,21 @@
-# Build and release pipeline.
+# Build pipeline.
 #
 # Security notes for a public repository:
 #
-#  * Secrets are injected through `environment`, never as command-line arguments
-#    and never embedded in a remote URL. `argv` is readable by every local
-#    process, shows up in process listings and is echoed by failing commands;
-#    a token in a URL is printed by git itself whenever a push fails.
-#  * Only this file's `publish` step receives secrets, and it is restricted to
-#    push and tag events, so a pull request can never read them even when it
-#    edits this file. `.github/CODEOWNERS` marks this directory as owned by
-#    @mitsuba7891 so such an edit cannot be merged without review, and the
-#    Woodpecker instance should additionally require approval for pipelines
-#    coming from forks.
+#  * This pipeline needs no repository secrets at all. It only builds and
+#    verifies the artifacts, so there is nothing here for a pull request to
+#    steal even if it rewrites this file.
+#  * The former `publish` step pushed the API artifact to repo.kyngs.xyz, the
+#    upstream maintainer's Maven repository, using credentials this fork does
+#    not own. It passed those credentials as `-P` command-line arguments, which
+#    are readable by every local process and echoed by failing commands. The
+#    step has been removed: publishing is now opt-in through
+#    `-PpublishRepositoryUrl=<your repository>` (see API/build.gradle.kts).
 #  * The former `update-wiki` step pushed to `kyngs/LibreLogin.wiki` using a
 #    personal access token. A fork must not hold write access to another
-#    maintainer's repository, so the step has been removed.
+#    maintainer's repository, so the step has been removed as well.
 #  * There is deliberately no step-level `secrets:` list. That was the legacy
-#    0.x syntax and is absent from the current workflow schema; secrets reach a
-#    step only through `from_secret`, which is what the publish step uses.
+#    0.x syntax and is absent from the current workflow schema.
 
 steps:
   platformArtifacts:
@@ -34,19 +32,3 @@ steps:
       - "test \"$(find Plugin/build/libs/platform -maxdepth 1 -type f -name 'LibreLogin-Paper-*.jar' | wc -l)\" -eq 1"
       - "test \"$(find Plugin/build/libs/platform -maxdepth 1 -type f -name 'LibreLogin-Velocity-*.jar' | wc -l)\" -eq 1"
       - "set -eu; paper=\"$(find Plugin/build/libs/platform -maxdepth 1 -type f -name 'LibreLogin-Paper-*.jar' | head -1)\"; velocity=\"$(find Plugin/build/libs/platform -maxdepth 1 -type f -name 'LibreLogin-Velocity-*.jar' | head -1)\"; test -f \"$paper\"; test -f \"$velocity\"; paper_list=\"$(mktemp)\"; velocity_list=\"$(mktemp)\"; trap 'rm -f \"$paper_list\" \"$velocity_list\"' EXIT; jar tf \"$paper\" > \"$paper_list\"; jar tf \"$velocity\" > \"$velocity_list\"; ! grep -q '^xyz/kyngs/librelogin/velocity/' \"$paper_list\"; ! grep -q '^xyz/kyngs/librelogin/paper/' \"$velocity_list\"; grep -q '^plugin.yml$' \"$paper_list\"; ! grep -q '^plugin.yml$' \"$velocity_list\"; grep -q '^paper-plugin.yml$' \"$paper_list\"; ! grep -q '^paper-plugin.yml$' \"$velocity_list\"; grep -q '^LICENSE.txt$' \"$paper_list\"; grep -q '^LICENSE.txt$' \"$velocity_list\""
-
-  publish:
-    image: "eclipse-temurin:21-alpine"
-    commands:
-      - "./gradlew :API:publish"
-    environment:
-      ORG_GRADLE_PROJECT_kyngsRepoUsername:
-        from_secret: kyngs_repo_token
-      ORG_GRADLE_PROJECT_kyngsRepoPassword:
-        from_secret: kyngs_repo_secret
-    when:
-      - event: push
-        branch:
-          - master
-          - dev
-      - event: tag

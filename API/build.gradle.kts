@@ -34,18 +34,26 @@ java {
     withJavadocJar()
 }
 
+// Publishing the API artifact is opt-in and never targets the upstream
+// maintainer's infrastructure. The repository used to be hardcoded to
+// repo.kyngs.xyz together with credentials this fork does not own, so a fork
+// that enabled it would have written its own artifact into a third party's
+// Maven repository. Pass -PpublishRepositoryUrl=<url> to publish into your own
+// repository; the credentials are then taken from the releaseUsername /
+// releasePassword project properties (or the matching ORG_GRADLE_PROJECT_*
+// environment variables).
 publishing {
     repositories {
-        maven {
-            name = "kyngsRepo"
-            url = uri(
-                "https://repo.kyngs.xyz/" + (if (project.version.toString()
-                        .contains("SNAPSHOT")
-                ) "snapshots" else "releases") + "/"
-            )
-            credentials(PasswordCredentials::class)
-            authentication {
-                create<BasicAuthentication>("basic")
+        val publishUrl = providers.gradleProperty("publishRepositoryUrl").orNull
+
+        if (publishUrl != null) {
+            maven {
+                name = "release"
+                url = uri(publishUrl)
+                credentials(PasswordCredentials::class)
+                authentication {
+                    create<BasicAuthentication>("basic")
+                }
             }
         }
     }
