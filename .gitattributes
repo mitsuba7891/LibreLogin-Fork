@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Binary assets must never be line-ending normalised. yggdrasil_session_pubkey.der
+# is parsed as a DER key at runtime; a mangled checkout breaks Mojang session
+# signature verification.
+*.der binary
+*.jar binary
+*.png binary

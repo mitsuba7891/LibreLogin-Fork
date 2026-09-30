@@ -130,6 +130,28 @@ repositories {
 
 val generatedSources = layout.buildDirectory.dir("generated/sources/versioned/main")
 val generatedLibbyDir = layout.buildDirectory.dir("generated/libby/main")
+val generatedLicenseDir = layout.buildDirectory.dir("generated/licenses/main")
+
+// The license texts are copied into the jar from their canonical locations in
+// the repository root. They used to be committed as symlinks, which Git
+// materialises as plain files on a Windows checkout (core.symlinks=false), so
+// a Windows build shipped the link target string as the license text.
+val generateLicenseResources = tasks.register("generateLicenseResources") {
+    val licenses = mapOf(
+        rootProject.layout.projectDirectory.file("LICENSE") to "LICENSE.txt",
+        rootProject.layout.projectDirectory.file("licenses/FASTLOGIN_LICENSE") to "FASTLOGIN_LICENSE.txt"
+    )
+    inputs.files(licenses.keys.toList())
+    outputs.dir(generatedLicenseDir)
+
+    doLast {
+        val outputDir = generatedLicenseDir.get().asFile
+        outputDir.mkdirs()
+        licenses.forEach { (source, name) ->
+            source.asFile.copyTo(outputDir.resolve(name), overwrite = true)
+        }
+    }
+}
 
 val generateVersionedSources = tasks.register("generateVersionedSources") {
     val template = layout.projectDirectory.file("src/main/java-templates/xyz/kyngs/librelogin/velocity/VelocityBootstrap.java.peb")
@@ -148,6 +170,7 @@ sourceSets {
     named("main") {
         java.srcDir(generatedSources)
         resources.srcDir(generatedLibbyDir)
+        resources.srcDir(generatedLicenseDir)
     }
 }
 
@@ -175,9 +198,9 @@ java {
     targetCompatibility = JavaVersion.VERSION_21
 }
 
-tasks.withType<Jar> {
-    from("../LICENSE.txt")
-}
+// The MPL-2.0 text reaches the jar as the generated LICENSE.txt resource (see
+// generateLicenseResources). The previous `from("../LICENSE.txt")` pointed at a
+// path that does not exist, and Gradle silently ignored it.
 
 
 dependencies {
@@ -409,6 +432,7 @@ tasks.named("generateVersionedSources") {
 tasks.named<ProcessResources>("processResources") {
     dependsOn(rootProject.tasks.named("bumpVersion"))
     dependsOn(generateLibbyJson)
+    dependsOn(generateLicenseResources)
 }
 
 tasks.withType<ProcessResources> {
