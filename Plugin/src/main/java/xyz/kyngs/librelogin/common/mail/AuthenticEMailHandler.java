@@ -37,10 +37,13 @@ public class AuthenticEMailHandler implements EmailHandler {
             mail.addTo(email);
             mail.setFrom(config.get(ConfigurationKeys.MAIL_EMAIL), config.get(ConfigurationKeys.MAIL_SENDER));
 
+            // TLS is mandatory on every branch. Port 465 is implicit TLS
+            // (SMTPS), so the connection itself must be encrypted; leaving SSL
+            // off there would submit MAIL_USERNAME/MAIL_PASSWORD in clear text.
             switch (port) {
                 case 465 -> {
-                    mail.setSslSmtpPort(String.valueOf(port));
-                    mail.setSSLOnConnect(false);
+                    mail.setSSLOnConnect(true);
+                    mail.setSSLCheckServerIdentity(true);
                 }
                 case 587 -> {
                     mail.setStartTLSEnabled(true);
