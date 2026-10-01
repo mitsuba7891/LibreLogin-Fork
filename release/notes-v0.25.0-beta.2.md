@@ -40,7 +40,7 @@ Build/Paper 26.2 use Java 25; LibreLogin bytecode remains Java 21. Velocity's op
 - Verification: compilation, 73 unit tests and `licenseCheck` pass. Unit tests do not start a Minecraft server/proxy; live-server smoke testing is still needed.
 - The specific TOTP licence uncertainty is resolved. The dependency report remains a partial direct-dependency inventory, not a complete transitive audit.
 
-[User guides](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md) · [Issue review](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/libreloginprod-issues.md) · [Compare with beta.1](https://github.com/mitsuba7891/LibreLogin-Fork/compare/v0.25.0-beta.1...v0.25.0-beta.2)
+[Wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) · [Versioned user guides](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md) · [Issue review](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/libreloginprod-issues.md) · [Compare with beta.1](https://github.com/mitsuba7891/LibreLogin-Fork/compare/v0.25.0-beta.1...v0.25.0-beta.2)
 
 ---
 
@@ -78,4 +78,4 @@ Compilación, **73 tests** y `licenseCheck` correctos. Faltan pruebas reales de 
 
 P-05, la incertidumbre de licencia TOTP, queda resuelto; esto no convierte el inventario parcial de dependencias en una auditoría transitiva completa.
 
-Las guías están incluidas en `docs/wiki/` dentro del ZIP y en la [documentación versionada](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md). Los assets de beta.1 se conservan. Esta publicación sigue marcada como **pre-release**; la estable continúa siendo v0.24.12.
+Las guías están publicadas en la [wiki en español](https://github.com/mitsuba7891/LibreLogin-Fork/wiki), incluidas en `docs/wiki/` dentro del ZIP y conservadas en la [documentación versionada](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md). Los assets de beta.1 se conservan. Esta publicación sigue marcada como **pre-release**; la estable continúa siendo v0.24.12.

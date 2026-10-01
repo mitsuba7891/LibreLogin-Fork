@@ -13,9 +13,9 @@
 [![Gradle](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/gradle_vector.svg)](https://gradle.org/)
 [![Java](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/java_vector.svg)](https://openjdk.org/projects/jdk/25/)
 
-[![Documentation](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg)](docs/wiki/Home.md)
+[![Documentation](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg)](https://github.com/mitsuba7891/LibreLogin-Fork/wiki)
 
-[Downloads](https://github.com/mitsuba7891/LibreLogin-Fork/releases) · [Wiki / Guías en español](docs/wiki/Home.md) · [API & Build](docs/wiki/API-y-compilacion.md) · [Issues](https://github.com/mitsuba7891/LibreLogin-Fork/issues)
+[Downloads](https://github.com/mitsuba7891/LibreLogin-Fork/releases) · [Wiki / Guías en español](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) · [API & Build](https://github.com/mitsuba7891/LibreLogin-Fork/wiki/API-y-compilacion) · [Issues](https://github.com/mitsuba7891/LibreLogin-Fork/issues)
 
 </div>
 
@@ -33,7 +33,7 @@ A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/Lib
 - **Pre-release:** [v0.25.0-beta.2](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.2), with authentication fixes and the user guides below.
 - **Development:** the `beta` branch uses version `0.25.0`. The GitHub tag identifies the beta revision; JAR filenames retain the base version. The older `beta.1` assets do not contain the fixes added in `beta.2`.
 
-The [Spanish wiki](docs/wiki/Home.md) covers installation, database TLS, commands, manual 2FA and troubleshooting. See the [cross-fork issue review](docs/libreloginprod-issues.md) for the status of reports from LibreLoginProd.
+The [Spanish wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) covers installation, database TLS, commands, manual 2FA and troubleshooting. Its [versioned sources](docs/wiki/Home.md) are included in this repository and the release ZIP. See the [cross-fork issue review](docs/libreloginprod-issues.md) for the status of reports from LibreLoginProd.
 
 ## Artifacts (0.25.0 beta)
 
@@ -260,5 +260,6 @@ LibreLogin Fork is distributed under the **Mozilla Public License 2.0**. See [`L
 - Fork repository: <https://github.com/mitsuba7891/LibreLogin-Fork>
 - Release documentation: [`release/README.md`](release/README.md)
 - Release changes: [`CHANGELOG.md`](CHANGELOG.md)
-- User wiki: [`docs/wiki/Home.md`](docs/wiki/Home.md)
+- User wiki: <https://github.com/mitsuba7891/LibreLogin-Fork/wiki>
+- Wiki sources: [`docs/wiki/Home.md`](docs/wiki/Home.md)
 - LibreLoginProd issue review: [`docs/libreloginprod-issues.md`](docs/libreloginprod-issues.md)
