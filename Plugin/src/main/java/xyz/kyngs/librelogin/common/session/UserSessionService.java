@@ -101,17 +101,8 @@ public final class UserSessionService {
     }
 
     public boolean canAuthenticateAutomatically(User user, String ip) {
-        if (user.autoLoginEnabled()) {
-            return true;
-        }
-
-        var timeoutSeconds = plugin.getConfiguration().get(ConfigurationKeys.SESSION_TIMEOUT);
-        if (timeoutSeconds <= 0 || user.getLastAuthentication() == null || user.getIp() == null) {
-            return false;
-        }
-
-        var expiresAt = user.getLastAuthentication().toInstant().plusSeconds(timeoutSeconds);
-        return user.getIp().equals(ip) && expiresAt.isAfter(Instant.now());
+        return SessionPolicy.canAuthenticateAutomatically(user, ip,
+                plugin.getConfiguration().get(ConfigurationKeys.SESSION_TIMEOUT), Instant.now());
     }
 
     private String normalize(String username) {
