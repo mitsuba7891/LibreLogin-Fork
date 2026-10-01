@@ -45,8 +45,11 @@ public class Blockers {
 
     @Subscribe(priority = 100)
     public void onServerConnect(ServerPreConnectEvent event) {
-        if (authorizationProvider.isAwaiting2FA(event.getPlayer())) {
-            if (!configuration.get(ConfigurationKeys.LIMBO).contains(event.getOriginalServer().getServerInfo().getName())) {
+        if (!authorizationProvider.isAuthorized(event.getPlayer()) || authorizationProvider.isAwaiting2FA(event.getPlayer())) {
+            // Check the effective destination: another plugin may have redirected
+            // a request that originally targeted a limbo server.
+            var target = event.getResult().getServer();
+            if (target.isEmpty() || !configuration.get(ConfigurationKeys.LIMBO).contains(target.get().getServerInfo().getName())) {
                 event.setResult(ServerPreConnectEvent.ServerResult.denied());
             }
         }
