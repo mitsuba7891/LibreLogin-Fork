@@ -159,7 +159,8 @@ val generateForbiddenPasswords = tasks.register("generateForbiddenPasswords") {
 val generateLicenseResources = tasks.register("generateLicenseResources") {
     val licenses = mapOf(
         rootProject.layout.projectDirectory.file("LICENSE") to "LICENSE.txt",
-        rootProject.layout.projectDirectory.file("licenses/FASTLOGIN_LICENSE") to "FASTLOGIN_LICENSE.txt"
+        rootProject.layout.projectDirectory.file("licenses/FASTLOGIN_LICENSE") to "FASTLOGIN_LICENSE.txt",
+        rootProject.layout.projectDirectory.file("licenses/TOTP_LICENSE") to "TOTP_LICENSE.txt"
     )
     inputs.files(licenses.keys.toList())
     outputs.dir(generatedLicenseDir)
@@ -442,6 +443,16 @@ val releaseArchive = tasks.register<Zip>("releaseArchive") {
     // Preserve the upstream license in the distributable package. LibreLogin
     // is MPL-2.0; the MIT notice under licenses/ belongs to a dependency.
     from(layout.projectDirectory.file("../LICENSE"))
+    from(rootProject.layout.projectDirectory.dir("licenses")) {
+        into("licenses")
+    }
+    from(rootProject.layout.projectDirectory.dir("docs/wiki")) {
+        into("docs/wiki")
+        exclude("README.md")
+    }
+    from(rootProject.layout.projectDirectory.file("docs/dependency-licenses.md")) {
+        into("docs")
+    }
 }
 
 // Bump the version before anything that embeds it runs (template generation and
