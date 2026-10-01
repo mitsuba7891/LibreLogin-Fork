@@ -110,10 +110,18 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
                     .connect()
                     .whenComplete((result, throwable) -> {
                         if (player.getCurrentServer().isEmpty()) return;
+                        if (result == null) {
+                            // The request failed before the proxy produced a result,
+                            // so there is no reason to forward.
+                            player.disconnect(Component.text("Unable to connect"));
+                            return;
+                        }
                         if (player.getCurrentServer().get().getServerInfo().getName().equals(result.getAttemptedConnection().getServerInfo().getName()))
                             return;
                         if (throwable != null || !result.isSuccessful())
-                            player.disconnect(Component.text("Unable to connect"));
+                            // Forward the proxy's own reason instead of a generic message,
+                            // otherwise the player cannot tell why the connection failed.
+                            player.disconnect(result.getReasonComponent().orElse(Component.text("Unable to connect")));
                     });
         } catch (EventCancelledException ignored) {}
     }
