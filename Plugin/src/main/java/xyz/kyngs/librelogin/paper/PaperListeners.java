@@ -37,9 +37,11 @@ import xyz.kyngs.librelogin.common.config.MessageKeys;
 import xyz.kyngs.librelogin.common.listener.AuthenticListeners;
 import xyz.kyngs.librelogin.paper.protocol.ClientPublicKey;
 import xyz.kyngs.librelogin.paper.protocol.EncryptionUtil;
+import xyz.kyngs.librelogin.paper.protocol.MojangSessionResponse;
 import xyz.kyngs.librelogin.paper.protocol.ProtocolUtil;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -248,7 +250,8 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
 
                         var newPacket = new WrapperLoginServerEncryptionRequest("", keyPair.getPublic(), token);
 
-                        encryptionDataCache.put(sessionKey, new EncryptionData(username, token, clientKey.orElse(null), preLoginResult.user().getUuid()));
+                        encryptionDataCache.put(sessionKey, new EncryptionData(username, token, clientKey.orElse(null),
+                                preLoginResult.user().getUuid(), preLoginResult.user().getPremiumUUID()));
 
                         PacketEvents.getAPI().getProtocolManager().sendPacket(event.getChannel(), newPacket);
                     } catch (Exception e) {
@@ -307,7 +310,7 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
             var address = user.getAddress();
 
             try {
-                if (hasJoined(username, serverId, address.getAddress())) {
+                if (hasJoined(username, serverId, address.getAddress(), data.premiumUuid())) {
                     receiveFakeStartPacket(username, data.publicKey(), event.getChannel(), data.uuid());
                 } else {
                     kickPlayer("Invalid session", user);
@@ -353,6 +356,13 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
     }
 
     public boolean hasJoined(String username, String serverHash, InetAddress hostIp) throws IOException {
+        var user = plugin.getUserSessionService().findPending(username);
+        return user != null && hasJoined(username, serverHash, hostIp, user.getPremiumUUID());
+    }
+
+    private boolean hasJoined(String username, String serverHash, InetAddress hostIp, UUID premiumUuid) throws IOException {
+        if (premiumUuid == null) return false;
+
         var encodedUsername = URLEncoder.encode(username, StandardCharsets.UTF_8);
         var encodedServerHash = URLEncoder.encode(serverHash, StandardCharsets.UTF_8);
         String url;
@@ -369,7 +379,9 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
         try {
             var responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                return true;
+                try (var reader = new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8)) {
+                    return MojangSessionResponse.matchesProfile(reader, username, premiumUuid);
+                }
             }
             if (responseCode == HttpURLConnection.HTTP_NO_CONTENT) {
                 return false;
