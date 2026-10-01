@@ -14,7 +14,7 @@
 - Unauthenticated and pending-2FA Velocity players cannot enter non-limbo backends, including redirected destinations.
 - Unregistered offline accounts cannot reuse stale IP sessions; incomplete, expired and future-dated session metadata is rejected.
 - Paper validates both username and expected premium UUID in the Mojang session response. Login nonces use constant-time comparison.
-- README badges, Spanish user guides and a review of all 22 LibreLoginProd issues are included.
+- README badges, user guides and a review of all 22 LibreLoginProd issues are included. The live wiki is maintained in English with categorized navigation.
 - TOTP 1.7.1's MIT license was verified in its parent POM and exact source tag; its original notice is bundled in the LibreLogin JARs and release ZIP.
 
 ### Downloads and installation
@@ -78,4 +78,4 @@ Compilación, **73 tests** y `licenseCheck` correctos. Faltan pruebas reales de 
 
 P-05, la incertidumbre de licencia TOTP, queda resuelto; esto no convierte el inventario parcial de dependencias en una auditoría transitiva completa.
 
-Las guías están publicadas en la [wiki en español](https://github.com/mitsuba7891/LibreLogin-Fork/wiki), incluidas en `docs/wiki/` dentro del ZIP y conservadas en la [documentación versionada](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md). Los assets de beta.1 se conservan. Esta publicación sigue marcada como **pre-release**; la estable continúa siendo v0.24.12.
+Las guías actuales están publicadas en la [wiki en inglés](https://github.com/mitsuba7891/LibreLogin-Fork/wiki), con navegación por categorías. El ZIP y la [documentación versionada](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md) conservan el contenido original de beta.2. Los assets de beta.1 se conservan. Esta publicación sigue marcada como **pre-release**; la estable continúa siendo v0.24.12.

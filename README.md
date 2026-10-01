@@ -15,7 +15,7 @@
 
 [![Documentation](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg)](https://github.com/mitsuba7891/LibreLogin-Fork/wiki)
 
-[Downloads](https://github.com/mitsuba7891/LibreLogin-Fork/releases) · [Wiki / Guías en español](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) · [API & Build](https://github.com/mitsuba7891/LibreLogin-Fork/wiki/API-y-compilacion) · [Issues](https://github.com/mitsuba7891/LibreLogin-Fork/issues)
+[Downloads](https://github.com/mitsuba7891/LibreLogin-Fork/releases) · [Wiki / User guides](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) · [API & Build](https://github.com/mitsuba7891/LibreLogin-Fork/wiki/API-and-Build) · [Issues](https://github.com/mitsuba7891/LibreLogin-Fork/issues)
 
 </div>
 
@@ -33,7 +33,7 @@ A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/Lib
 - **Pre-release:** [v0.25.0-beta.2](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.2), with authentication fixes and the user guides below.
 - **Development:** the `beta` branch uses version `0.25.0`. The GitHub tag identifies the beta revision; JAR filenames retain the base version. The older `beta.1` assets do not contain the fixes added in `beta.2`.
 
-The [Spanish wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) covers installation, database TLS, commands, manual 2FA and troubleshooting. Its [versioned sources](docs/wiki/Home.md) are included in this repository and the release ZIP. See the [cross-fork issue review](docs/libreloginprod-issues.md) for the status of reports from LibreLoginProd.
+The [English wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) covers installation, database TLS, commands, manual 2FA and troubleshooting, with categorized navigation and prominent setup notes. The repository keeps its current [wiki sources](docs/wiki/Home.md); release ZIPs preserve the documentation snapshot packaged with each build. See the [cross-fork issue review](docs/libreloginprod-issues.md) for the status of reports from LibreLoginProd.
 
 ## Artifacts (0.25.0 beta)
 
@@ -164,7 +164,7 @@ totp:
   qr-enabled: false
 ```
 
-Restart after changing these settings. Disabling `totp.enabled` does not remove existing account secrets: accounts with 2FA must still verify their second factor. See [2FA and recovery](docs/wiki/Comandos-y-2FA.md).
+Restart after changing these settings. Disabling `totp.enabled` does not remove existing account secrets: accounts with 2FA must still verify their second factor. See [2FA and recovery](docs/wiki/Commands-and-2FA.md).
 
 To release `/log` for Carpet or another plugin, set `login-log-alias: false` in `config.yml` and restart. `/login` and `/l` remain available.
 
@@ -224,7 +224,7 @@ MariaDB URLs use `jdbc:mariadb://`; official MySQL URLs use `jdbc:mysql://`. Kee
 
 New MariaDB and PostgreSQL configuration defaults use `verify-full` for TLS and certificate/hostname verification. Existing `jdbc-url` values are preserved when upgrading. The equivalent official MySQL mode is `VERIFY_IDENTITY`.
 
-TLS is configured in `database.properties.mysql.jdbc-url` or `database.properties.postgresql.jdbc-url`; it is not a boolean toggle. The explicit non-TLS values are `sslMode=disable` (MariaDB), `sslMode=DISABLED` (MySQL) and `sslmode=disable` (PostgreSQL). Remote non-TLS connections produce a warning and remain allowed; credentials and password hashes then travel unencrypted. See [database examples](docs/wiki/Configuracion.md).
+TLS is configured in `database.properties.mysql.jdbc-url` or `database.properties.postgresql.jdbc-url`; it is not a boolean toggle. The explicit non-TLS values are `sslMode=disable` (MariaDB), `sslMode=DISABLED` (MySQL) and `sslmode=disable` (PostgreSQL). Remote non-TLS connections produce a warning and remain allowed; credentials and password hashes then travel unencrypted. See [database examples](docs/wiki/Configuration.md).
 
 ## Upgrade and migration
 

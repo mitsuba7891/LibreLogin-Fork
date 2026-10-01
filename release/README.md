@@ -71,7 +71,7 @@ Fork: <https://github.com/mitsuba7891/LibreLogin-Fork>
 
 Generated legacy HOCON files are converted automatically to YAML and retained as `.conf.pre-yaml.bak` backups.
 
-The archive includes the Spanish user guides under `docs/wiki/`; start with `docs/wiki/Home.md`. The same revision is available in the [versioned online guides](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md).
+The archive includes the user guides under `docs/wiki/`; start with `docs/wiki/Home.md`. The original beta.2 snapshot is available in the [versioned online guides](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md); the [live wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) is maintained in English.
 
 New database URLs default to verified TLS. Existing URLs are preserved; review their parameters when upgrading. `login-log-alias: false` releases `/log` after a restart.
 

@@ -6,7 +6,7 @@
 2. On first startup, `config.conf` becomes `config.yml` and `messages.conf` becomes `messages.yml`.
 3. The original files are preserved as `config.conf.pre-yaml.bak` and `messages.conf.pre-yaml.bak`.
 4. After migration, edit only the `.yml` files. The old `.conf` files are not read while YAML exists.
-5. Review the existing JDBC URL and TLS settings; explicit old values are preserved. See the [current configuration guide](wiki/Configuracion.md).
+5. Review the existing JDBC URL and TLS settings; explicit old values are preserved. See the [current configuration guide](wiki/Configuration.md).
 
 ## Artifact names
 
@@ -26,7 +26,7 @@ migration is required. In the current beta source, Paper and Velocity support ma
 setup without an image integration. Velocity prefers PacketEvents for optional QR delivery and
 retains Protocolize as a compatible legacy fallback. Set `totp.qr-enabled: false` and restart to
 use text-only setup. Disabling `totp.enabled` does not remove existing account factors or allow
-their login to skip verification. See [2FA and recovery](wiki/Comandos-y-2FA.md).
+their login to skip verification. See [2FA and recovery](wiki/Commands-and-2FA.md).
 
 ## Platform removal
 
