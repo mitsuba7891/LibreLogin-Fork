@@ -48,22 +48,24 @@ public class LoginCommand<P> extends AuthorizationCommand<P> {
             if (secret != null) {
                 var totp = plugin.getTOTPProvider();
 
-                if (totp != null) {
-                    if (code == null) throw new InvalidCommandArgument(getMessage("totp-not-provided"));
+                // Disabling the provider must not silently bypass an account's
+                // existing second factor. An administrator can explicitly remove
+                // that factor using the user 2faoff command when recovery is needed.
+                if (totp == null) throw new InvalidCommandArgument(getMessage("error-unknown"));
+                if (code == null) throw new InvalidCommandArgument(getMessage("totp-not-provided"));
 
-                    int parsedCode;
+                int parsedCode;
 
-                    try {
-                        parsedCode = Integer.parseInt(code.trim().replace(" ", ""));
-                    } catch (NumberFormatException e) {
-                        recordWrongCredential(user, player, AuthenticationSource.TOTP);
-                        throw new InvalidCommandArgument(getMessage("totp-wrong"));
-                    }
+                try {
+                    parsedCode = Integer.parseInt(code.trim().replace(" ", ""));
+                } catch (NumberFormatException e) {
+                    recordWrongCredential(user, player, AuthenticationSource.TOTP);
+                    throw new InvalidCommandArgument(getMessage("totp-wrong"));
+                }
 
-                    if (!totp.verify(parsedCode, secret)) {
-                        recordWrongCredential(user, player, AuthenticationSource.TOTP);
-                        throw new InvalidCommandArgument(getMessage("totp-wrong"));
-                    }
+                if (!totp.verify(parsedCode, secret)) {
+                    recordWrongCredential(user, player, AuthenticationSource.TOTP);
+                    throw new InvalidCommandArgument(getMessage("totp-wrong"));
                 }
             }
 

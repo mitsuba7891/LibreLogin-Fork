@@ -47,7 +47,8 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
             // Without one, for example on Paper, 2FA still works with the manual
             // secret and provisioning URI sent below.
             var imageProjector = plugin.getImageProjector();
-            var qrAvailable = imageProjector != null && imageProjector.canProject(player);
+            var qrAvailable = plugin.getConfiguration().get(ConfigurationKeys.TOTP_QR_ENABLED)
+                    && imageProjector != null && imageProjector.canProject(player);
 
             sender.sendMessage(getMessage("totp-generating"));
 
@@ -58,6 +59,13 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
 
                 plugin.cancelOnExit(plugin.delay(() -> {
                     if (!auth.isAwaiting2FA(player)) return;
+
+                    // Deliver the manual route before any optional map packets.
+                    sender.sendMessage(getMessage("totp-show-info"));
+                    sender.sendMessage(getMessage("totp-manual-info",
+                            "%secret%", data.secret(),
+                            "%uri%", data.provisioningUri() == null ? "unavailable" : data.provisioningUri()
+                    ));
 
                     if (qrAvailable) {
                         try {
@@ -80,12 +88,6 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
                                     + plugin.getPlatformHandle().getUsernameForPlayer(player), throwable);
                         }
                     }
-
-                    sender.sendMessage(getMessage("totp-show-info"));
-                    sender.sendMessage(getMessage("totp-manual-info",
-                            "%secret%", data.secret(),
-                            "%uri%", data.provisioningUri() == null ? "unavailable" : data.provisioningUri()
-                    ));
                 }, plugin.getConfiguration().get(ConfigurationKeys.TOTP_DELAY)), player);
             });
         });

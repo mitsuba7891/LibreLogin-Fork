@@ -288,9 +288,10 @@ public class ConfigurationKeys {
             "totp",
             """
                     This section is used for 2FA configuration.
-                    !! YOU MUST HAVE PROTOCOLIZE INSTALLED FOR THIS TO WORK !!
+                    Manual secret/URI setup works on Paper and Velocity without an image integration.
+                    QR maps on Velocity use PacketEvents or the compatible Protocolize fallback.
                                         
-                    You can find more information on the wiki: https://github.com/kyngs/LibreLogin/wiki/2FA
+                    You can find more information in the fork documentation: https://github.com/mitsuba7891/LibreLogin-Fork/blob/beta/docs/wiki/Comandos-y-2FA.md
                     """
     );
 
@@ -299,8 +300,15 @@ public class ConfigurationKeys {
             true,
             """
                     Should we enable TOTP-Based Two-Factor Authentication? If you don't know what this is, this is the 2FA used in applications like Google Authenticator etc.
-                    I heavily suggest you to read this wiki page: https://github.com/kyngs/LibreLogin/wiki/2FA
+                    Accounts with an existing TOTP secret cannot log in while the provider is disabled. Remove their factor explicitly with the administrator user 2faoff command if recovery is required.
                     """,
+            ConfigurateHelper::getBoolean
+    );
+
+    public static final ConfigurationKey<Boolean> TOTP_QR_ENABLED = new ConfigurationKey<>(
+            "totp.qr-enabled",
+            true,
+            "Should we deliver the optional QR map? Set to false for manual secret/URI setup only, for example when an image integration causes client protocol errors. TOTP verification stays enabled.",
             ConfigurateHelper::getBoolean
     );
 
@@ -328,7 +336,7 @@ public class ConfigurationKeys {
     public static final ConfigurationKey<Long> SESSION_TIMEOUT = new ConfigurationKey<>(
             "session-timeout",
             0L,
-            "Defines a time in seconds after a player's session expires. Default value is one week (604800 seconds). Set to zero or less to disable sessions.",
+            "Defines the lifetime in seconds of IP-based sessions for registered accounts. Disabled by default (0); set to zero or less to require a new login after reconnecting.",
             ConfigurateHelper::getLong
     );
 

@@ -355,15 +355,12 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
 
         var totpEnabled = configuration.get(TOTP_ENABLED);
 
-        imageProjector = provideImageProjector();
+        imageProjector = totpEnabled && configuration.get(TOTP_QR_ENABLED) ? provideImageProjector() : null;
 
-        if (imageProjector != null) {
-            if (!totpEnabled) {
-                imageProjector = null;
-                logger.warn("2FA is disabled in the configuration, aborting...");
-            } else {
-                imageProjector.enable();
-            }
+        if (!totpEnabled) {
+            logger.warn("2FA is disabled in the configuration, aborting...");
+        } else if (imageProjector != null) {
+            imageProjector.enable();
         }
 
         // TOTP does not depend on the image projector. Platforms without QR
