@@ -14,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EncryptionUtilTest {
 
@@ -34,6 +36,19 @@ class EncryptionUtilTest {
         // Ensure the test is exercising encryption rather than an accidental
         // identity transformation.
         assertFalseSameBytes(plaintext, encrypted);
+    }
+
+    @Test
+    void acceptsOnlyTheEncryptedNonceFromThisLoginRequest() throws Exception {
+        var keys = EncryptionUtil.generateKeyPair();
+        var token = new byte[]{1, 2, 3, 4};
+        var cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.ENCRYPT_MODE, keys.getPublic());
+        var encryptedToken = cipher.doFinal(token);
+
+        assertTrue(EncryptionUtil.verifyNonce(token, keys.getPrivate(), encryptedToken));
+        assertFalse(EncryptionUtil.verifyNonce(new byte[]{1, 2, 3, 5}, keys.getPrivate(), encryptedToken));
+        assertFalse(EncryptionUtil.verifyNonce(new byte[]{1, 2, 3}, keys.getPrivate(), encryptedToken));
     }
 
     private static void assertFalseSameBytes(byte[] expected, byte[] actual) {
