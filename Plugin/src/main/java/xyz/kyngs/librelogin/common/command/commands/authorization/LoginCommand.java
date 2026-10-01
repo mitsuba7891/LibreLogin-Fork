@@ -16,7 +16,7 @@ import xyz.kyngs.librelogin.common.event.events.AuthenticWrongPasswordEvent;
 
 import java.util.concurrent.CompletionStage;
 
-@CommandAlias("login|l|log")
+@CommandAlias("%login-aliases")
 public class LoginCommand<P> extends AuthorizationCommand<P> {
 
     public LoginCommand(AuthenticLibreLogin<P, ?> premium) {

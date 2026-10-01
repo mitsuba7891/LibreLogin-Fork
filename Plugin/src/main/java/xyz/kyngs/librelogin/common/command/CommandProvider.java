@@ -29,6 +29,8 @@ import xyz.kyngs.librelogin.common.command.commands.premium.PremiumEnableCommand
 import xyz.kyngs.librelogin.common.command.commands.staff.LibreLoginCommand;
 import xyz.kyngs.librelogin.common.command.commands.tfa.TwoFactorAuthCommand;
 import xyz.kyngs.librelogin.common.command.commands.tfa.TwoFactorConfirmCommand;
+import xyz.kyngs.librelogin.common.config.ConfigurationKeys;
+import xyz.kyngs.librelogin.common.util.CommandLineUtil;
 import xyz.kyngs.librelogin.common.util.RateLimiter;
 
 import java.util.HashMap;
@@ -38,6 +40,11 @@ import java.util.concurrent.TimeUnit;
 public class CommandProvider<P, S> extends AuthenticHandler<P, S> {
 
     public static final LegacyComponentSerializer ACF_SERIALIZER = LegacyComponentSerializer.legacySection();
+
+    /**
+     * Name of the ACF replacement used by {@code @CommandAlias("%login-aliases")}.
+     */
+    private static final String LOGIN_ALIASES_REPLACEMENT = "login-aliases";
 
     private final CommandManager<?, ?, ?, ?, ?, ?> manager;
     private final RateLimiter<UUID> limiter;
@@ -96,6 +103,14 @@ public class CommandProvider<P, S> extends AuthenticHandler<P, S> {
         confirmCache = Caffeine.newBuilder()
                 .expireAfterWrite(5, TimeUnit.MINUTES)
                 .build();
+
+        // /log is an optional alias of /login. Some servers run another plugin or
+        // mod that also owns /log, so let owners turn the alias off. ACF resolves
+        // the alias from this replacement while registering the command below.
+        manager.getCommandReplacements().addReplacement(
+                LOGIN_ALIASES_REPLACEMENT,
+                CommandLineUtil.loginAliases(plugin.getConfiguration().get(ConfigurationKeys.LOGIN_LOG_ALIAS))
+        );
 
         manager.registerCommand(new LoginCommand<>(plugin));
         manager.registerCommand(new RegisterCommand<>(plugin));

@@ -16,6 +16,14 @@ public final class CommandLineUtil {
     private CommandLineUtil() {
     }
 
+    /**
+     * Builds the /login alias list. {@code /log} is optional because other
+     * plugins and mods (for example Carpet) may already own that command.
+     */
+    public static String loginAliases(boolean includeLogAlias) {
+        return includeLogAlias ? "login|l|log" : "login|l";
+    }
+
     public static String normalize(String commandLine) {
         var normalized = commandLine.strip().toLowerCase(Locale.ROOT);
         if (normalized.startsWith("/")) {

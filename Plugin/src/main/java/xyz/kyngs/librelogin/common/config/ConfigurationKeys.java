@@ -35,6 +35,17 @@ public class ConfigurationKeys {
             ConfigurateHelper::getStringList
     );
 
+    public static final ConfigurationKey<Boolean> LOGIN_LOG_ALIAS = new ConfigurationKey<>(
+            "login-log-alias",
+            true,
+            """
+                    Should the plugin also register /log as an alias of /login?
+                    Some plugins and mods (for example Carpet) also own /log, which makes the command unusable for them.
+                    Set this to false to release /log while keeping /login and /l available.
+                    """,
+            ConfigurateHelper::getBoolean
+    );
+
     public static final ConfigurationKey<List<String>> LIMBO = new ConfigurationKey<>(
             "limbo",
             List.of("limbo0", "limbo1"),
