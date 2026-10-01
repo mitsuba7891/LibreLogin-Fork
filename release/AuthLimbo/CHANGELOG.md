@@ -2,6 +2,11 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## LibreLogin bundle 0.25.0-beta.2
+
+- Included as the Paper limbo companion for the updated Velocity authentication flow.
+- The companion version remains `1.0.0`; backend configuration and forwarding requirements are unchanged.
+
 ## LibreLogin bundle 0.24.8
 
 - Expanded the unauthenticated lock to chat, commands, block/entity interaction, direct/projectile damage, inventory operations, pickup/drop, hand swaps and consumption.

@@ -2,6 +2,22 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
+## 0.25.0-beta.2 — Authentication fixes and user guides
+
+- Made `/log` optional with `login-log-alias`, preserving `/login` and `/l`.
+- Preserved Velocity's connection failure reason and handled missing connection results.
+- Enabled manual TOTP setup on Paper independently of QR support; added `totp.qr-enabled: false` for text-only setup on either platform.
+- Refused login for accounts with an existing second factor when the TOTP provider is disabled instead of silently skipping verification.
+- Restricted unauthenticated and pending-2FA Velocity players to configured limbos, checking effective redirected destinations.
+- Prevented unregistered offline accounts from reusing stale IP sessions; rejected incomplete, expired and future-dated session metadata.
+- Validated Mojang session response names and premium UUIDs on Paper, preserving the expected premium UUID across the encrypted handshake.
+- Used a constant-time nonce comparison and added 35 regression cases (73 tests total).
+- Updated README badges, Spanish user guides, migration notes and the review of all 22 LibreLoginProd issues.
+- Resolved the TOTP license uncertainty through the inherited MIT declaration and exact release-tag license; bundled its notice in the JARs and ZIP.
+- Included user guides and dependency license information in the release ZIP.
+- Retained all beta.1 hardening: verified database TLS defaults, SMTP TLS on 465, the packaged password list, licence-resource portability and startup failure refusal without terminating the server/proxy process.
+- This is a pre-release. Paper spawn-event migration and tablist textures remain pending; no live Minecraft server/proxy matrix has been certified by these unit tests.
+
 ## 0.24.12 — Login brute-force protection & authentication bossbar
 
 ### Brute-force protection

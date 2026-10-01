@@ -2,6 +2,14 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.25.0-beta.2
+
+- Restricted unauthenticated and pending-2FA players to configured limbo backends, including effective redirected destinations.
+- Preserved backend connection failure reasons and handled missing connection results.
+- Added optional QR delivery and text-only 2FA setup; disabled providers no longer bypass account factors.
+- Hardened registered-account IP sessions and made `/log` optional.
+- Updated user guides and bundled the verified MIT notice for TOTP; retains the beta.1 hardening.
+
 ## 0.24.10
 
 - Added a Velocity-asset-aware fallback to the fork's GitHub releases when the primary Modrinth update check fails.

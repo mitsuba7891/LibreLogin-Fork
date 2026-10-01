@@ -11,7 +11,7 @@ Use this artifact when Paper itself handles authentication and no proxy-side Lib
 Copy the JAR into Paper:
 
 ```text
-Paper/plugins/LibreLogin-Paper-0.24.10.jar
+Paper/plugins/LibreLogin-Paper-0.25.0.jar
 ```
 
 Start once to generate `config.yml` and `messages.yml`, stop the server, configure them, then start again. Back up the database and plugin data before upgrades.
@@ -41,6 +41,12 @@ Legacy `config.conf` and `messages.conf` files are converted to YAML and retaine
 ```
 
 Premium/autologin accounts must run `/cracked` before configuring 2FA.
+
+In beta.2, TOTP works through the manual secret/provisioning URI without a QR projector. Disabling `totp.enabled` does not bypass a saved second factor; recovery must be performed explicitly for the account. User guides are included in the bundle's `docs/wiki/` directory and [online at the release tag](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md).
+
+`login-log-alias: false` disables only `/log` after restarting, preserving `/login` and `/l`. Review existing database URLs because upgraded explicit values are preserved even though new defaults use verified TLS.
+
+This is a pre-release. Tablist textures and the transition to the modern Paper spawn event remain pending live-server validation.
 
 ## Messages
 

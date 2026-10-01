@@ -6,7 +6,7 @@
 2. On first startup, `config.conf` becomes `config.yml` and `messages.conf` becomes `messages.yml`.
 3. The original files are preserved as `config.conf.pre-yaml.bak` and `messages.conf.pre-yaml.bak`.
 4. After migration, edit only the `.yml` files. The old `.conf` files are not read while YAML exists.
-5. Keep the existing database configuration and Protocolize installation unchanged.
+5. Review the existing JDBC URL and TLS settings; explicit old values are preserved. See the [current configuration guide](wiki/Configuracion.md).
 
 ## Artifact names
 
@@ -22,9 +22,11 @@ is no longer a supported LibreLogin platform.
 ## 2FA and Protocolize
 
 The TOTP API remains behind LibreLogin's existing provider interface. No secret or database
-migration is required. On Velocity, QR display remains conditional on Protocolize being present
-and compatible. If Protocolize is unavailable, the plugin logs a warning and QR-based 2FA cannot
-be enabled through the map projector.
+migration is required. In the current beta source, Paper and Velocity support manual secret/URI
+setup without an image integration. Velocity prefers PacketEvents for optional QR delivery and
+retains Protocolize as a compatible legacy fallback. Set `totp.qr-enabled: false` and restart to
+use text-only setup. Disabling `totp.enabled` does not remove existing account factors or allow
+their login to skip verification. See [2FA and recovery](wiki/Comandos-y-2FA.md).
 
 ## Platform removal
 

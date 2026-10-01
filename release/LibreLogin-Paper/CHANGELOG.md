@@ -2,6 +2,15 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.25.0-beta.2
+
+- Enabled manual TOTP setup without a QR projector and refused skipping existing factors when TOTP is disabled.
+- Validated both username and premium UUID in successful Mojang session responses.
+- Hardened IP-session eligibility and nonce comparisons.
+- Added the optional `/log` alias setting and updated installation/version documentation.
+- Bundled the verified MIT notice for TOTP; retains the beta.1 TLS and startup hardening.
+- Tablist textures and the modern spawn-event transition remain pending live-server validation.
+
 ## 0.24.10
 
 - Added a Paper-asset-aware fallback to the fork's GitHub releases when the primary Modrinth update check fails.

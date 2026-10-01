@@ -1,19 +1,48 @@
+<div align="center">
+
 # LibreLogin Fork
+
+**Open-source authentication for Paper servers and Velocity networks.**
+
+[![Velocity](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/velocity_vector.svg)](https://github.com/mitsuba7891/LibreLogin-Fork/releases)
+[![Paper](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg)](https://github.com/mitsuba7891/LibreLogin-Fork/releases)
+[![GitHub](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/github_vector.svg)](https://github.com/mitsuba7891/LibreLogin-Fork)
+
+[//]: # ([![Modrinth]&#40;https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_vector.svg&#41;]&#40;https://modrinth.com/plugin/librelogin-fork&#41;)
+
+[![Gradle](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/gradle_vector.svg)](https://gradle.org/)
+[![Java](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/java_vector.svg)](https://openjdk.org/projects/jdk/25/)
+
+[![Documentation](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/generic_vector.svg)](docs/wiki/Home.md)
+
+[Downloads](https://github.com/mitsuba7891/LibreLogin-Fork/releases) · [Wiki / Guías en español](docs/wiki/Home.md) · [API & Build](docs/wiki/API-y-compilacion.md) · [Issues](https://github.com/mitsuba7891/LibreLogin-Fork/issues)
+
+</div>
+
+<br>
 
 A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/LibreLogin), an open-source authentication platform for Minecraft networks.
 
 > **Attribution and license:** This repository contains modifications of LibreLogin by kyngs and contributors. The upstream project is licensed under the **Mozilla Public License 2.0 (MPL-2.0)**; this fork retains that license and the original notices. The MIT license present under `licenses/FASTLOGIN_LICENSE` applies only to the relevant FastLogin-derived dependency, not to LibreLogin itself.
 >
-> **AI-assisted update:** Release 0.24.10, including the message-formatting work introduced in 0.24.7, was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See the `CHANGELOG.md` 0.24.10 section for the latest changes.
+> **Historical AI-assisted update:** Release 0.24.10, including the message-formatting work introduced in 0.24.7, was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See the `CHANGELOG.md` 0.24.10 section for that release's changes.
 
-## Release 0.24.10
+## Release status
+
+- **Stable:** [v0.24.12](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.24.12).
+- **Pre-release:** [v0.25.0-beta.2](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.2), with authentication fixes and the user guides below.
+- **Development:** the `beta` branch uses version `0.25.0`. The GitHub tag identifies the beta revision; JAR filenames retain the base version. The older `beta.1` assets do not contain the fixes added in `beta.2`.
+
+The [Spanish wiki](docs/wiki/Home.md) covers installation, database TLS, commands, manual 2FA and troubleshooting. See the [cross-fork issue review](docs/libreloginprod-issues.md) for the status of reports from LibreLoginProd.
+
+## Artifacts (0.25.0 beta)
 
 This release provides three clearly separated artifacts:
 
 | Artifact | Install on | Purpose |
 |---|---|---|
-| `LibreLogin-Velocity-0.24.10.jar` | Velocity proxy | Central authentication, sessions, premium login, commands and proxy-side 2FA |
-| `LibreLogin-Paper-0.24.10.jar` | Standalone Paper server | Authentication when no proxy-side LibreLogin is used |
+| `LibreLogin-Velocity-0.25.0.jar` | Velocity proxy | Central authentication, sessions, premium login, commands and 2FA |
+| `LibreLogin-Paper-0.25.0.jar` | Standalone Paper server | Authentication and manual 2FA when no proxy-side LibreLogin is used |
 | `AuthLimbo-1.0.0.jar` | Paper `auth` backend | Empty-world limbo protection for the Velocity architecture |
 
 For a Velocity network, install **LibreLogin-Velocity on the proxy** and **AuthLimbo on the Paper auth backend**. Do not install LibreLogin-Paper on that auth backend; it would create a second authentication pipeline.
@@ -35,7 +64,7 @@ The shared artifacts retain Java 21 bytecode while being compiled and tested wit
 ### 1. Install the artifacts
 
 ```text
-Velocity/plugins/LibreLogin-Velocity-0.24.10.jar
+Velocity/plugins/LibreLogin-Velocity-0.25.0.jar
 Paper-auth/plugins/AuthLimbo-1.0.0.jar
 ```
 
@@ -93,10 +122,10 @@ The exact generated keys and comments are authoritative for your installed revis
 
 ## Standalone Paper installation
 
-Use `LibreLogin-Paper-0.24.10.jar` only when authentication is handled directly by Paper:
+Use `LibreLogin-Paper-0.25.0.jar` only when authentication is handled directly by Paper:
 
 ```text
-Paper/plugins/LibreLogin-Paper-0.24.10.jar
+Paper/plugins/LibreLogin-Paper-0.25.0.jar
 ```
 
 Start the server, configure the generated `config.yml` and `messages.yml`, then restart after structural configuration changes. Do not run both the proxy and standalone Paper authentication flows for the same player path.
@@ -126,6 +155,18 @@ If a premium/autologin account is active, disable it first:
 ```
 
 The QR/provisioning output must be treated as a secret. Never post a TOTP URI or recovery data publicly.
+
+On the current `beta` source, Paper supports manual setup using the displayed secret or provisioning URI without Protocolize. On Velocity, QR delivery is optional. To avoid incompatible map packets while keeping TOTP enabled:
+
+```yaml
+totp:
+  enabled: true
+  qr-enabled: false
+```
+
+Restart after changing these settings. Disabling `totp.enabled` does not remove existing account secrets: accounts with 2FA must still verify their second factor. See [2FA and recovery](docs/wiki/Comandos-y-2FA.md).
+
+To release `/log` for Carpet or another plugin, set `login-log-alias: false` in `config.yml` and restart. `/login` and `/l` remain available.
 
 ## Messages and prefix
 
@@ -181,6 +222,10 @@ database name → host → port → user → password
 
 MariaDB URLs use `jdbc:mariadb://`; official MySQL URLs use `jdbc:mysql://`. Keep credentials in dedicated fields and never commit active passwords. MariaDB, MySQL, SQLite and PostgreSQL drivers are loaded at runtime through Libby.
 
+New MariaDB and PostgreSQL configuration defaults use `verify-full` for TLS and certificate/hostname verification. Existing `jdbc-url` values are preserved when upgrading. The equivalent official MySQL mode is `VERIFY_IDENTITY`.
+
+TLS is configured in `database.properties.mysql.jdbc-url` or `database.properties.postgresql.jdbc-url`; it is not a boolean toggle. The explicit non-TLS values are `sslMode=disable` (MariaDB), `sslMode=DISABLED` (MySQL) and `sslmode=disable` (PostgreSQL). Remote non-TLS connections produce a warning and remain allowed; credentials and password hashes then travel unencrypted. See [database examples](docs/wiki/Configuracion.md).
+
 ## Upgrade and migration
 
 Legacy HOCON files (`config.conf` and `messages.conf`) are converted to YAML automatically and retained as backup files. Review the generated YAML after migration. Do not delete database or world backups until login, premium mode, 2FA and lobby routing have been tested.
@@ -190,16 +235,19 @@ This fork removes the NanoLimbo integration from the supported release architect
 ## Building and release files
 
 ```bash
-./gradlew :API:test :Plugin:test :Plugin:platformJars :Plugin:releaseArchive --no-daemon -PnoBump
+# JAVA_HOME must point to JDK 25.
+./gradlew -PnoBump -Dorg.gradle.java.installations.paths="$JAVA_HOME" \
+  :API:test :Plugin:compileJava :Plugin:test :Plugin:platformJars \
+  :Plugin:releaseArchive :Plugin:licenseCheck
 ```
 
 Outputs:
 
 ```text
-Plugin/build/libs/platform/LibreLogin-Velocity-0.24.10.jar
-Plugin/build/libs/platform/LibreLogin-Paper-0.24.10.jar
+Plugin/build/libs/platform/LibreLogin-Velocity-0.25.0.jar
+Plugin/build/libs/platform/LibreLogin-Paper-0.25.0.jar
 Plugin/build/libs/platform/AuthLimbo-1.0.0.jar
-Plugin/build/distributions/LibreLogin-0.24.10.zip
+Plugin/build/distributions/LibreLogin-0.25.0.zip
 ```
 
 The ZIP contains one folder per component, a README and component changelog for each plugin, the root changelog and the MPL-2.0 license.
@@ -212,3 +260,5 @@ LibreLogin Fork is distributed under the **Mozilla Public License 2.0**. See [`L
 - Fork repository: <https://github.com/mitsuba7891/LibreLogin-Fork>
 - Release documentation: [`release/README.md`](release/README.md)
 - Release changes: [`CHANGELOG.md`](CHANGELOG.md)
+- User wiki: [`docs/wiki/Home.md`](docs/wiki/Home.md)
+- LibreLoginProd issue review: [`docs/libreloginprod-issues.md`](docs/libreloginprod-issues.md)

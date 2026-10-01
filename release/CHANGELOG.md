@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.25.0-beta.2 — Authentication fixes and user guides
+
+- Configurable `/log` alias; preserved Velocity disconnect reasons.
+- Manual 2FA on Paper and optional QR delivery via `totp.qr-enabled`.
+- Existing account factors cannot be bypassed by disabling the TOTP provider.
+- Restricted pre-authentication Velocity routing, including redirected destinations.
+- Hardened registered-account IP sessions, Mojang profile verification and login nonce comparison.
+- Added 35 regression cases: 73 passing tests.
+- Added the Spanish user wiki sources under `docs/wiki/`, updated README badges and documented the status of the 22 LibreLoginProd issues.
+- Verified the TOTP library's inherited MIT license and bundled its original copyright/permission notice.
+- Included documentation and dependency notices in the ZIP; retained the beta.1 TLS, password-list, startup and build hardening.
+- Pre-release: skins/tablist and Paper's modern spawn-event transition remain pending, and live-server matrix testing is still required.
+
 ## 0.24.12 — Login brute-force protection & authentication bossbar
 
 ### Brute-force protection

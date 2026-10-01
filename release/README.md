@@ -2,17 +2,17 @@
 
 This is a maintained, customized distribution based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). It separates proxy authentication, standalone Paper authentication and the Paper limbo backend into three clearly named artifacts.
 
-> **AI-assisted update:** This release package and the fork changes it ships (release 0.24.10, including the message-formatting upgrade) were reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6). See `CHANGELOG.md` for the complete list of changes.
+> **Release:** `v0.25.0-beta.2` is a pre-release for testing the authentication fixes. JAR filenames keep the base version `0.25.0`; the release tag and `SHA256SUMS.txt` distinguish beta revisions. Historical release 0.24.10 work used AI assistance (Freebuff assistant using GPT Luna 5.6); see `CHANGELOG.md` for the change history.
 
 ## Package contents
 
 ```text
 LibreLogin-Velocity/
-  LibreLogin-Velocity-0.24.10.jar
+  LibreLogin-Velocity-0.25.0.jar
   README.md
   CHANGELOG.md
 LibreLogin-Paper/
-  LibreLogin-Paper-0.24.10.jar
+  LibreLogin-Paper-0.25.0.jar
   README.md
   CHANGELOG.md
 AuthLimbo/
@@ -22,6 +22,10 @@ AuthLimbo/
 README.md
 CHANGELOG.md
 LICENSE
+licenses/
+docs/
+  dependency-licenses.md
+  wiki/
 ```
 
 ## Which plugin should I install?
@@ -30,14 +34,14 @@ LICENSE
 
 Install:
 
-- `LibreLogin-Velocity-0.24.10.jar` on the Velocity proxy.
+- `LibreLogin-Velocity-0.25.0.jar` on the Velocity proxy.
 - `AuthLimbo-1.0.0.jar` on the Paper backend named `auth`.
 
 Do **not** install `LibreLogin-Paper` on that auth backend. LibreLogin-Velocity owns authentication and AuthLimbo only supplies the protected empty limbo world.
 
 ### Standalone Paper server
 
-Install only `LibreLogin-Paper-0.24.10.jar` on the Paper server. Do not install LibreLogin-Velocity unless the server is also part of a proxy architecture.
+Install only `LibreLogin-Paper-0.25.0.jar` on the Paper server. Do not install LibreLogin-Velocity unless the server is also part of a proxy architecture.
 
 ## Dependencies and compatibility
 
@@ -66,6 +70,10 @@ Fork: <https://github.com/mitsuba7891/LibreLogin-Fork>
 6. Back up the database, plugin directory and worlds before migrating from HOCON.
 
 Generated legacy HOCON files are converted automatically to YAML and retained as `.conf.pre-yaml.bak` backups.
+
+The archive includes the Spanish user guides under `docs/wiki/`; start with `docs/wiki/Home.md`. The same revision is available in the [versioned online guides](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md).
+
+New database URLs default to verified TLS. Existing URLs are preserved; review their parameters when upgrading. `login-log-alias: false` releases `/log` after a restart.
 
 ## Messages and prefix
 
@@ -123,10 +131,17 @@ Reload messages with:
 
 Premium/autologin accounts must use `/cracked` before configuring 2FA. Treat QR URLs, TOTP secrets and recovery codes as passwords.
 
+Paper supports manual secret/URI setup. On either platform, `totp.qr-enabled: false` selects text-only setup while `totp.enabled: true` keeps verification enabled. Disabling the provider no longer bypasses an account's saved second factor.
+
+## Known pre-release limitations
+
+Tablist textures and the modern Paper spawn-event transition remain pending. Unit tests do not certify a live Paper/Velocity/client matrix. See the [beta.2 notes](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.2) for details.
+
 ## Build the package
 
 ```bash
-./gradlew :API:test :Plugin:test :Plugin:platformJars :Plugin:releaseArchive --no-daemon -PnoBump
+./gradlew -PnoBump -Dorg.gradle.java.installations.paths="$JAVA_HOME" \
+  :Plugin:compileJava :Plugin:test :Plugin:platformJars :Plugin:releaseArchive :Plugin:licenseCheck
 ```
 
 ## Publish the GitHub Release
@@ -147,14 +162,15 @@ gh auth status
 Then create the release from the repository root:
 
 ```bash
-gh release create v0.24.10 \
-  Plugin/build/distributions/LibreLogin-0.24.10.zip \
-  Plugin/build/libs/platform/LibreLogin-Paper-0.24.10.jar \
-  Plugin/build/libs/platform/LibreLogin-Velocity-0.24.10.jar \
+gh release create v0.25.0-beta.2 \
+  Plugin/build/distributions/LibreLogin-0.25.0.zip \
+  Plugin/build/libs/platform/LibreLogin-Paper-0.25.0.jar \
+  Plugin/build/libs/platform/LibreLogin-Velocity-0.25.0.jar \
   Plugin/build/libs/platform/AuthLimbo-1.0.0.jar \
   --repo mitsuba7891/LibreLogin-Fork \
-  --title "LibreLogin Fork 0.24.10" \
-  --notes-file release/CHANGELOG.md
+  --title "LibreLogin Fork 0.25.0-beta.2" \
+  --prerelease --latest=false --verify-tag \
+  --notes-file release/notes-v0.25.0-beta.2.md
 ```
 
 Do not paste the token into Git, a README, a shell script or this chat. SSH authenticates Git operations; GitHub Releases use the API and therefore require `gh auth` or `GH_TOKEN`.
