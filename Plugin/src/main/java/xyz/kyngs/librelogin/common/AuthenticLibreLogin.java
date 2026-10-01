@@ -353,10 +353,12 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         // Moved to a different class to avoid class loading issues
         GeneralUtil.checkAndMigrate(configuration, logger, this);
 
+        var totpEnabled = configuration.get(TOTP_ENABLED);
+
         imageProjector = provideImageProjector();
 
         if (imageProjector != null) {
-            if (!configuration.get(TOTP_ENABLED)) {
+            if (!totpEnabled) {
                 imageProjector = null;
                 logger.warn("2FA is disabled in the configuration, aborting...");
             } else {
@@ -364,7 +366,10 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
             }
         }
 
-        totpProvider = imageProjector == null ? null : new AuthenticTOTPProvider(this);
+        // TOTP does not depend on the image projector. Platforms without QR
+        // delivery (for example Paper) still support 2FA through the manual
+        // secret, so only the QR projection is unavailable there.
+        totpProvider = totpEnabled ? new AuthenticTOTPProvider(this) : null;
         eMailHandler = configuration.get(MAIL_ENABLED) ? new AuthenticEMailHandler(this) : null;
 
         authorizationProvider = new AuthenticAuthorizationProvider<>(this);

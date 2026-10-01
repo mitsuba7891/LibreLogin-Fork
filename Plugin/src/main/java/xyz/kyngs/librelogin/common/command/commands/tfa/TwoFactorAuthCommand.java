@@ -37,19 +37,17 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
                 throw new InvalidCommandArgument(getMessage("totp-show-info"));
             }
 
-            var imageProjector = plugin.getImageProjector();
             var totpProvider = plugin.getTOTPProvider();
 
-            if (imageProjector == null || totpProvider == null) {
+            if (totpProvider == null) {
                 throw new InvalidCommandArgument(getMessage("error-unknown"));
             }
 
-            if (!imageProjector.canProject(player)) {
-                throw new InvalidCommandArgument(getMessage("totp-wrong-version",
-                        "%low%", "1.13",
-                        "%high%", "26.2"
-                ));
-            }
+            // QR projection needs a platform image integration (Velocity/Bungee).
+            // Without one, for example on Paper, 2FA still works with the manual
+            // secret and provisioning URI sent below.
+            var imageProjector = plugin.getImageProjector();
+            var qrAvailable = imageProjector != null && imageProjector.canProject(player);
 
             sender.sendMessage(getMessage("totp-generating"));
 
@@ -59,27 +57,28 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
                 if (failure != null || transferError != null) return;
 
                 plugin.cancelOnExit(plugin.delay(() -> {
-                    try {
-                        if (!auth.isAwaiting2FA(player)) return;
+                    if (!auth.isAwaiting2FA(player)) return;
 
-                        var currentServer = plugin.getPlatformHandle().getPlayersServerName(player);
-                        var onLimbo = currentServer != null
-                                && plugin.getConfiguration().get(ConfigurationKeys.LIMBO).contains(currentServer);
-                        if (!onLimbo) {
-                            plugin.getLogger().debug("Skipping 2FA QR projection for "
-                                    + plugin.getPlatformHandle().getUsernameForPlayer(player)
-                                    + ": player is no longer on a limbo server (current=" + currentServer + ")");
-                            return;
+                    if (qrAvailable) {
+                        try {
+                            var currentServer = plugin.getPlatformHandle().getPlayersServerName(player);
+                            var onLimbo = currentServer != null
+                                    && plugin.getConfiguration().get(ConfigurationKeys.LIMBO).contains(currentServer);
+                            if (onLimbo) {
+                                imageProjector.project(data.qr(), player);
+                                plugin.getLogger().debug("2FA QR projected for "
+                                        + plugin.getPlatformHandle().getUsernameForPlayer(player));
+                            } else {
+                                plugin.getLogger().debug("Skipping 2FA QR projection for "
+                                        + plugin.getPlatformHandle().getUsernameForPlayer(player)
+                                        + ": player is no longer on a limbo server (current=" + currentServer + ")");
+                            }
+                        } catch (Throwable throwable) {
+                            // QR delivery must never tear down the player's login
+                            // connection. The manual secret/URI remains usable.
+                            plugin.getLogger().debug("2FA QR projection failed for "
+                                    + plugin.getPlatformHandle().getUsernameForPlayer(player), throwable);
                         }
-
-                        imageProjector.project(data.qr(), player);
-                        plugin.getLogger().debug("2FA QR projected for "
-                                + plugin.getPlatformHandle().getUsernameForPlayer(player));
-                    } catch (Throwable throwable) {
-                        // QR delivery must never tear down the player's login
-                        // connection. The manual secret/URI remains usable.
-                        plugin.getLogger().debug("2FA QR projection failed for "
-                                + plugin.getPlatformHandle().getUsernameForPlayer(player), throwable);
                     }
 
                     sender.sendMessage(getMessage("totp-show-info"));
