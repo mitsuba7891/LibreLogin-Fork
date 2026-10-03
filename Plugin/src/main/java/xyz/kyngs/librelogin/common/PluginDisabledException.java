@@ -18,7 +18,18 @@ package xyz.kyngs.librelogin.common;
  */
 public class PluginDisabledException extends RuntimeException {
 
+    private final boolean restartRequested;
+
     public PluginDisabledException(String message) {
+        this(message, false);
+    }
+
+    public PluginDisabledException(String message, boolean restartRequested) {
         super(message);
+        this.restartRequested = restartRequested;
+    }
+
+    public boolean restartRequested() {
+        return restartRequested;
     }
 }

@@ -67,6 +67,13 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
         super.disable();
     }
 
+    @Override
+    protected void requestRestart() {
+        server.getScheduler().buildTask(bootstrap,
+                () -> server.shutdown(Component.text("LibreLogin generated a new configuration; restart the proxy after filling it in."))
+        ).schedule();
+    }
+
     public ProxyServer getServer() {
         return server;
     }

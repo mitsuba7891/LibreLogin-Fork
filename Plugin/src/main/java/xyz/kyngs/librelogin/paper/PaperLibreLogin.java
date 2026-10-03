@@ -121,6 +121,11 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
         super.disable();
     }
 
+    @Override
+    protected void requestRestart() {
+        Bukkit.getScheduler().runTask(bootstrap, Bukkit.getServer()::restart);
+    }
+
     @SuppressWarnings("removal")
     private boolean isProxyConfigured() {
         return Bukkit.spigot().getSpigotConfig().getBoolean("settings.bungeecord")
@@ -156,9 +161,11 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
         // point of not terminating the process. The blocking listeners are left
         // out because they depend on the state that failed to initialise.
         if (isDisabledByFailure()) {
-            listeners = new PaperListeners(this);
-            Bukkit.getPluginManager().registerEvents(listeners, bootstrap);
-            getLogger().error("LibreLogin refuses every connection until the problem reported above is fixed.");
+            if (!isRestartRequested()) {
+                listeners = new PaperListeners(this);
+                Bukkit.getPluginManager().registerEvents(listeners, bootstrap);
+                getLogger().error("LibreLogin refuses every connection until the problem reported above is fixed.");
+            }
             return;
         }
 
@@ -183,7 +190,7 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
     public void authorize(Player player, User user, Audience audience) {
         try {
 
-            var location = listeners.getSpawnLocationCache().getIfPresent(player);
+            var location = listeners.getSpawnLocationCache().getIfPresent(player.getUniqueId());
 
             if (location == null) {
                 var world = getServerHandler().chooseLobbyServer(user, player, true, false);
@@ -195,7 +202,7 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
 
                 location = world.getSpawnLocation();
             } else {
-                listeners.getSpawnLocationCache().invalidate(player);
+                listeners.getSpawnLocationCache().invalidate(player.getUniqueId());
             }
 
             var finalLocation = location;

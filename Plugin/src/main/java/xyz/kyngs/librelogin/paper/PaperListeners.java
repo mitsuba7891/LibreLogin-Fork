@@ -18,6 +18,7 @@ import com.github.retrooper.packetevents.wrapper.login.client.WrapperLoginClient
 import com.github.retrooper.packetevents.wrapper.login.server.WrapperLoginServerDisconnect;
 import com.github.retrooper.packetevents.wrapper.login.server.WrapperLoginServerEncryptionRequest;
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil;
+import io.papermc.paper.event.player.AsyncPlayerSpawnLocationEvent;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -29,7 +30,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 import xyz.kyngs.librelogin.api.database.User;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
 import xyz.kyngs.librelogin.common.config.ConfigurationKeys;
@@ -65,7 +65,7 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
             .build();
     private final FloodgateHelper floodgateHelper;
     private final Cache<UUID, String> ipCache;
-    private final Cache<Player, Location> spawnLocationCache;
+    private final Cache<UUID, Location> spawnLocationCache;
 
     public PaperListeners(PaperLibreLogin plugin) {
         super(plugin);
@@ -81,7 +81,7 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
                 .build();
     }
 
-    public Cache<Player, Location> getSpawnLocationCache() {
+    public Cache<UUID, Location> getSpawnLocationCache() {
         return spawnLocationCache;
     }
 
@@ -143,40 +143,32 @@ public class PaperListeners extends AuthenticListeners<PaperLibreLogin, Player, 
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    @SuppressWarnings("removal") // Compatibility bridge used through Paper 26.2; replacement has no Player entity.
-    public void chooseWorld(PlayerSpawnLocationEvent event) {
-        var playerId = event.getPlayer().getUniqueId();
-        var ip = ipCache.getIfPresent(playerId);
-        if (ip == null && plugin.fromFloodgate(playerId)) {
-            ip = plugin.getPlatformHandle().getIP(event.getPlayer());
-        }
-        if (ip == null) {
-            event.getPlayer().kick(Component.text("Internal error, please try again later."));
+    public void chooseWorld(AsyncPlayerSpawnLocationEvent event) {
+        var profile = event.getConnection().getProfile();
+        var playerId = profile.getId();
+        if (playerId == null) {
+            plugin.getLogger().error("Paper did not provide a UUID during async player spawn; refusing the connection");
             return;
         }
-        var world = chooseServer(event.getPlayer(), ip, plugin.getUserSessionService().findPending(event.getPlayer().getUniqueId()));
+
+        var ip = ipCache.getIfPresent(playerId);
+        if (ip == null) {
+            plugin.getLogger().error("No staged IP address was found for " + profile.getName() + " during async player spawn; refusing to select a destination");
+            return;
+        }
+
+        var user = plugin.getUserSessionService().findPending(playerId);
+        var world = chooseServer(playerId, ip, user, null);
         ipCache.invalidate(playerId);
 
-        // Do not carry a vehicle into limbo: otherwise a mount can be teleported
-        // with the player and die in the limbo void when the player logs in again.
-        // Fixes #402.
-        if (!world.key() && event.getPlayer().isInsideVehicle()) {
-            event.getPlayer().leaveVehicle();
-        }
-        spawnLocationCache.invalidate(event.getPlayer());
+        spawnLocationCache.invalidate(playerId);
         if (world.value() == null) {
-            event.getPlayer().kick(plugin.getMessages().getMessage("kick-no-" + (world.key() ? "lobby" : "limbo")));
+            plugin.getLogger().error("No " + (world.key() ? "lobby" : "limbo") + " world is available for " + profile.getName());
         } else {
-            if (event.getPlayer().getHealth() == 0) {
-                //Fixes bug where player is dead when logging in
-                event.getPlayer().setHealth(PaperCompatibility.maximumHealth(event.getPlayer()));
-                var bed = PaperCompatibility.respawnLocation(event.getPlayer());
-                event.setSpawnLocation(bed == null ? world.value().getSpawnLocation() : bed);
-            }
             // Preserve the original location so a successful login can return the player there.
-            if (event.getPlayer().hasPlayedBefore() && !plugin.getConfiguration().get(ConfigurationKeys.LIMBO).contains(event.getSpawnLocation().getWorld().getName())) {
+            if (!event.isNewPlayer() && !plugin.getConfiguration().get(ConfigurationKeys.LIMBO).contains(event.getSpawnLocation().getWorld().getName())) {
                 if (plugin.getConfiguration().get(ConfigurationKeys.LIMBO).contains(world.value().getName())) {
-                    spawnLocationCache.put(event.getPlayer(), event.getSpawnLocation());
+                    spawnLocationCache.put(playerId, event.getSpawnLocation());
                 } else {
                     return;
                 }

@@ -87,7 +87,9 @@ public class VelocityBootstrap implements LibreLoginProvider<Player, RegisteredS
         // They refuse every login and do not depend on the state that failed to
         // load, so the proxy keeps running instead of being terminated.
         if (libreLogin.isDisabledByFailure()) {
-            server.getEventManager().register(this, new VelocityListeners(libreLogin));
+            if (!libreLogin.isRestartRequested()) {
+                server.getEventManager().register(this, new VelocityListeners(libreLogin));
+            }
             return;
         }
 

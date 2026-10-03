@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
+import java.util.UUID;
 
 public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> {
 
@@ -282,7 +283,10 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
     }
 
     protected BiHolder<Boolean, S> chooseServer(P player, @Nullable String ip, @Nullable User user) {
-        var id = platformHandle.getUUIDForPlayer(player);
+        return chooseServer(platformHandle.getUUIDForPlayer(player), ip, user, player);
+    }
+
+    protected BiHolder<Boolean, S> chooseServer(UUID id, @Nullable String ip, @Nullable User user, @Nullable P player) {
         var fromFloodgate = plugin.fromFloodgate(id);
 
         if (fromFloodgate) {
@@ -297,7 +301,7 @@ public class AuthenticListeners<Plugin extends AuthenticLibreLogin<P, S>, P, S> 
             throw new IllegalStateException("No database profile was resolved for " + id);
         }
 
-        if (ip == null) {
+        if (ip == null && player != null) {
             ip = platformHandle.getIP(player);
         }
 

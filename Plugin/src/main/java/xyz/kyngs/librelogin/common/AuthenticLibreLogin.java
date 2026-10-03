@@ -151,6 +151,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
      * while it is set, which is what makes it safe to keep the process alive.
      */
     private volatile String fatalFailure;
+    private volatile boolean restartRequested;
 
     protected AuthenticLibreLogin() {
         cryptoProviders = new ConcurrentHashMap<>();
@@ -258,9 +259,15 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
             enableInternal();
         } catch (PluginDisabledException disabled) {
             fatalFailure = disabled.getMessage();
+            restartRequested = disabled.restartRequested();
             if (logger != null) {
                 logger.error("LibreLogin is disabled and refuses every login until the reported problem is fixed: " + fatalFailure);
-                logger.error("The server/proxy was deliberately left running. Fix the problem above and restart it.");
+                if (restartRequested) {
+                    logger.warn("The configuration was generated during first startup. The server/proxy will restart now; fill in the generated configuration before it starts again.");
+                    requestRestart();
+                } else {
+                    logger.error("The server/proxy was deliberately left running. Fix the problem above and restart it.");
+                }
             }
         }
     }
@@ -944,7 +951,7 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
     protected void abortStartup(int code) {
         throw new PluginDisabledException(code == 0
                 ? "a new configuration was generated and has to be filled in"
-                : "initialisation failed (exit code " + code + ")");
+                : "initialisation failed (exit code " + code + ")", code == 0);
     }
 
     /**
@@ -961,6 +968,13 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
     public String getFatalFailureReason() {
         return fatalFailure;
     }
+
+    public boolean isRestartRequested() {
+        return restartRequested;
+    }
+
+    /** Requests a platform restart after the first configuration was generated. */
+    protected abstract void requestRestart();
 
     public abstract Audience getAudienceFromIssuer(CommandIssuer issuer);
 
