@@ -162,15 +162,15 @@ gh auth status
 Then create the release from the repository root:
 
 ```bash
-gh release create v0.25.0-beta.2 \
+gh release create v0.25.0-beta.3 \
   Plugin/build/distributions/LibreLogin-0.25.0.zip \
   Plugin/build/libs/platform/LibreLogin-Paper-0.25.0.jar \
   Plugin/build/libs/platform/LibreLogin-Velocity-0.25.0.jar \
   Plugin/build/libs/platform/AuthLimbo-1.0.0.jar \
   --repo mitsuba7891/LibreLogin-Fork \
-  --title "LibreLogin Fork 0.25.0-beta.2" \
+  --title "LibreLogin Fork 0.25.0-beta.3" \
   --prerelease --latest=false --verify-tag \
-  --notes-file release/notes-v0.25.0-beta.2.md
+  --notes-file release/notes-v0.25.0-beta.3.md
 ```
 
 Do not paste the token into Git, a README, a shell script or this chat. SSH authenticates Git operations; GitHub Releases use the API and therefore require `gh auth` or `GH_TOKEN`.
