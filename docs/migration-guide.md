@@ -8,6 +8,8 @@
 4. After migration, edit only the `.yml` files. The old `.conf` files are not read while YAML exists.
 5. Review the existing JDBC URL and TLS settings; explicit old values are preserved. See the [current configuration guide](wiki/Configuration.md).
 
+On a completely new installation, LibreLogin requests a restart after generating the configuration instead of leaving the server/proxy active with an empty authentication configuration. The host must have a restart supervisor if it does not relaunch stopped processes automatically.
+
 ## Artifact names
 
 The build produces platform-labelled files in `Plugin/build/libs/platform/`:

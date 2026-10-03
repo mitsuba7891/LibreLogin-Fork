@@ -2,6 +2,10 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## LibreLogin bundle 0.25.0-beta.3
+
+- Documentation/release bundle update; the `AuthLimbo-1.0.0.jar` companion behavior is unchanged.
+
 ## LibreLogin bundle 0.25.0-beta.2
 
 - Included as the Paper limbo companion for the updated Velocity authentication flow.

@@ -2,6 +2,12 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.25.0-beta.3
+
+- Requests a Paper restart after generating first-run configuration instead of leaving authentication disabled in a running server.
+- Replaces the deprecated spawn listener with `AsyncPlayerSpawnLocationEvent` and UUID-based location caching.
+- Updated English installation and troubleshooting guidance.
+
 ## 0.25.0-beta.2
 
 - Enabled manual TOTP setup without a QR projector and refused skipping existing factors when TOTP is disabled.

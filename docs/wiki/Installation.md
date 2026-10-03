@@ -11,6 +11,8 @@
 3. Use **Java 25** for Paper 26.2. Back up the database, plugin folders and worlds before upgrading.
 4. Keep one active LibreLogin JAR per instance. Libby downloads database libraries and other runtime dependencies where required.
 
+> **First startup:** LibreLogin generates `config.yml` and `messages.yml`, then requests a server/proxy restart instead of leaving an unauthenticated instance running. Fill in the generated files before the restarted process starts again. A restart supervisor is required if your host does not automatically relaunch the process.
+
 ## Velocity network with AuthLimbo
 
 ### Step 1 — Install the components

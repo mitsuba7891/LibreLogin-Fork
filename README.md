@@ -30,8 +30,8 @@ A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/Lib
 ## Release status
 
 - **Stable:** [v0.24.12](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.24.12).
-- **Pre-release:** [v0.25.0-beta.2](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.2), with authentication fixes and the user guides below.
-- **Development:** the `beta` branch uses version `0.25.0`. The GitHub tag identifies the beta revision; JAR filenames retain the base version. The older `beta.1` assets do not contain the fixes added in `beta.2`.
+- **Pre-release:** [v0.25.0-beta.3](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.3), with the initial-startup restart and modern Paper spawn fixes.
+- **Development:** the `beta` branch uses version `0.25.0`. The GitHub tag identifies the beta revision; JAR filenames retain the base version. Use the release tag and checksums to distinguish beta builds.
 
 The [English wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) covers installation, database TLS, commands, manual 2FA and troubleshooting, with categorized navigation and prominent setup notes. The repository keeps its current [wiki sources](docs/wiki/Home.md); release ZIPs preserve the documentation snapshot packaged with each build. See the [cross-fork issue review](docs/libreloginprod-issues.md) for the status of reports from LibreLoginProd.
 
@@ -128,7 +128,7 @@ Use `LibreLogin-Paper-0.25.0.jar` only when authentication is handled directly b
 Paper/plugins/LibreLogin-Paper-0.25.0.jar
 ```
 
-Start the server, configure the generated `config.yml` and `messages.yml`, then restart after structural configuration changes. Do not run both the proxy and standalone Paper authentication flows for the same player path.
+Start the server once. LibreLogin generates `config.yml` and `messages.yml` and requests a restart instead of leaving a new unauthenticated instance running; fill in those files before the restarted process starts again. Do not run both the proxy and standalone Paper authentication flows for the same player path.
 
 ## Login and 2FA commands
 

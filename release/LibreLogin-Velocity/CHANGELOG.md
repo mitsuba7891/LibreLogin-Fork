@@ -2,6 +2,11 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.25.0-beta.3
+
+- Shuts down the proxy after generating first-run configuration so a supervisor can restart it only after the files are filled in.
+- Updated English installation guidance and release notes.
+
 ## 0.25.0-beta.2
 
 - Restricted unauthenticated and pending-2FA players to configured limbo backends, including effective redirected destinations.

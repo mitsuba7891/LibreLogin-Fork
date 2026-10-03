@@ -48,4 +48,4 @@ Fuente: los 22 issues abiertos y cerrados de [Navio1430/LibreLoginProd](https://
 
 Resultado: **BUILD SUCCESSFUL**, 73 tests sin fallos. Se añadieron 35 casos para selección/restricción de backend, sesiones offline, respuesta de Mojang y nonce. Los tests no arrancan un proxy o servidor Minecraft ni acreditan la reproducción de los problemas de spawn/skins.
 
-Los tres primeros arreglos y los refuerzos de esta revisión se incluyen en `v0.25.0-beta.2`, junto con la documentación. Los assets de `v0.25.0-beta.1` se conservan. La incertidumbre P-05 sobre TOTP se resolvió comprobando la licencia MIT heredada del POM padre y el aviso del tag exacto; véase [dependency-licenses.md](dependency-licenses.md).
+Los tres primeros arreglos, los refuerzos y la corrección de arranque/spawn se incluyen en `v0.25.0-beta.3`, junto con la documentación. Los assets de beta.1 y beta.2 se conservan. La incertidumbre P-05 sobre TOTP se resolvió comprobando la licencia MIT heredada del POM padre y el aviso del tag exacto; véase [dependency-licenses.md](dependency-licenses.md).

@@ -57,7 +57,7 @@ If premium/autologin is active, run `/cracked` before `/2fa`. Never share a TOTP
 
 For text-only setup, set `totp.qr-enabled: false`, keep `totp.enabled: true`, and restart. Beta.2 refuses skipping a saved second factor when its provider is disabled. It also restricts unauthenticated players to configured limbos, including effective destinations changed by other plugins.
 
-Set `login-log-alias: false` and restart to release `/log` for another plugin while keeping `/login` and `/l`. User guides are included in the bundle's `docs/wiki/` directory and [online at the release tag](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md).
+Set `login-log-alias: false` and restart to release `/log` for another plugin while keeping `/login` and `/l`. On a first startup, LibreLogin requests a proxy restart after generating configuration; configure a process supervisor to relaunch Velocity. User guides are included in the bundle's `docs/wiki/` directory and [online at the release tag](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.3/docs/wiki/Home.md).
 
 ## Messages and prefix
 

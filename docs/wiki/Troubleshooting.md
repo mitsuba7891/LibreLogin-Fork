@@ -81,7 +81,7 @@ The issue numbers below belong to **LibreLoginProd**.
 | Report | Current status |
 |---|---|
 | **Tablist skins (#73)** | Paper's replacement profile does not preserve textures. Session validation does not add them; the visual issue remains pending. |
-| **Spawn on Paper 1.21.9+ (#52/#68)** | Location caching/restoration exists, but the listener uses the old spawn event. Those versions need live testing and, where necessary, the modern event integration. |
+| **Spawn on Paper 1.21.9+ (#52/#68)** | Beta.3 uses `AsyncPlayerSpawnLocationEvent` and UUID-based location caching. Live testing is still required for each Paper/client matrix. |
 | **Skull cache (#58)** | The original log is no longer accessible. A current log and reproduction steps are needed. |
 
 The [cross-fork review](https://github.com/mitsuba7891/LibreLogin-Fork/blob/beta/docs/libreloginprod-issues.md) records all 22 reports.

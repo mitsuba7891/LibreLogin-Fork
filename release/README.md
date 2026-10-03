@@ -2,7 +2,7 @@
 
 This is a maintained, customized distribution based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). It separates proxy authentication, standalone Paper authentication and the Paper limbo backend into three clearly named artifacts.
 
-> **Release:** `v0.25.0-beta.2` is a pre-release for testing the authentication fixes. JAR filenames keep the base version `0.25.0`; the release tag and `SHA256SUMS.txt` distinguish beta revisions. Historical release 0.24.10 work used AI assistance (Freebuff assistant using GPT Luna 5.6); see `CHANGELOG.md` for the change history.
+> **Release:** `v0.25.0-beta.3` is a pre-release for testing the authentication fixes, initial-startup restart and modern Paper spawn handling. JAR filenames keep the base version `0.25.0`; the release tag and `SHA256SUMS.txt` distinguish beta revisions. Historical release 0.24.10 work used AI assistance (Freebuff assistant using GPT Luna 5.6); see `CHANGELOG.md` for the change history.
 
 ## Package contents
 
@@ -71,7 +71,7 @@ Fork: <https://github.com/mitsuba7891/LibreLogin-Fork>
 
 Generated legacy HOCON files are converted automatically to YAML and retained as `.conf.pre-yaml.bak` backups.
 
-The archive includes the user guides under `docs/wiki/`; start with `docs/wiki/Home.md`. The original beta.2 snapshot is available in the [versioned online guides](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.2/docs/wiki/Home.md); the [live wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) is maintained in English.
+The archive includes the user guides under `docs/wiki/`; start with `docs/wiki/Home.md`. The beta.3 snapshot is available in the [versioned online guides](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.3/docs/wiki/Home.md); the [live wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) is maintained in English.
 
 New database URLs default to verified TLS. Existing URLs are preserved; review their parameters when upgrading. `login-log-alias: false` releases `/log` after a restart.
 
@@ -135,7 +135,7 @@ Paper supports manual secret/URI setup. On either platform, `totp.qr-enabled: fa
 
 ## Known pre-release limitations
 
-Tablist textures and the modern Paper spawn-event transition remain pending. Unit tests do not certify a live Paper/Velocity/client matrix. See the [beta.2 notes](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.2) for details.
+Tablist textures remain pending. Unit tests do not certify a live Paper/Velocity/client matrix. See the [beta.3 notes](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.3) for details.
 
 ## Build the package
 

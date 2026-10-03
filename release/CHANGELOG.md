@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.25.0-beta.3 — Startup restart and modern Paper spawn handling
+
+- First configuration generation requests a Paper restart or shuts down the Velocity proxy instead of leaving an empty authentication configuration active.
+- Paper now uses `AsyncPlayerSpawnLocationEvent` and UUID-based pre-login destination/location handling.
+- Updated English wiki, README and release guidance with the first-start behavior.
+- Verified compilation, 73 tests, license check and platform release artifacts.
+
 ## 0.25.0-beta.2 — Authentication fixes and user guides
 
 - Configurable `/log` alias; preserved Velocity disconnect reasons.

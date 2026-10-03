@@ -2,6 +2,15 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
+## 0.25.0-beta.3 — Startup restart and modern Paper spawn handling
+
+- A first startup that generates configuration now requests a Paper restart or shuts down the Velocity proxy instead of leaving an empty authentication configuration active. A process supervisor must relaunch Velocity/Paper when required.
+- Paper now listens to `AsyncPlayerSpawnLocationEvent`, eliminating the deprecated `PlayerSpawnLocationEvent` warning and avoiding premature `Player` creation.
+- Paper destination selection now works from the pre-login profile UUID and preserves the post-login location cache by UUID.
+- Updated English user guides and release documentation with the first-start restart behavior.
+- `BUILD SUCCESSFUL`: 73 tests, `licenseCheck`, platform JARs and release archive.
+- This remains a pre-release; tablist textures and live Minecraft server/proxy matrix testing remain pending.
+
 ## 0.25.0-beta.2 — Authentication fixes and user guides
 
 - Made `/log` optional with `login-log-alias`, preserving `/login` and `/l`.
