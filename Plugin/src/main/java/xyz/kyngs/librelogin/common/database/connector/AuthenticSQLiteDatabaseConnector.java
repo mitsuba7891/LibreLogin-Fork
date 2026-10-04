@@ -31,6 +31,10 @@ public class AuthenticSQLiteDatabaseConnector extends AuthenticDatabaseConnector
         hikariConfig.setPoolName("LibreLogin SQLite Pool");
         hikariConfig.setDriverClassName("org.sqlite.JDBC");
         hikariConfig.setMaxLifetime(60000);
+        // SQLite is a local file and does not need Hikari keepalive pings.
+        // Hikari's default keepalive interval is longer than this pool's
+        // lifetime, which otherwise produces a misleading startup warning.
+        hikariConfig.setKeepaliveTime(0);
         hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
         hikariConfig.addDataSourceProperty("prepStmtCacheSize", "250");
         hikariConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
