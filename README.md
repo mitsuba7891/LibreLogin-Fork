@@ -30,7 +30,7 @@ A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/Lib
 ## Release status
 
 - **Stable:** [v0.24.12](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.24.12).
-- **Pre-release:** [v0.25.0-beta.4](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.4), with the SQLite pool warning fix and the beta.3 startup/spawn fixes.
+- **Pre-release:** [v0.25.0-beta.5](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.5), with interactive `/librelogin` help and clickable command suggestions.
 - **Development:** the `beta` branch uses version `0.25.0`. The GitHub tag identifies the beta revision; JAR filenames retain the base version. Use the release tag and checksums to distinguish beta builds.
 
 The [English wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) covers installation, database TLS, commands, manual 2FA and troubleshooting, with categorized navigation and prominent setup notes. The repository keeps its current [wiki sources](docs/wiki/Home.md); release ZIPs preserve the documentation snapshot packaged with each build. See the [cross-fork issue review](docs/libreloginprod-issues.md) for the status of reports from LibreLoginProd.

@@ -77,6 +77,8 @@ The command system resolves the UUIDs present in internal method signatures; pla
 
 Many permission names retain the **`librepremium.*`** prefix for compatibility even though the command is `/librelogin`.
 
+Running `/librelogin` without a subcommand now shows the plugin version, platform, database/TOTP/email status and a clickable list of administrator commands. Hover a command for its description; click it to suggest the command in chat without executing it. Use `/librelogin about` for the full license/version message.
+
 | Command | Permission |
 |---|---|
 | `/librelogin reload messages` | `librepremium.reload.messages` |

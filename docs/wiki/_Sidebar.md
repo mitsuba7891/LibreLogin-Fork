@@ -1,7 +1,7 @@
 ## LibreLogin Fork
 
 - **[Home](Home.md)**
-- **[Download beta.4](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.4)**
+- **[Download beta.5](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.5)**
 
 ## Features
 

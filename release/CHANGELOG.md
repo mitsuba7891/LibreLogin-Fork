@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.25.0-beta.5 — Interactive administrator help
+
+- `/librelogin` now displays runtime status and clickable command suggestions with hover descriptions.
+- `/librelogin about` retains the original license/version output.
+- Retains the beta.4 SQLite pool warning fix and beta.3 startup/spawn fixes.
+
 ## 0.25.0-beta.4 — SQLite pool warning fix
 
 - Disabled Hikari keepalive pings for the local SQLite connector, removing the misleading startup warning.

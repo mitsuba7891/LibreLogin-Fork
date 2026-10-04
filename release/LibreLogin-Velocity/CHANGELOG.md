@@ -2,6 +2,10 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.25.0-beta.5
+
+- Added interactive `/librelogin` help with runtime status and clickable command suggestions.
+
 ## 0.25.0-beta.4
 
 - Dependency/documentation update for the shared SQLite connector warning fix; Velocity behavior is otherwise unchanged.

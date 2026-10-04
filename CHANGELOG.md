@@ -2,6 +2,13 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
+## 0.25.0-beta.5 — Interactive administrator help
+
+- `/librelogin` now displays version, platform, database, TOTP and email status.
+- The help output lists useful administrator commands with hover descriptions; clicking a command suggests it in the chat bar without executing it.
+- `/librelogin about` keeps the original license/version information message.
+- Beta.4 SQLite keepalive fix and beta.3 startup/spawn fixes are included unchanged.
+
 ## 0.25.0-beta.4 — SQLite pool warning fix
 
 - Disabled Hikari keepalive pings for the local SQLite connector. This removes the misleading `keepaliveTime is greater than or equal to maxLifetime` warning without changing database behavior.

@@ -4,7 +4,7 @@ Start with [Home.md](Home.md). These English guides are maintained in the main r
 
 ## GitHub Wiki
 
-The [public wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) was initialized on **October 1, 2026** and is maintained in **English**. It has six primary guides and a categorized sidebar covering the features and setup of `v0.25.0-beta.4`.
+The [public wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) was initialized on **October 1, 2026** and is maintained in **English**. It has six primary guides and a categorized sidebar covering the features and setup of `v0.25.0-beta.5`.
 
 The separate Git repository is `https://github.com/mitsuba7891/LibreLogin-Fork.wiki.git`, with published branch `master`. It is independent of the plugin repository's `master` branch. The working clone is `/tmp/opencode/LibreLogin-Fork.wiki`.
 
