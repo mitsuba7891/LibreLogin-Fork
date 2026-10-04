@@ -2,6 +2,10 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.25.0-beta.4
+
+- Dependency/documentation update for the shared SQLite connector warning fix; Velocity behavior is otherwise unchanged.
+
 ## 0.25.0-beta.3
 
 - Shuts down the proxy after generating first-run configuration so a supervisor can restart it only after the files are filled in.

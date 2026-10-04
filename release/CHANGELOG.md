@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.25.0-beta.4 — SQLite pool warning fix
+
+- Disabled Hikari keepalive pings for the local SQLite connector, removing the misleading startup warning.
+- Retains beta.3 first-start restart and modern Paper async-spawn fixes.
+
 ## 0.25.0-beta.3 — Startup restart and modern Paper spawn handling
 
 - First configuration generation requests a Paper restart or shuts down the Velocity proxy instead of leaving an empty authentication configuration active.

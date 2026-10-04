@@ -42,7 +42,7 @@ Legacy `config.conf` and `messages.conf` files are converted to YAML and retaine
 
 Premium/autologin accounts must run `/cracked` before configuring 2FA.
 
-In beta.3, TOTP works through the manual secret/provisioning URI without a QR projector. Disabling `totp.enabled` does not bypass a saved second factor; recovery must be performed explicitly for the account. User guides are included in the bundle's `docs/wiki/` directory and [online at the release tag](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.3/docs/wiki/Home.md).
+In beta.4, TOTP works through the manual secret/provisioning URI without a QR projector. Disabling `totp.enabled` does not bypass a saved second factor; recovery must be performed explicitly for the account. User guides are included in the bundle's `docs/wiki/` directory and [online at the release tag](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.4/docs/wiki/Home.md).
 
 `login-log-alias: false` disables only `/log` after restarting, preserving `/login` and `/l`. Review existing database URLs because upgraded explicit values are preserved even though new defaults use verified TLS.
 

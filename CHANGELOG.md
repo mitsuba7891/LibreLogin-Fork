@@ -2,6 +2,12 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
+## 0.25.0-beta.4 — SQLite pool warning fix
+
+- Disabled Hikari keepalive pings for the local SQLite connector. This removes the misleading `keepaliveTime is greater than or equal to maxLifetime` warning without changing database behavior.
+- Beta.3 startup-restart and modern Paper async-spawn fixes are included unchanged.
+- The release remains a pre-release; the real server's database type is controlled by `config.yml` and is not changed by the JAR.
+
 ## 0.25.0-beta.3 — Startup restart and modern Paper spawn handling
 
 - A first startup that generates configuration now requests a Paper restart or shuts down the Velocity proxy instead of leaving an empty authentication configuration active. A process supervisor must relaunch Velocity/Paper when required.

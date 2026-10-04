@@ -2,6 +2,11 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.25.0-beta.4
+
+- Disabled the unused SQLite Hikari keepalive to remove its startup warning.
+- Retains the beta.3 first-run restart and async Paper spawn fixes.
+
 ## 0.25.0-beta.3
 
 - Requests a Paper restart after generating first-run configuration instead of leaving authentication disabled in a running server.

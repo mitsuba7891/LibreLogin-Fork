@@ -2,7 +2,7 @@
 
 **Authentication for standalone Paper servers and Velocity networks.**
 
-[Download beta.3](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.3) · [Installation](Installation.md) · [Configuration](Configuration.md) · [Troubleshooting](Troubleshooting.md)
+[Download beta.4](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.4) · [Installation](Installation.md) · [Configuration](Configuration.md) · [Troubleshooting](Troubleshooting.md)
 
 [LibreLogin Fork](https://github.com/mitsuba7891/LibreLogin-Fork) is a maintained fork of LibreLogin. This wiki explains its features, setup and account-management commands in **English**.
 
@@ -51,11 +51,11 @@
 
 > **Java and compatibility:** Building and running Paper 26.2 require **Java 25**. LibreLogin keeps Java 21 bytecode. The advertised 1.13–26.2 range describes **client protocols**, not certification for every older Paper server; older clients need the appropriate protocol translation layer.
 
-> **Release status:** These guides cover **v0.25.0-beta.3**, a **pre-release**. Initial configuration now requests a restart, and Paper uses the modern async spawn event. The [known issues](Troubleshooting.md#known-issues) include Paper tablist textures and live-server validation. The current distribution provides Paper, Velocity and AuthLimbo artifacts; BungeeCord and NanoLimbo are not supported outputs.
+> **Release status:** These guides cover **v0.25.0-beta.4**, a **pre-release**. Initial configuration requests a restart, Paper uses the modern async spawn event, and SQLite no longer emits the Hikari keepalive warning. The [known issues](Troubleshooting.md#known-issues) include Paper tablist textures and live-server validation. The current distribution provides Paper, Velocity and AuthLimbo artifacts; BungeeCord and NanoLimbo are not supported outputs.
 
 - [Stable release: v0.24.12](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.24.12).
-- [Testing pre-release: v0.25.0-beta.3](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.3).
-- JAR names retain the base version `0.25.0`. Use the **release tag and checksums** to distinguish beta builds. Beta.1 and beta.2 do not include the beta.3 startup/spawn fixes.
+- [Testing pre-release: v0.25.0-beta.4](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.4).
+- JAR names retain the base version `0.25.0`. Use the **release tag and checksums** to distinguish beta builds. Beta.1–beta.3 do not include the beta.4 SQLite warning fix.
 - This wiki is maintained in English. Release archives preserve the documentation snapshot packaged with that release.
 
 ## Support and license
