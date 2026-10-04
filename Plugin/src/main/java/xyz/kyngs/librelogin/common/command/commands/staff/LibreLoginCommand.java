@@ -10,6 +10,10 @@ import co.aikar.commands.annotation.*;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import xyz.kyngs.librelogin.api.configuration.CorruptedConfigurationException;
 import xyz.kyngs.librelogin.api.database.User;
 import xyz.kyngs.librelogin.api.event.events.AuthenticatedEvent;
@@ -34,6 +38,9 @@ import java.util.concurrent.CompletionStage;
 
 import static xyz.kyngs.librelogin.common.AuthenticLibreLogin.DATE_TIME_FORMATTER;
 import static xyz.kyngs.librelogin.common.AuthenticLibreLogin.GSON;
+import static xyz.kyngs.librelogin.common.config.ConfigurationKeys.DATABASE_TYPE;
+import static xyz.kyngs.librelogin.common.config.ConfigurationKeys.MAIL_ENABLED;
+import static xyz.kyngs.librelogin.common.config.ConfigurationKeys.TOTP_ENABLED;
 
 @CommandAlias("librelogin")
 public class LibreLoginCommand<P> extends StaffCommand<P> {
@@ -42,12 +49,46 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
         super(plugin);
     }
 
-    @Subcommand("about")
     @Default
+    public CompletionStage<Void> onHelp(Audience audience) {
+        return runAsync(() -> {
+            audience.sendMessage(Component.text("LibreLogin help", NamedTextColor.GOLD)
+                    .append(Component.text(" — version " + plugin.getVersion(), NamedTextColor.YELLOW)));
+            audience.sendMessage(Component.text("Platform: ", NamedTextColor.GRAY)
+                    .append(Component.text(plugin.getPlatformHandle().getPlatformIdentifier(), NamedTextColor.WHITE))
+                    .append(Component.text(" | Database: ", NamedTextColor.GRAY))
+                    .append(Component.text(plugin.getConfiguration().get(DATABASE_TYPE), NamedTextColor.WHITE))
+                    .append(Component.text(" | TOTP: ", NamedTextColor.GRAY))
+                    .append(Component.text(plugin.getConfiguration().get(TOTP_ENABLED) ? "enabled" : "disabled", NamedTextColor.WHITE))
+                    .append(Component.text(" | Email: ", NamedTextColor.GRAY))
+                    .append(Component.text(plugin.getConfiguration().get(MAIL_ENABLED) ? "enabled" : "disabled", NamedTextColor.WHITE)));
+
+            audience.sendMessage(Component.text("Click a command to place it in your chat bar:", NamedTextColor.GRAY));
+            suggest(audience, "/librelogin about", "Show version, authors and license information.");
+            suggest(audience, "/librelogin reload messages", "Reload messages.yml after editing it.");
+            suggest(audience, "/librelogin reload configuration", "Reload config.yml after editing it.");
+            suggest(audience, "/librelogin user info <name>", "Inspect a player's stored authentication profile.");
+            suggest(audience, "/librelogin user premium <name>", "Enable premium autologin for a verified account.");
+            suggest(audience, "/librelogin user cracked <name>", "Disable premium autologin for an account.");
+            suggest(audience, "/librelogin user 2faoff <name>", "Remove a player's saved TOTP factor.");
+            suggest(audience, "/librelogin dump", "Create a diagnostics dump for support.");
+            audience.sendMessage(Component.text("Wiki: ", NamedTextColor.GRAY)
+                    .append(Component.text("https://github.com/mitsuba7891/LibreLogin-Fork/wiki", NamedTextColor.AQUA)
+                            .clickEvent(ClickEvent.openUrl("https://github.com/mitsuba7891/LibreLogin-Fork/wiki"))));
+        });
+    }
+
+    @Subcommand("about")
     public CompletionStage<Void> onAbout(Audience audience) {
         return runAsync(() -> audience.sendMessage(getMessage("info-about",
                 "%version%", plugin.getVersion()
         )));
+    }
+
+    private void suggest(Audience audience, String command, String description) {
+        audience.sendMessage(Component.text("  " + command, NamedTextColor.AQUA)
+                .clickEvent(ClickEvent.suggestCommand(command))
+                .hoverEvent(HoverEvent.showText(Component.text(description, NamedTextColor.GRAY))));
     }
 
     @Subcommand("email test")
