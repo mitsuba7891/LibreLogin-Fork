@@ -87,6 +87,8 @@ Keep username and password in their separate fields. Upgrades preserve an existi
 
 > **Unencrypted connections:** The plugin allows non-TLS URLs and warns for non-loopback destinations. Credentials and password hashes then travel in clear text. `localhost`, `127.0.0.1` and `::1` only suppress that warning; they do not automatically change the URL's TLS mode.
 
+Beta.4 disables SQLite keepalive pings because SQLite is a local file database. The database behavior is unchanged; this only removes an Hikari startup warning.
+
 ## Accounts and sessions
 
 ```yaml
