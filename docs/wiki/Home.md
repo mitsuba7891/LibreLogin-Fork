@@ -51,9 +51,10 @@
 
 > **Java and compatibility:** Building and running Paper 26.3 require **Java 25**. LibreLogin keeps Java 21 bytecode. The advertised 1.13–26.3 range describes **client protocols**, not certification for every older Paper server; older clients need the appropriate protocol translation layer. QR maps on Velocity require PacketEvents 2.14.0+ for this range.
 
-> **Source status:** These guides cover **0.25.0 on master**, including complete paginated help, the `librelogin-fork` identity and the Minecraft 26.3 update. Initial configuration still requests a restart, now without misleading fatal-error announcements. Publishing source to `master` does not itself create a GitHub release/tag. The [known issues](Troubleshooting.md#known-issues) include Paper tablist textures and live-server validation. The current build provides Paper, Velocity and AuthLimbo artifacts; BungeeCord and NanoLimbo are not supported outputs.
+> **Release status:** These guides cover **v0.25.0**, including complete paginated help, the `librelogin-fork` identity and the Minecraft 26.3 update. Initial configuration still requests a restart, now without misleading fatal-error announcements. The [known issues](Troubleshooting.md#known-issues) include Paper tablist textures and live-server validation. The release provides Paper, Velocity and AuthLimbo artifacts, the ZIP and SHA-256 checksums; BungeeCord and NanoLimbo are not supported outputs.
 
-- [Stable release: v0.24.12](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.24.12).
+- [Latest release: v0.25.0](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0).
+- [Previous stable release: v0.24.12](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.24.12).
 - [Testing pre-release: v0.25.0-beta.5](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.5).
 - JAR names retain the base version `0.25.0`. Use the **source commit, release tag and checksums** to distinguish builds. Previously published beta.5 artifacts do not include the current 26.3 update or the complete paginated help.
 - This wiki is maintained in English. Release archives preserve the documentation snapshot packaged with that release.

@@ -2,7 +2,7 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
-## 0.25.0 — Master source update
+## 0.25.0
 
 - Added complete paginated help and safe command suggestions with clickable page navigation.
 - Renamed the internal name to `librelogin-fork`, retaining the `LibreLogin` provider alias and legacy data directories.

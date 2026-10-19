@@ -50,7 +50,7 @@ TOTP works through the manual secret/provisioning URI without a QR projector. Di
 
 `login-log-alias: false` disables only `/log` after restarting, preserving `/login` and `/l`. Review existing database URLs because upgraded explicit values are preserved even though new defaults use verified TLS.
 
-This is the 0.25.0 source update for master; a source push does not create a GitHub tag/release. Tablist textures remain pending; live Paper/client validation is still required.
+This artifact belongs to release `v0.25.0`. Tablist textures remain pending; live Paper/client validation is still required.
 
 ## Messages
 

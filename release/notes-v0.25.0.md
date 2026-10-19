@@ -1,6 +1,6 @@
-# LibreLogin Fork 0.25.0 — Master source update
+# LibreLogin Fork 0.25.0 — Minecraft 26.3
 
-This update promotes the beta work to `master`. A GitHub release/tag and public artifact upload are separate publication steps.
+This release promotes the beta work to `master` and provides the Paper, Velocity and AuthLimbo artifacts with an installation bundle and SHA-256 checksums. It includes Minecraft 26.3 support, complete paginated command help and the `librelogin-fork` plugin identity.
 
 ## Included changes
 
@@ -16,6 +16,12 @@ PacketEvents' upstream [2.14.0 release notes](https://github.com/retrooper/packe
 ## Upgrade and verify
 
 Back up the database, plugin folders and worlds. Keep one authentication JAR per instance and do not install LibreLogin-Paper on a proxied AuthLimbo backend. Check the selected data-directory path at startup before editing configuration.
+
+- **Velocity network:** install `LibreLogin-Velocity-0.25.0.jar` on the proxy and `AuthLimbo-1.0.0.jar` on its Paper auth backend. Install PacketEvents 2.14.0+ separately on Velocity if QR maps are wanted.
+- **Standalone Paper:** install only `LibreLogin-Paper-0.25.0.jar`. Paper 26.3 requires Java 25; the shared plugin bytecode remains Java 21.
+- **Complete package:** `LibreLogin-0.25.0.zip` contains all three artifacts and the installation guides.
+
+Download `SHA256SUMS.txt` alongside the four release files and run `sha256sum -c SHA256SUMS.txt` to verify them.
 
 Build with JDK 25, retaining the `0.25.0` artifact version:
 

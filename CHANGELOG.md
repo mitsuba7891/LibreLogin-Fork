@@ -2,7 +2,7 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
-## Unreleased 0.25.0 — Complete help, fork identity and Minecraft 26.3
+## 0.25.0 — Complete help, fork identity and Minecraft 26.3
 
 - Replaced the fixed eight-command help list with all registered, permitted commands, including optional account features and alias details.
 - Added six-command pages, clickable Previous/Next navigation, `/librelogin [page]` and `/librelogin help [page]`, page completion and invalid-page recovery. Account/staff commands remain suggestions, never click-to-execute actions.

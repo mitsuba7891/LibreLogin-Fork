@@ -2,7 +2,7 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
-## 0.25.0 — Master source update
+## 0.25.0
 
 - Added complete paginated help with permission filtering, aliases, visible descriptions and safe command suggestions.
 - Renamed the plugin ID to `librelogin-fork`, reusing legacy data directories and preserving commands/permission nodes.

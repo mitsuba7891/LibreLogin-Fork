@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.25.0 — Master source update
+## 0.25.0 — Minecraft 26.3 and complete command help
 
 - Added complete permission-aware command help with six-command pages, clickable navigation and `/librelogin help [page]`.
 - Renamed the internal plugin identity to `librelogin-fork`, retaining commands, permission nodes and existing data directories.

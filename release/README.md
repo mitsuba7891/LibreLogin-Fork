@@ -2,7 +2,7 @@
 
 This is a maintained, customized distribution based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin). It separates proxy authentication, standalone Paper authentication and the Paper limbo backend into three clearly named artifacts.
 
-> **Version:** `0.25.0` source prepared for `master`, with Minecraft 26.3 support, complete paginated help and the `librelogin-fork` identity. This source push is separate from creating a GitHub release/tag. JAR filenames keep the base version `0.25.0`; record the source commit and artifact checksums when deploying. Historical release 0.24.10 work used AI assistance (Freebuff assistant using GPT Luna 5.6); see `CHANGELOG.md` for the change history.
+> **Release:** [v0.25.0](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0), with Minecraft 26.3 support, complete paginated help and the `librelogin-fork` identity. The GitHub release includes Paper, Velocity, AuthLimbo, the ZIP and `SHA256SUMS.txt`; record the source commit and verify artifact checksums when deploying. Historical release 0.24.10 work used AI assistance (Freebuff assistant using GPT Luna 5.6); see `CHANGELOG.md` for the change history.
 
 ## Package contents
 

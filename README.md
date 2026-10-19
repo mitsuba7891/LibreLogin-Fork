@@ -29,6 +29,7 @@ A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/Lib
 
 ## Release status
 
+- **Latest release:** [v0.25.0](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0), with Minecraft 26.3 support, paginated help and the `librelogin-fork` identity. Paper, Velocity, AuthLimbo, the ZIP and SHA-256 checksums are attached to the release.
 - **Current source:** `master` uses version `0.25.0`, with complete paginated help, the `librelogin-fork` plugin identity, Paper API 26.3 and PacketEvents 2.14.0 for client protocols through 26.3. See the [release notes](release/notes-v0.25.0.md).
 - **Previously published stable:** [v0.24.12](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.24.12).
 - **Previously published pre-release:** [v0.25.0-beta.5](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.5). It does not include the current 26.3 update. A source push to `master` does not itself create a new GitHub tag or downloadable release.
