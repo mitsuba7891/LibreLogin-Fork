@@ -29,13 +29,13 @@ A maintained fork and modernization of [LibreLogin](https://github.com/kyngs/Lib
 
 ## Release status
 
-- **Stable:** [v0.24.12](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.24.12).
-- **Pre-release:** [v0.25.0-beta.5](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.5), with interactive `/librelogin` help and clickable command suggestions.
-- **Development:** the `beta` branch uses version `0.25.0`. The GitHub tag identifies the beta revision; JAR filenames retain the base version. Use the release tag and checksums to distinguish beta builds.
+- **Current source:** `master` uses version `0.25.0`, with complete paginated help, the `librelogin-fork` plugin identity, Paper API 26.3 and PacketEvents 2.14.0 for client protocols through 26.3. See the [release notes](release/notes-v0.25.0.md).
+- **Previously published stable:** [v0.24.12](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.24.12).
+- **Previously published pre-release:** [v0.25.0-beta.5](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.5). It does not include the current 26.3 update. A source push to `master` does not itself create a new GitHub tag or downloadable release.
 
 The [English wiki](https://github.com/mitsuba7891/LibreLogin-Fork/wiki) covers installation, database TLS, commands, manual 2FA and troubleshooting, with categorized navigation and prominent setup notes. The repository keeps its current [wiki sources](docs/wiki/Home.md); release ZIPs preserve the documentation snapshot packaged with each build. See the [cross-fork issue review](docs/libreloginprod-issues.md) for the status of reports from LibreLoginProd.
 
-## Artifacts (0.25.0 beta)
+## Artifacts (0.25.0)
 
 This release provides three clearly separated artifacts:
 
@@ -47,17 +47,19 @@ This release provides three clearly separated artifacts:
 
 For a Velocity network, install **LibreLogin-Velocity on the proxy** and **AuthLimbo on the Paper auth backend**. Do not install LibreLogin-Paper on that auth backend; it would create a second authentication pipeline.
 
+On the current source, the internal plugin ID/name is **`librelogin-fork`** on both platforms. New installations use `plugins/librelogin-fork/`. Existing `librelogin`, `LibreLogin`, `librepremium` or `LibrePremium` data directories are reused in place so the rename does not create an empty authentication database. The startup log identifies a reused legacy directory. `/librelogin`, its subcommands and existing permission nodes remain unchanged; Paper also provides the legacy `LibreLogin` plugin alias. Velocity integrations declaring a plugin dependency must use `librelogin-fork`.
+
 At startup, LibreLogin checks the public [`librelogin-fork` Modrinth project](https://modrinth.com/plugin/librelogin-fork) for a newer stable release and prints the correct Paper or Velocity download link. If Modrinth is unavailable, it falls back exclusively to the fork's [GitHub releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases). It only notifies: JAR downloads and replacement remain manual administrator actions.
 
 ## Requirements and compatibility
 
-- JDK/Java 25 for builds and Paper 26.2 deployments.
-- Paper API 26.2 is the server API used for compilation. Velocity remains a separate artifact.
+- JDK/Java 25 for builds and Paper 26.3 deployments.
+- Paper API 26.3 is the server API used for compilation. Velocity remains a separate artifact.
 - A database supported by the generated configuration when using persistent authentication data.
-- On Velocity, install PacketEvents 2.13.0+ separately for cross-version QR projection; it is compile-only and is not bundled in the Velocity JAR. The Paper artifact loads its PacketEvents runtime dependency through Libby.
+- On Velocity, install PacketEvents 2.14.0+ separately for cross-version QR projection; it is compile-only and is not bundled in the Velocity JAR. The Paper artifact loads its PacketEvents runtime dependency through Libby.
 - Optional integrations: Protocolize, LuckPerms, Floodgate and RedisBungee, only when your network uses them.
 
-The shared artifacts retain Java 21 bytecode while being compiled and tested with JDK 25. The **1.13-26.2 compatibility range refers to Minecraft client/protocol versions**, not to running this build on a Paper 1.13 server. A 26.2 server needs the network's ViaVersion/ViaBackwards-style translation layer to accept older clients; PacketEvents observes those protocols but does not replace protocol translation. Test the exact server, proxy and translation-plugin matrix before production.
+The shared artifacts retain Java 21 bytecode while being compiled and tested with JDK 25. The **1.13-26.3 compatibility range refers to Minecraft client/protocol versions**, not to running this build on a Paper 1.13 server. A 26.3 server needs the network's ViaVersion/ViaBackwards-style translation layer to accept older clients; PacketEvents observes those protocols but does not replace protocol translation. Test the exact server, proxy and translation-plugin matrix before production.
 
 ## Installation: Velocity network
 
@@ -68,7 +70,7 @@ Velocity/plugins/LibreLogin-Velocity-0.25.0.jar
 Paper-auth/plugins/AuthLimbo-1.0.0.jar
 ```
 
-Install PacketEvents 2.13.0+ separately if QR projection is needed. Do not install `LibreLogin-Paper` on the proxied auth server.
+Install PacketEvents 2.14.0+ separately if QR projection is needed. Without a compatible integration, only QR maps are unavailable: manual 2FA stays available and an INFO notice explains the optional dependency. Do not install `LibreLogin-Paper` on the proxied auth server.
 
 ### 2. Register backend servers in `velocity.toml`
 
@@ -108,7 +110,7 @@ Start the auth server once to generate the dedicated void world. Do not reuse a 
 
 ### 5. Configure LibreLogin
 
-In the proxy plugin data directory, edit the generated `plugins/librelogin/config.yml` and set the backend names used by your network. The relevant shape is:
+In the proxy plugin data directory, edit the generated `plugins/librelogin-fork/config.yml` (or the reused legacy directory shown at startup) and set the backend names used by your network. The relevant shape is:
 
 ```yaml
 limbo:
@@ -128,9 +130,11 @@ Use `LibreLogin-Paper-0.25.0.jar` only when authentication is handled directly b
 Paper/plugins/LibreLogin-Paper-0.25.0.jar
 ```
 
-Start the server once. LibreLogin generates `config.yml` and `messages.yml` and requests a restart instead of leaving a new unauthenticated instance running; fill in those files before the restarted process starts again. Do not run both the proxy and standalone Paper authentication flows for the same player path.
+Start the server once. LibreLogin generates `config.yml` and `messages.yml` and requests a restart instead of leaving a new unauthenticated instance running; fill in those files before the restarted process starts again. This expected setup step is logged at INFO, not as a fatal authentication failure. Real configuration/database failures still refuse connections. Do not run both the proxy and standalone Paper authentication flows for the same player path.
 
 ## Login and 2FA commands
+
+Use `/librelogin` or `/librelogin help` for paginated help covering all registered commands available to your permissions. Click **Previous / Next**, or type `/librelogin 2` (also `/librelogin help 2`), to change pages. Commands show descriptions and hover details, including aliases and permissions. Clicking an account/staff command only fills in its literal name, leaving you to enter its arguments; it never executes the action. TOTP/email account commands only appear when those features have been registered at startup.
 
 The login form accepts the password and, when TOTP is enabled, the one-time code together:
 
@@ -156,7 +160,7 @@ If a premium/autologin account is active, disable it first:
 
 The QR/provisioning output must be treated as a secret. Never post a TOTP URI or recovery data publicly.
 
-On the current `beta` source, Paper supports manual setup using the displayed secret or provisioning URI without Protocolize. On Velocity, QR delivery is optional. To avoid incompatible map packets while keeping TOTP enabled:
+On the current source, Paper supports manual setup using the displayed secret or provisioning URI without Protocolize. On Velocity, QR delivery is optional. To avoid incompatible map packets while keeping TOTP enabled:
 
 ```yaml
 totp:
@@ -170,7 +174,7 @@ To release `/log` for Carpet or another plugin, set `login-log-alias: false` in 
 
 ## Messages and prefix
 
-Edit `plugins/librelogin/messages.yml`. Every message value is written between double quotes and supports the fork formatting syntax:
+Edit `plugins/librelogin-fork/messages.yml` (or the reused legacy directory shown at startup). Every message value is written between double quotes and supports the fork formatting syntax:
 
 ```yaml
 prefix: "LibreLogin"

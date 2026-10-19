@@ -15,6 +15,7 @@ import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.PluginDescription;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -22,6 +23,7 @@ import net.byteflux.libby.VelocityLibraryManager;
 import org.slf4j.Logger;
 import xyz.kyngs.librelogin.api.LibreLoginPlugin;
 import xyz.kyngs.librelogin.api.provider.LibreLoginProvider;
+import xyz.kyngs.librelogin.common.util.PluginDataDirectory;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -29,8 +31,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Plugin(
-        id = "librelogin",
-        name = "LibreLogin",
+        id = "librelogin-fork",
+        name = "librelogin-fork",
         version = "@version@",
         authors = "kyngs",
         dependencies = {
@@ -45,16 +47,23 @@ public class VelocityBootstrap implements LibreLoginProvider<Player, RegisteredS
 
     ProxyServer server;
     private final VelocityLibreLogin libreLogin;
+    private final Path dataDirectory;
 
     @Inject
-    public VelocityBootstrap(ProxyServer server, Injector injector, Logger logger, PluginContainer container) {
+    public VelocityBootstrap(ProxyServer server, Injector injector, Logger logger, PluginContainer container,
+                             @DataDirectory Path configuredDataDirectory) {
         this.server = server;
+        dataDirectory = PluginDataDirectory.resolve(configuredDataDirectory,
+                "librelogin", "LibreLogin", "librepremium", "LibrePremium");
+        if (!dataDirectory.getFileName().toString().equals("librelogin-fork")) {
+            logger.info("Using existing authentication data directory: {}", dataDirectory);
+        }
 
         // This is a very ugly hack to be able to load libraries in the constructor
         // We cannot pass this as a parameter to the constructor because the plugin is technically still not loaded
         // And, we cannot past the container as a parameter to the constructor because the proxy still did not assign the instance to it.
         // So, we have to "mock" the container and pass this as the instance. I'm kinda surprised this works, but in theory could break in the future.
-        var libraryManager = new VelocityLibraryManager<>(logger, Path.of("plugins", "librelogin"), server.getPluginManager(), new PluginContainer() {
+        var libraryManager = new VelocityLibraryManager<>(logger, dataDirectory, server.getPluginManager(), new PluginContainer() {
             @Override
             public PluginDescription getDescription() {
                 return container.getDescription();
@@ -100,6 +109,10 @@ public class VelocityBootstrap implements LibreLoginProvider<Player, RegisteredS
     @Override
     public LibreLoginPlugin<Player, RegisteredServer> getLibreLogin() {
         return libreLogin;
+    }
+
+    Path getDataDirectory() {
+        return dataDirectory;
     }
 
     @Subscribe

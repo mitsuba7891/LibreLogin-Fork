@@ -8,12 +8,16 @@ package xyz.kyngs.librelogin.velocity.integration.packetevents;
 
 final class PacketEventsProtocolSupport {
     static final int MIN_SUPPORTED_PROTOCOL = 393; // Minecraft 1.13
-    static final int MAX_SUPPORTED_PROTOCOL = 776; // Minecraft 26.2
+    static final int MAX_SUPPORTED_PROTOCOL = 777; // Minecraft 26.3, PacketEvents 2.14.0+
 
     private PacketEventsProtocolSupport() {
     }
 
     static boolean supports(int protocol) {
         return protocol >= MIN_SUPPORTED_PROTOCOL && protocol <= MAX_SUPPORTED_PROTOCOL;
+    }
+
+    static boolean hasRequiredMappings(int latestRuntimeProtocol) {
+        return latestRuntimeProtocol >= MAX_SUPPORTED_PROTOCOL;
     }
 }

@@ -24,6 +24,7 @@ public class LoginCommand<P> extends AuthorizationCommand<P> {
     }
 
     @Default
+    @Description("Log in with your password and optional two-factor code.")
     @Syntax("{@@syntax.login}")
     @CommandCompletion("%autocomplete.login")
     public CompletionStage<Void> onLogin(Audience sender, P player, @Single String password, @Optional String code) {

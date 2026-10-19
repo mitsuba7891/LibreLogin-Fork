@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.25.0 — Master source update
+
+- Added complete permission-aware command help with six-command pages, clickable navigation and `/librelogin help [page]`.
+- Renamed the internal plugin identity to `librelogin-fork`, retaining commands, permission nodes and existing data directories.
+- Updated Paper API to 26.3 and PacketEvents to 2.14.0; enabled client protocol 777 with runtime mapping checks.
+- Missing optional QR providers now explain at INFO level that manual 2FA remains available. First-time setup no longer emits misleading fatal-error/refusal messages.
+- CI now uses JDK 25 and verifies tests, licenses, platform JARs and the release archive. GitHub tags/releases remain separate publication steps; live-server validation is still required.
+
 ## 0.25.0-beta.5 — Interactive administrator help
 
 - `/librelogin` now displays runtime status and clickable command suggestions with hover descriptions.

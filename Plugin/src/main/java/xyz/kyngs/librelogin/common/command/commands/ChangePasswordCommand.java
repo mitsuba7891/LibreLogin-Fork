@@ -23,6 +23,7 @@ public class ChangePasswordCommand<P> extends Command<P> {
     }
 
     @Default
+    @Description("Change your account password using your current password.")
     @Syntax("{@@syntax.change-password}")
     @CommandCompletion("%autocomplete.change-password")
     public CompletionStage<Void> onPasswordChange(Audience sender, P player, String oldPass, @Single String newPass) {

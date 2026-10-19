@@ -2,6 +2,10 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## LibreLogin bundle 0.25.0 — Master source update
+
+- Rebuilt against Paper API 26.3. The companion version remains `1.0.0`; behavior and forwarding requirements are unchanged.
+
 ## LibreLogin bundle 0.25.0-beta.5
 
 - Documentation/release bundle update; the `AuthLimbo-1.0.0.jar` companion behavior is unchanged.

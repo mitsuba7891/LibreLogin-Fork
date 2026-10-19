@@ -2,6 +2,16 @@
 
 All notable changes in this fork are documented here. This release is based on [kyngs/LibreLogin](https://github.com/kyngs/LibreLogin) and preserves its Mozilla Public License 2.0 notices.
 
+## Unreleased 0.25.0 — Complete help, fork identity and Minecraft 26.3
+
+- Replaced the fixed eight-command help list with all registered, permitted commands, including optional account features and alias details.
+- Added six-command pages, clickable Previous/Next navigation, `/librelogin [page]` and `/librelogin help [page]`, page completion and invalid-page recovery. Account/staff commands remain suggestions, never click-to-execute actions.
+- First-time configuration generation is informational rather than a fatal-error/refusal announcement; real startup failures continue to block authentication. Removed duplicate platform-level refusal logs.
+- Renamed the internal Paper/Velocity plugin ID/name to `librelogin-fork`, preserving commands, permission nodes, database IDs and existing data directories. Paper retains the legacy `LibreLogin` provider alias.
+- Updated PacketEvents to 2.14.0, Paper API to `26.3.build.206-stable` and the supported client protocol upper bound to 777 (Minecraft 26.3). Older PacketEvents mappings fall back to Protocolize's legacy range or manual 2FA instead of being advertised as 26.3-compatible.
+- Missing optional QR integrations now produce an INFO notice explaining that manual 2FA remains available, with current PacketEvents/version guidance. Real incompatible installed integrations still produce actionable warnings.
+- Updated CI to JDK 25 and added tests plus release-archive verification to the artifact build. Source promotion to `master` does not create a GitHub release or tag.
+
 ## 0.25.0-beta.5 — Interactive administrator help
 
 - `/librelogin` now displays version, platform, database, TOTP and email status.

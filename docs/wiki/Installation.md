@@ -7,11 +7,13 @@
 ## Before you start
 
 1. Choose standalone Paper or proxy-side authentication on Velocity.
-2. Download your revision from [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases), or [build `beta`](API-and-Build.md).
-3. Use **Java 25** for Paper 26.2. Back up the database, plugin folders and worlds before upgrading.
+2. Download your revision from [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases), or [build `master`](API-and-Build.md) for the current 0.25.0 / Minecraft 26.3 source.
+3. Use **Java 25** for Paper 26.3. Back up the database, plugin folders and worlds before upgrading.
 4. Keep one active LibreLogin JAR per instance. Libby downloads database libraries and other runtime dependencies where required.
 
-> **First startup:** LibreLogin generates `config.yml` and `messages.yml`, then requests a server/proxy restart instead of leaving an unauthenticated instance running. Fill in the generated files before the restarted process starts again. A restart supervisor is required if your host does not automatically relaunch the process.
+> **First startup:** LibreLogin generates `config.yml` and `messages.yml`, then requests a server/proxy restart instead of leaving an unauthenticated instance running. This normal setup step uses INFO messages rather than fatal-error/refusal announcements. Fill in the generated files before the restarted process starts again. A restart supervisor is required if your host does not automatically relaunch the process. Real startup failures still block authentication.
+
+The internal ID/name is now **`librelogin-fork`**. Fresh installations use `plugins/librelogin-fork/`; existing data directories are reused without moving or merging files. Check the startup log before editing configuration. Keep `/librelogin` and existing permission nodes; update Velocity plugin dependencies that explicitly refer to the old ID.
 
 ## Velocity network with AuthLimbo
 
@@ -24,7 +26,7 @@ Paper-auth/plugins/AuthLimbo-1.0.0.jar
 
 > **Important:** Do not install LibreLogin-Paper on this auth backend. LibreLogin-Velocity owns authentication; AuthLimbo protects the waiting world.
 
-For QR maps on Velocity, install PacketEvents 2.13.0+ separately. [Manual 2FA](Commands-and-2FA.md#enable-2fa-without-a-map) does not require a map projector.
+For QR maps on Velocity, install PacketEvents 2.14.0+ separately; this release adds Minecraft 26.3 mappings. [Manual 2FA](Commands-and-2FA.md#enable-2fa-without-a-map) does not require a map projector.
 
 ### Step 2 — Register the backends
 
@@ -45,7 +47,7 @@ Replace the addresses with your actual backend addresses. Even when the proxy ac
 
 ### Step 3 — Configure forwarding on every Paper backend
 
-Set `online-mode=false` in `server.properties`. For Paper 26.2, configure `config/paper-global.yml`:
+Set `online-mode=false` in `server.properties`. For Paper 26.3, configure `config/paper-global.yml`:
 
 ```yaml
 proxies:
@@ -82,7 +84,7 @@ Start the backend to create the void world. AuthLimbo does not automatically con
 
 ### Step 5 — Configure LibreLogin on the proxy
 
-After the first startup, stop Velocity and edit `plugins/librelogin/config.yml`:
+After the first startup, stop Velocity and edit `plugins/librelogin-fork/config.yml` (or the reused legacy directory):
 
 ```yaml
 limbo:
@@ -98,7 +100,7 @@ Names must match `[servers]` exactly. Start the backends, then the proxy. Verify
 
 1. Install `LibreLogin-Paper-0.25.0.jar` in `Paper/plugins/`.
 2. Set `online-mode=false` in `server.properties`. Bungee/Velocity forwarding must be disabled for this architecture.
-3. Start once, stop the server, and edit `plugins/LibreLogin/config.yml` and `messages.yml`.
+3. Start once, stop the server, and edit `plugins/librelogin-fork/config.yml` and `messages.yml` (or the reused legacy directory).
 4. Configure the actual worlds, for example:
 
 ```yaml

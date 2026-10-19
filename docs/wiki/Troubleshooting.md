@@ -37,7 +37,9 @@ Restart, run `/2fa`, enter the secret in your authenticator, and confirm with `/
 
 ### Check the QR integration
 
-PacketEvents 2.13.0+ is the preferred Velocity QR path. Protocolize is a fallback with a more limited range; its integration must not be advertised as supporting clients newer than 1.21.3. Older clients on a modern backend also need appropriate protocol translation. Paper does not provide a built-in QR projector.
+PacketEvents 2.14.0+ is the preferred Velocity QR path for Minecraft clients 1.13–26.3. PacketEvents 2.13.0 only provides mappings through 26.2 and must be upgraded for this range. The plugin checks the installed library's real mappings before enabling that projector.
+
+With no compatible image integration, an INFO notice explains that only optional QR maps are unavailable; manual secret/URI setup still works. Set `totp.qr-enabled: false` for an intentional manual-only setup. Protocolize is a fallback with a more limited range; its integration must not be advertised as supporting clients newer than 1.21.3. Older clients on a modern backend also need appropriate protocol translation. Paper does not provide a built-in QR projector.
 
 ## Existing 2FA account cannot log in
 
@@ -84,7 +86,7 @@ The issue numbers below belong to **LibreLoginProd**.
 | **Spawn on Paper 1.21.9+ (#52/#68)** | Beta.3 uses `AsyncPlayerSpawnLocationEvent` and UUID-based location caching. Live testing is still required for each Paper/client matrix. |
 | **Skull cache (#58)** | The original log is no longer accessible. A current log and reproduction steps are needed. |
 
-The [cross-fork review](https://github.com/mitsuba7891/LibreLogin-Fork/blob/beta/docs/libreloginprod-issues.md) records all 22 reports.
+The [cross-fork review](https://github.com/mitsuba7891/LibreLogin-Fork/blob/master/docs/libreloginprod-issues.md) records all 22 reports.
 
 ## Uninstalling
 

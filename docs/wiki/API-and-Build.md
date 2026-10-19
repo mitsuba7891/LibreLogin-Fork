@@ -6,7 +6,7 @@
 
 ## Requirements
 
-- **JDK 25** to compile against Paper API 26.2.
+- **JDK 25** to compile against Paper API 26.3.
 - The repository's `./gradlew` wrapper.
 - Access to dependency repositories for the first build.
 
@@ -48,11 +48,11 @@ Plugin/build/libs/platform/AuthLimbo-1.0.0.jar
 Plugin/build/distributions/LibreLogin-0.25.0.zip
 ```
 
-Building does not publish commits, tags, releases or artifacts. Published ZIP/JAR files belong to their release revision; a local `beta` build may include later fixes or documentation changes.
+Building does not publish commits, tags, releases or artifacts. Published ZIP/JAR files belong to their release revision; the current `master` source includes the 26.3 update and can differ from the previously published beta.5 artifacts.
 
 ## Integration API
 
-Interfaces are in the [API module](https://github.com/mitsuba7891/LibreLogin-Fork/tree/beta/API/src/main/java/xyz/kyngs/librelogin/api):
+Interfaces are in the [API module](https://github.com/mitsuba7891/LibreLogin-Fork/tree/master/API/src/main/java/xyz/kyngs/librelogin/api):
 
 | Interface or package | Purpose |
 |---|---|
@@ -63,6 +63,8 @@ Interfaces are in the [API module](https://github.com/mitsuba7891/LibreLogin-For
 | `totp/TOTPProvider` | Factor setup and verification. |
 
 Use interfaces from the revision you deploy. A connected client is not necessarily authenticated; integrations that move players must respect authorization and 2FA state.
+
+The current plugin ID is **`librelogin-fork`**. Velocity dependencies must declare that ID. Paper also advertises `LibreLogin` as a legacy provider alias. Java package/interface names and existing permission nodes have not been renamed.
 
 ## Generate local Javadoc
 
@@ -76,4 +78,4 @@ Output: **`API/build/docs/javadoc/`**. Maven publication is opt-in through `publ
 
 ## Licenses
 
-`licenseCheck` checks source headers, not dependency licensing. See the [dependency license report](https://github.com/mitsuba7891/LibreLogin-Fork/blob/beta/docs/dependency-licenses.md) for that inventory's status.
+`licenseCheck` checks source headers, not dependency licensing. See the [dependency license report](https://github.com/mitsuba7891/LibreLogin-Fork/blob/master/docs/dependency-licenses.md) for that inventory's status.

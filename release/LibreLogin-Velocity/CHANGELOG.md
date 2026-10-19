@@ -2,6 +2,13 @@
 
 This fork artifact was reviewed and updated with AI assistance (Freebuff assistant using GPT Luna 5.6).
 
+## 0.25.0 — Master source update
+
+- Added complete paginated help with permission filtering, aliases, visible descriptions and safe command suggestions.
+- Renamed the plugin ID to `librelogin-fork`, reusing legacy data directories and preserving commands/permission nodes.
+- Added Minecraft 26.3 / protocol 777 support through PacketEvents 2.14.0, with runtime mapping checks and a clear manual-2FA fallback.
+- Missing optional QR integrations and first-time setup now use informational notices rather than misleading warnings/fatal-error announcements.
+
 ## 0.25.0-beta.5
 
 - Added interactive `/librelogin` help with runtime status and clickable command suggestions.

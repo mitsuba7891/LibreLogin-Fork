@@ -1,4 +1,5 @@
-name: "LibreLogin"
+name: "librelogin-fork"
+provides: [LibreLogin]
 author: "kyngs"
 version: '${version}'
 main: "xyz.kyngs.librelogin.paper.PaperBootstrap"

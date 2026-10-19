@@ -6,8 +6,10 @@
 
 package xyz.kyngs.librelogin.common.command;
 
+import co.aikar.commands.CommandIssuer;
 import co.aikar.commands.CommandManager;
 import co.aikar.commands.MessageKeys;
+import co.aikar.commands.RegisteredCommand;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.kyori.adventure.audience.Audience;
@@ -33,9 +35,13 @@ import xyz.kyngs.librelogin.common.config.ConfigurationKeys;
 import xyz.kyngs.librelogin.common.util.CommandLineUtil;
 import xyz.kyngs.librelogin.common.util.RateLimiter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 public class CommandProvider<P, S> extends AuthenticHandler<P, S> {
 
@@ -112,6 +118,10 @@ public class CommandProvider<P, S> extends AuthenticHandler<P, S> {
                 CommandLineUtil.loginAliases(plugin.getConfiguration().get(ConfigurationKeys.LOGIN_LOG_ALIAS))
         );
 
+        manager.getCommandCompletions().registerCompletion("librelogin-help-pages", context ->
+                IntStream.rangeClosed(1, CommandHelpMenu.pageCount(getHelpEntries(context.getIssuer()).size()))
+                        .mapToObj(Integer::toString).toList());
+
         manager.registerCommand(new LoginCommand<>(plugin));
         manager.registerCommand(new RegisterCommand<>(plugin));
         manager.registerCommand(new PremiumEnableCommand<>(plugin));
@@ -132,6 +142,37 @@ public class CommandProvider<P, S> extends AuthenticHandler<P, S> {
             manager.registerCommand(new ConfirmPasswordReset<>(plugin));
         }
 
+    }
+
+    public List<CommandHelpMenu.Entry> getHelpEntries(CommandIssuer issuer) {
+        var roots = manager.getRegisteredRootCommands();
+        var commands = new TreeMap<String, RegisteredCommand<?>>();
+        for (var root : roots) {
+            for (RegisteredCommand<?> command : root.getSubCommands().values()) {
+                String name = command.getCommand().trim();
+                // The default help handler is also registered as "librelogin help".
+                if (!command.isPrivate() && !name.equals("librelogin")) {
+                    commands.putIfAbsent(name, command);
+                }
+            }
+        }
+
+        var entries = new ArrayList<CommandHelpMenu.Entry>();
+        commands.forEach((name, command) -> {
+            String path = "/" + name;
+            String suffix = command.getPrefSubCommand().isBlank() ? "" : " " + command.getPrefSubCommand();
+            var aliases = new ArrayList<>(roots.stream()
+                    .filter(root -> root.getSubCommands().containsValue(command))
+                    .map(root -> "/" + root.getCommandName() + suffix)
+                    .filter(alias -> !alias.equals(path))
+                    .distinct().sorted().toList());
+            if (name.equals("librelogin help")) aliases.add("/librelogin");
+            entries.add(new CommandHelpMenu.Entry(path,
+                    manager.getLocales().replaceI18NStrings(command.getSyntaxText(issuer)),
+                    manager.getLocales().replaceI18NStrings(command.getHelpText()),
+                    aliases, command.getRequiredPermissions()));
+        });
+        return CommandHelpMenu.visibleEntries(entries, permission -> manager.hasPermission(issuer, permission));
     }
 
     public void registerConfirm(UUID uuid) {

@@ -291,7 +291,7 @@ public class ConfigurationKeys {
                     Manual secret/URI setup works on Paper and Velocity without an image integration.
                     QR maps on Velocity use PacketEvents or the compatible Protocolize fallback.
                                         
-                    You can find more information in the fork documentation: https://github.com/mitsuba7891/LibreLogin-Fork/blob/beta/docs/wiki/Comandos-y-2FA.md
+                    You can find more information in the fork documentation: https://github.com/mitsuba7891/LibreLogin-Fork/blob/master/docs/wiki/Commands-and-2FA.md
                     """
     );
 

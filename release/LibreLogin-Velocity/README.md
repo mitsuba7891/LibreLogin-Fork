@@ -10,7 +10,9 @@ Copy the JAR into the Velocity proxy:
 Velocity/plugins/LibreLogin-Velocity-0.25.0.jar
 ```
 
-Install `PacketEvents 2.13.0+` separately when QR projection is required. It is compile-only and is not bundled. Keep only one active LibreLogin Velocity JAR.
+Install `PacketEvents 2.14.0+` separately when QR projection is required, including Minecraft 26.3 clients. It is compile-only and is not bundled. Keep only one active LibreLogin Velocity JAR.
+
+The internal ID is `librelogin-fork`. Fresh installations use `plugins/librelogin-fork/`; existing `librelogin`/`LibreLogin`/LibrePremium data directories are reused. The startup log identifies the legacy path. Update plugin dependencies referring to the old Velocity ID, but keep `/librelogin` and existing permission nodes.
 
 For the split architecture, install `AuthLimbo-1.0.0.jar` on the Paper server registered as `auth`. Do not install `LibreLogin-Paper` on that backend.
 
@@ -29,7 +31,7 @@ Use the real backend addresses. Configure modern forwarding and the same forward
 
 ## LibreLogin configuration
 
-After first startup, edit `plugins/librelogin/config.yml`:
+After first startup, edit `plugins/librelogin-fork/config.yml` (or the reused legacy directory):
 
 ```yaml
 limbo:
@@ -55,13 +57,15 @@ Use the generated comments as the source of truth for your revision. Keep the au
 
 If premium/autologin is active, run `/cracked` before `/2fa`. Never share a TOTP URI, secret or recovery code.
 
+`/librelogin [page]` and `/librelogin help [page]` show all permitted commands in six-command pages, with clickable Previous/Next controls. Clicking a staff/account command suggests it without executing it.
+
 For text-only setup, set `totp.qr-enabled: false`, keep `totp.enabled: true`, and restart. Beta.2 refuses skipping a saved second factor when its provider is disabled. It also restricts unauthenticated players to configured limbos, including effective destinations changed by other plugins.
 
-Set `login-log-alias: false` and restart to release `/log` for another plugin while keeping `/login` and `/l`. On a first startup, LibreLogin requests a proxy restart after generating configuration; configure a process supervisor to relaunch Velocity. User guides are included in the bundle's `docs/wiki/` directory and [online at the release tag](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.4/docs/wiki/Home.md).
+Set `login-log-alias: false` and restart to release `/log` for another plugin while keeping `/login` and `/l`. On a first startup, LibreLogin requests a proxy restart after generating configuration; configure a process supervisor to relaunch Velocity. This expected setup step is informational, not a fatal error. User guides are included in the bundle's `docs/wiki/` directory and [in the current source](https://github.com/mitsuba7891/LibreLogin-Fork/blob/master/docs/wiki/Home.md).
 
 ## Messages and prefix
 
-Edit `plugins/librelogin/messages.yml`:
+Edit `plugins/librelogin-fork/messages.yml` (or the reused legacy directory):
 
 ```yaml
 prefix: "LibreLogin"
@@ -85,18 +89,18 @@ The prefix is excluded from titles, subtitles, action bars and email templates.
 
 - Java 25 is the tested runtime for this release; the artifact retains Java 21 bytecode.
 - Compatible Velocity proxy.
-- PacketEvents 2.13.0+ as an external plugin for the preferred QR path.
+- PacketEvents 2.14.0+ as an external plugin for the preferred QR path.
 - Protocolize optional where its supported protocol range is appropriate.
 - Optional LuckPerms, Floodgate and RedisBungee integrations.
 - Database driver libraries loaded at runtime through Libby.
 
-Client/protocol handling is maintained from 1.13 through 26.2. Install the appropriate ViaVersion/ViaBackwards-style translation components for the actual backend versions; PacketEvents does not perform protocol translation by itself. AuthLimbo is required on the configured Paper authentication backend and performs the safe chat/interaction lock for modern signed-chat clients.
+Client/protocol handling is maintained from 1.13 through 26.3. Install the appropriate ViaVersion/ViaBackwards-style translation components for the actual backend versions; PacketEvents does not perform protocol translation by itself. AuthLimbo is required on the configured Paper authentication backend and performs the safe chat/interaction lock for modern signed-chat clients.
 
 ## Troubleshooting
 
 - **Limbo not running:** confirm the `auth` Paper backend is online, registered under the same name in `velocity.toml` and listed under `limbo`.
 - **Backend closes immediately:** verify modern forwarding and matching secrets; do not run LibreLogin-Paper on the auth backend.
-- **QR unavailable:** install a compatible external PacketEvents/Protocolize path, or use the manual provisioning URI output.
+- **QR unavailable:** install PacketEvents 2.14.0+ for 1.13–26.3, or use the manual provisioning URI output. Missing optional image integrations are reported at INFO and do not disable 2FA. Protocolize's fallback only covers clients through 1.21.3.
 - **Messages unchanged:** run `/librelogin reload messages` or restart the proxy.
 
 ## License

@@ -6,13 +6,15 @@
 
 package xyz.kyngs.librelogin.common;
 
+import xyz.kyngs.librelogin.api.Logger;
+
 /**
- * Signals that LibreLogin must stop initialising and stay disabled.
+ * Signals that LibreLogin must stop initialising, either for first-time setup
+ * or because of an actual startup failure.
  *
- * <p>LibreLogin deliberately does not terminate the JVM in this situation.
- * An authentication plugin that cannot start has to refuse connections; it
- * must not take the proxy or the server, and every other plugin running on
- * it, down as well.</p>
+ * <p>Actual failures keep the process alive but refuse authentication. First-time
+ * setup instead requests a platform restart and is reported as informational,
+ * not as a fatal authentication failure.</p>
  *
  * @author kyngs
  */
@@ -31,5 +33,14 @@ public class PluginDisabledException extends RuntimeException {
 
     public boolean restartRequested() {
         return restartRequested;
+    }
+
+    public void logOutcome(Logger logger) {
+        if (restartRequested) {
+            logger.info("First-time setup: configuration files were generated. Review them before the next startup; a server/proxy restart has been requested.");
+        } else {
+            logger.error("LibreLogin-Fork is disabled and refuses every login until the reported problem is fixed: " + getMessage());
+            logger.error("The server/proxy was deliberately left running. Fix the problem above and restart it.");
+        }
     }
 }

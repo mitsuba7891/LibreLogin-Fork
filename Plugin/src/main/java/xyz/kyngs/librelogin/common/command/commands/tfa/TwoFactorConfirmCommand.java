@@ -9,6 +9,7 @@ package xyz.kyngs.librelogin.common.command.commands.tfa;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Syntax;
 import net.kyori.adventure.audience.Audience;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
@@ -24,6 +25,7 @@ public class TwoFactorConfirmCommand<P> extends Command<P> {
     }
 
     @Default
+    @Description("Confirm two-factor setup with a code from your authenticator.")
     @Syntax("{@@syntax.2fa-confirm}")
     @CommandCompletion("%autocomplete.2fa-confirm")
     public CompletionStage<Void> onTwoFactorConfirm(Audience sender, P player, String code) {

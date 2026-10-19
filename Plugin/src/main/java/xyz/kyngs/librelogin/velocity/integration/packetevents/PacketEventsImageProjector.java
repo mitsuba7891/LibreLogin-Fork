@@ -11,6 +11,7 @@ import com.github.retrooper.packetevents.protocol.component.ComponentTypes;
 import com.github.retrooper.packetevents.protocol.item.ItemStack;
 import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
 import com.github.retrooper.packetevents.protocol.nbt.NBTInt;
+import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerHeldItemChange;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerMapData;
@@ -24,8 +25,20 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 public class PacketEventsImageProjector<P, S> extends AuthenticImageProjector<P, S> implements ImageProjector<P> {
+    public static final String SUPPORTED_CLIENT_RANGE = "1.13-26.3";
+    public static final String REQUIRED_PACKET_EVENTS_VERSION = "2.14.0";
+    public static final String MISSING_INTEGRATION_NOTICE = "No compatible QR-map integration found. Manual 2FA setup remains available. "
+            + "For optional QR maps, install PacketEvents " + REQUIRED_PACKET_EVENTS_VERSION + "+ on Velocity "
+            + "(Minecraft clients " + SUPPORTED_CLIENT_RANGE + "), or set totp.qr-enabled=false for manual-only setup.";
+
     public PacketEventsImageProjector(AuthenticLibreLogin<P, S> plugin) {
         super(plugin);
+    }
+
+    public static boolean compatible() {
+        // Do not treat an older library's unknown/future protocol sentinel as
+        // genuine 26.3 support. Keep the manual setup path available instead.
+        return PacketEventsProtocolSupport.hasRequiredMappings(ClientVersion.getLatest().getProtocolVersion());
     }
 
     @Override

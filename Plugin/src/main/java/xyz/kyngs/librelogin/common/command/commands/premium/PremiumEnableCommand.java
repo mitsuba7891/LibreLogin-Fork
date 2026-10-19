@@ -23,6 +23,7 @@ public class PremiumEnableCommand<P> extends PremiumCommand<P> {
     }
 
     @Default
+    @Description("Request premium autologin for your account.")
     @Syntax("{@@syntax.premium}")
     @CommandCompletion("%autocomplete.premium")
     public CompletionStage<Void> onPremium(Audience sender, UUID uuid, P player, @Single String password) {

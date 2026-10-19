@@ -8,6 +8,7 @@ package xyz.kyngs.librelogin.common.command.commands.tfa;
 
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.Description;
 import net.kyori.adventure.audience.Audience;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
 import xyz.kyngs.librelogin.common.command.Command;
@@ -23,6 +24,7 @@ public class TwoFactorAuthCommand<P> extends Command<P> {
     }
 
     @Default
+    @Description("Start two-factor authentication setup for your account.")
     public CompletionStage<Void> onTwoFactorAuth(Audience sender, P player) {
         return runAsync(() -> {
             checkAuthorized(player);

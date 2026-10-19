@@ -47,4 +47,4 @@
 
 - [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases)
 - [Report an issue](https://github.com/mitsuba7891/LibreLogin-Fork/issues)
-- [Beta source](https://github.com/mitsuba7891/LibreLogin-Fork/tree/beta)
+- [Current master source](https://github.com/mitsuba7891/LibreLogin-Fork/tree/master)

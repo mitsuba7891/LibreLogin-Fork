@@ -21,6 +21,7 @@ public class RegisterCommand<P> extends AuthorizationCommand<P> {
     }
 
     @Default
+    @Description("Register your account by entering your password twice.")
     @Syntax("{@@syntax.register}")
     @CommandCompletion("%autocomplete.register")
     public CompletionStage<Void> onRegister(Audience sender, P player, @Single String password, String passwordRepeat) {

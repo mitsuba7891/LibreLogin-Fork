@@ -8,7 +8,7 @@
 
 ## Which file do you need?
 
-Download the **3-in-1 ZIP** (`LibreLogin-0.24.10.zip`) from the [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases) page and pick the files for your setup:
+Download the matching **3-in-1 ZIP** from [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases) and pick the files for your setup. The current `master` source builds `LibreLogin-0.25.0.zip` with the Minecraft 26.3 update; a source push does not itself publish that ZIP.
 
 | Your setup | Files you need |
 |---|---|
@@ -20,10 +20,12 @@ Download the **3-in-1 ZIP** (`LibreLogin-0.24.10.zip`) from the [Releases](https
 
 **Requirements**
 
-- Java **21** or newer.
+- Java **25** for builds and Paper 26.3; shared plugin bytecode remains Java 21.
 - A supported **Paper** or **Velocity** build for your Minecraft version.
 - A database (MariaDB/MySQL, SQLite or PostgreSQL) configured in `config.yml`.
-- On Velocity, also install **PacketEvents 2.13.0+** if you want in-game QR codes for 2FA.
+- On Velocity, also install **PacketEvents 2.14.0+** if you want in-game QR codes for 2FA through Minecraft 26.3. Manual 2FA does not require it.
+
+The internal plugin name is `librelogin-fork`. New installations use `plugins/librelogin-fork/`; existing legacy directories are reused. `/librelogin` now has complete paginated help with clickable Previous/Next controls.
 
 ---
 
@@ -79,7 +81,7 @@ Start the auth server once so it creates the empty limbo world.
 
 ### Step 5 — Configure the plugin
 
-Start everything, then edit the generated `plugins/librelogin/config.yml` on the proxy:
+Start once, then edit the generated `plugins/librelogin-fork/config.yml` on the proxy (or the reused legacy directory shown in the log):
 
 ```yaml
 limbo:
@@ -181,7 +183,7 @@ If an account has premium/autologin active, run `/cracked` first before enabling
 | "Limbo not running" | The `auth` server is offline, not registered in `velocity.toml`, or not listed under `limbo`. |
 | Backend disconnects instantly | Enable modern forwarding and check that the forwarding secret matches on all servers. |
 | Player can move in the limbo | AuthLimbo is missing/disabled on the auth server. |
-| QR code not shown | Install PacketEvents 2.13.0+ on Velocity, or use the manual TOTP secret shown in chat. |
+| QR code not shown | Install PacketEvents 2.14.0+ on Velocity for 1.13–26.3, or use the manual TOTP secret shown in chat. |
 | Messages not changing | Run `/librelogin reload messages` or restart the proxy. |
 
 ---
@@ -217,7 +219,7 @@ Distributed under the **Mozilla Public License 2.0 (MPL-2.0)**, the same license
 
 ## ¿Qué archivo necesitas?
 
-Descarga el **ZIP 3-en-1** (`LibreLogin-0.24.10.zip`) desde la página de [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases) y elige los archivos según tu caso:
+Descarga el **ZIP 3-en-1** de tu versión desde [Releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases) y elige los archivos según tu caso. El código actual de `master` genera `LibreLogin-0.25.0.zip` con la actualización para Minecraft 26.3; subir el código no publica automáticamente ese ZIP.
 
 | Tu configuración | Archivos que necesitas |
 |---|---|
@@ -229,10 +231,12 @@ Descarga el **ZIP 3-en-1** (`LibreLogin-0.24.10.zip`) desde la página de [Relea
 
 **Requisitos**
 
-- Java **21** o superior.
+- Java **25** para compilar y para Paper 26.3; el bytecode compartido del plugin sigue siendo Java 21.
 - Una build compatible de **Paper** o **Velocity** para tu versión de Minecraft.
 - Una base de datos (MariaDB/MySQL, SQLite o PostgreSQL) configurada en `config.yml`.
-- En Velocity, instala también **PacketEvents 2.13.0+** si quieres códigos QR en el juego para el 2FA.
+- En Velocity, instala también **PacketEvents 2.14.0+** si quieres códigos QR para clientes hasta Minecraft 26.3. El 2FA manual no necesita esa integración.
+
+El nombre interno del plugin es `librelogin-fork`. Las instalaciones nuevas usan `plugins/librelogin-fork/`; se reutilizan las carpetas anteriores. `/librelogin` incluye ayuda completa paginada y botones clicables para cambiar de página.
 
 ---
 
@@ -288,7 +292,7 @@ Inicia una vez el servidor auth para que cree el mundo vacío del limbo.
 
 ### Paso 5 — Configura el plugin
 
-Inicia todo y luego edita el `plugins/librelogin/config.yml` generado en el proxy:
+Inicia una vez y luego edita `plugins/librelogin-fork/config.yml` en el proxy (o la carpeta anterior indicada en el registro):
 
 ```yaml
 limbo:
@@ -390,7 +394,7 @@ Si una cuenta tiene premium/autologin activo, ejecuta `/cracked` antes de activa
 | "Limbo not running" | El servidor `auth` está apagado, no registrado en `velocity.toml`, o no está en `limbo`. |
 | El backend expulsa al instante | Activa el modern forwarding y comprueba que la forwarding secret coincide en todos los servidores. |
 | El jugador se mueve en el limbo | Falta AuthLimbo o está desactivado en el servidor auth. |
-| No aparece el QR | Instala PacketEvents 2.13.0+ en Velocity, o usa el secreto TOTP manual que sale en el chat. |
+| No aparece el QR | Instala PacketEvents 2.14.0+ en Velocity para 1.13–26.3, o usa el secreto TOTP manual que sale en el chat. |
 | Los mensajes no cambian | Ejecuta `/librelogin reload messages` o reinicia el proxy. |
 
 ---

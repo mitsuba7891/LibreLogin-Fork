@@ -54,8 +54,8 @@ AuthLimbo keeps players at the limbo spawn and blocks chat, movement, unsafe tel
 
 ## Dependencies and limitations
 
-- Java 25 for Paper 26.2.
-- Compiled and tested against Paper API 26.2. The 1.13-26.2 range describes client protocols reaching the proxy/backend through the network translation layer, not Paper server versions.
+- Java 25 for Paper 26.3.
+- Compiled and unit-tested against Paper API 26.3. The 1.13-26.3 range describes client protocols reaching the proxy/backend through the network translation layer, not Paper server versions.
 - No database, PacketEvents, NanoLimbo or LibreLogin-Paper dependency.
 - Test the exact Paper/Minecraft version before production.
 

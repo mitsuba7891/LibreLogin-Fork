@@ -6,18 +6,18 @@
 
 package xyz.kyngs.librelogin.common.command.commands.staff;
 
+import co.aikar.commands.CommandIssuer;
 import co.aikar.commands.annotation.*;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
 import xyz.kyngs.librelogin.api.configuration.CorruptedConfigurationException;
 import xyz.kyngs.librelogin.api.database.User;
 import xyz.kyngs.librelogin.api.event.events.AuthenticatedEvent;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
+import xyz.kyngs.librelogin.common.command.CommandHelpMenu;
 import xyz.kyngs.librelogin.common.command.InvalidCommandArgument;
 import xyz.kyngs.librelogin.common.database.AuthenticUser;
 import xyz.kyngs.librelogin.common.event.events.AuthenticPasswordChangeEvent;
@@ -50,48 +50,36 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Default
-    public CompletionStage<Void> onHelp(Audience audience) {
+    @Subcommand("help")
+    @Description("Browse all available commands and help pages.")
+    @Syntax("{@@syntax.help}")
+    @CommandCompletion("@librelogin-help-pages")
+    public CompletionStage<Void> onHelp(Audience audience, CommandIssuer issuer, @Optional String page) {
+        // Resolve permissions, locale and issuer-aware syntax on the command thread.
+        var entries = plugin.getCommandProvider().getHelpEntries(issuer);
         return runAsync(() -> {
-            audience.sendMessage(Component.text("LibreLogin help", NamedTextColor.GOLD)
-                    .append(Component.text(" — version " + plugin.getVersion(), NamedTextColor.YELLOW)));
-            audience.sendMessage(Component.text("Platform: ", NamedTextColor.GRAY)
+            var status = Component.text("Platform: ", NamedTextColor.GRAY)
                     .append(Component.text(plugin.getPlatformHandle().getPlatformIdentifier(), NamedTextColor.WHITE))
-                    .append(Component.text(" | Database: ", NamedTextColor.GRAY))
+                    .append(Component.text("\nDatabase: ", NamedTextColor.GRAY))
                     .append(Component.text(plugin.getConfiguration().get(DATABASE_TYPE), NamedTextColor.WHITE))
-                    .append(Component.text(" | TOTP: ", NamedTextColor.GRAY))
+                    .append(Component.text("\nTOTP: ", NamedTextColor.GRAY))
                     .append(Component.text(plugin.getConfiguration().get(TOTP_ENABLED) ? "enabled" : "disabled", NamedTextColor.WHITE))
-                    .append(Component.text(" | Email: ", NamedTextColor.GRAY))
-                    .append(Component.text(plugin.getConfiguration().get(MAIL_ENABLED) ? "enabled" : "disabled", NamedTextColor.WHITE)));
-
-            audience.sendMessage(Component.text("Click a command to place it in your chat bar:", NamedTextColor.GRAY));
-            suggest(audience, "/librelogin about", "Show version, authors and license information.");
-            suggest(audience, "/librelogin reload messages", "Reload messages.yml after editing it.");
-            suggest(audience, "/librelogin reload configuration", "Reload config.yml after editing it.");
-            suggest(audience, "/librelogin user info <name>", "Inspect a player's stored authentication profile.");
-            suggest(audience, "/librelogin user premium <name>", "Enable premium autologin for a verified account.");
-            suggest(audience, "/librelogin user cracked <name>", "Disable premium autologin for an account.");
-            suggest(audience, "/librelogin user 2faoff <name>", "Remove a player's saved TOTP factor.");
-            suggest(audience, "/librelogin dump", "Create a diagnostics dump for support.");
-            audience.sendMessage(Component.text("Wiki: ", NamedTextColor.GRAY)
-                    .append(Component.text("https://github.com/mitsuba7891/LibreLogin-Fork/wiki", NamedTextColor.AQUA)
-                            .clickEvent(ClickEvent.openUrl("https://github.com/mitsuba7891/LibreLogin-Fork/wiki"))));
+                    .append(Component.text("\nEmail: ", NamedTextColor.GRAY))
+                    .append(Component.text(plugin.getConfiguration().get(MAIL_ENABLED) ? "enabled" : "disabled", NamedTextColor.WHITE));
+            CommandHelpMenu.render(entries, page, plugin.getVersion(), status).forEach(audience::sendMessage);
         });
     }
 
     @Subcommand("about")
+    @Description("Show version, authors and license information.")
     public CompletionStage<Void> onAbout(Audience audience) {
         return runAsync(() -> audience.sendMessage(getMessage("info-about",
                 "%version%", plugin.getVersion()
         )));
     }
 
-    private void suggest(Audience audience, String command, String description) {
-        audience.sendMessage(Component.text("  " + command, NamedTextColor.AQUA)
-                .clickEvent(ClickEvent.suggestCommand(command))
-                .hoverEvent(HoverEvent.showText(Component.text(description, NamedTextColor.GRAY))));
-    }
-
     @Subcommand("email test")
+    @Description("Send a test email to check the SMTP configuration.")
     @CommandPermission("librelogin.email.test")
     @Syntax("{@@syntax.email-test}")
     @CommandCompletion("%autocomplete.email-test")
@@ -106,6 +94,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("dump")
+    @Description("Create a diagnostics dump for support.")
     @CommandPermission("librelogin.dump")
     public CompletionStage<Void> onDump(Audience audience) {
         return runAsync(() -> {
@@ -194,6 +183,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("reload configuration")
+    @Description("Reload config.yml; structural changes still need a restart.")
     @CommandPermission("librepremium.reload.configuration")
     public CompletionStage<Void> onReloadConfiguration(Audience audience) {
         return runAsync(() -> {
@@ -216,6 +206,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("reload messages")
+    @Description("Reload messages.yml after editing it.")
     @CommandPermission("librepremium.reload.messages")
     public CompletionStage<Void> onReloadMessages(Audience audience) {
         return runAsync(() -> {
@@ -240,6 +231,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user info")
+    @Description("Inspect a player's stored authentication profile.")
     @CommandPermission("librepremium.user.info")
     @Syntax("{@@syntax.user-info}")
     @CommandCompletion("%autocomplete.user-info")
@@ -279,6 +271,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user migrate")
+    @Description("Move an offline account to a new player name.")
     @CommandPermission("librepremium.user.migrate")
     @Syntax("{@@syntax.user-migrate}")
     @CommandCompletion("%autocomplete.user-migrate")
@@ -308,6 +301,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user unregister")
+    @Description("Clear an offline account's credentials without deleting its profile.")
     @CommandPermission("librepremium.user.unregister")
     @Syntax("{@@syntax.user-unregister}")
     @CommandCompletion("%autocomplete.user-unregister")
@@ -331,6 +325,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user delete")
+    @Description("Permanently delete an offline player's stored account.")
     @CommandPermission("librepremium.user.delete")
     @Syntax("{@@syntax.user-delete}")
     @CommandCompletion("%autocomplete.user-delete")
@@ -349,6 +344,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user premium")
+    @Description("Enable premium autologin for a verified account.")
     @CommandPermission("librepremium.user.premium")
     @Syntax("{@@syntax.user-premium}")
     @CommandCompletion("%autocomplete.user-premium")
@@ -371,6 +367,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user cracked")
+    @Description("Disable premium autologin for an account.")
     @CommandPermission("librepremium.user.cracked")
     @Syntax("{@@syntax.user-cracked}")
     @CommandCompletion("%autocomplete.user-cracked")
@@ -392,6 +389,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user register")
+    @Description("Create a registered account for a player.")
     @CommandPermission("librepremium.user.register")
     @Syntax("{@@syntax.user-register}")
     @CommandCompletion("%autocomplete.user-register")
@@ -432,6 +430,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user login")
+    @Description("Authenticate an online player without their password.")
     @CommandPermission("librepremium.user.login")
     @Syntax("{@@syntax.user-login}")
     @CommandCompletion("%autocomplete.user-login")
@@ -452,6 +451,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user 2faoff")
+    @Description("Remove a player's saved TOTP factor after verifying ownership.")
     @CommandPermission("librepremium.user.2faoff")
     @Syntax("{@@syntax.user-2fa-off}")
     @CommandCompletion("%autocomplete.user-2fa-off")
@@ -470,6 +470,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user emailoff")
+    @Description("Remove a player's recovery email address.")
     @CommandPermission("librepremium.user.emailoff")
     @Syntax("{@@syntax.user-email-off}")
     @CommandCompletion("%autocomplete.user-email-off")
@@ -488,6 +489,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user setemail")
+    @Description("Set a player's recovery email address.")
     @CommandPermission("librepremium.user.setemail")
     @Syntax("{@@syntax.user-set-email}")
     @CommandCompletion("%autocomplete.user-set-email")
@@ -506,6 +508,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user pass-change")
+    @Description("Set a new password for a player's account.")
     @CommandPermission("librepremium.user.pass-change")
     @Syntax("{@@syntax.user-pass-change}")
     @CommandCompletion("%autocomplete.user-pass-change")
@@ -525,6 +528,7 @@ public class LibreLoginCommand<P> extends StaffCommand<P> {
     }
 
     @Subcommand("user alts")
+    @Description("List accounts stored with the same IP address.")
     @CommandPermission("librelogin.user.alts")
     @Syntax("{@@syntax.user-alts}")
     @CommandCompletion("%autocomplete.user-alts")

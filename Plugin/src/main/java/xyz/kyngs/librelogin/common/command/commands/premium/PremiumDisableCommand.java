@@ -8,6 +8,7 @@ package xyz.kyngs.librelogin.common.command.commands.premium;
 
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.Description;
 import net.kyori.adventure.audience.Audience;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
 import xyz.kyngs.librelogin.common.event.events.AuthenticPremiumLoginSwitchEvent;
@@ -22,6 +23,7 @@ public class PremiumDisableCommand<P> extends PremiumCommand<P> {
     }
 
     @Default
+    @Description("Disable premium autologin and use manual login instead.")
     public CompletionStage<Void> onCracked(Audience sender, P player) {
         return runAsync(() -> {
             var user = getUser(player);

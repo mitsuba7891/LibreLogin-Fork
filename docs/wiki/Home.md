@@ -2,7 +2,7 @@
 
 **Authentication for standalone Paper servers and Velocity networks.**
 
-[Download beta.5](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.5) · [Installation](Installation.md) · [Configuration](Configuration.md) · [Troubleshooting](Troubleshooting.md)
+[Published releases](https://github.com/mitsuba7891/LibreLogin-Fork/releases) · [Build current master](API-and-Build.md) · [Installation](Installation.md) · [Configuration](Configuration.md) · [Troubleshooting](Troubleshooting.md)
 
 [LibreLogin Fork](https://github.com/mitsuba7891/LibreLogin-Fork) is a maintained fork of LibreLogin. This wiki explains its features, setup and account-management commands in **English**.
 
@@ -49,17 +49,17 @@
 
 ## Important before installing
 
-> **Java and compatibility:** Building and running Paper 26.2 require **Java 25**. LibreLogin keeps Java 21 bytecode. The advertised 1.13–26.2 range describes **client protocols**, not certification for every older Paper server; older clients need the appropriate protocol translation layer.
+> **Java and compatibility:** Building and running Paper 26.3 require **Java 25**. LibreLogin keeps Java 21 bytecode. The advertised 1.13–26.3 range describes **client protocols**, not certification for every older Paper server; older clients need the appropriate protocol translation layer. QR maps on Velocity require PacketEvents 2.14.0+ for this range.
 
-> **Release status:** These guides cover **v0.25.0-beta.5**, a **pre-release**. `/librelogin` provides clickable administrator help; initial configuration requests a restart, Paper uses the modern async spawn event, and SQLite no longer emits the Hikari keepalive warning. The [known issues](Troubleshooting.md#known-issues) include Paper tablist textures and live-server validation. The current distribution provides Paper, Velocity and AuthLimbo artifacts; BungeeCord and NanoLimbo are not supported outputs.
+> **Source status:** These guides cover **0.25.0 on master**, including complete paginated help, the `librelogin-fork` identity and the Minecraft 26.3 update. Initial configuration still requests a restart, now without misleading fatal-error announcements. Publishing source to `master` does not itself create a GitHub release/tag. The [known issues](Troubleshooting.md#known-issues) include Paper tablist textures and live-server validation. The current build provides Paper, Velocity and AuthLimbo artifacts; BungeeCord and NanoLimbo are not supported outputs.
 
 - [Stable release: v0.24.12](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.24.12).
 - [Testing pre-release: v0.25.0-beta.5](https://github.com/mitsuba7891/LibreLogin-Fork/releases/tag/v0.25.0-beta.5).
-- JAR names retain the base version `0.25.0`. Use the **release tag and checksums** to distinguish beta builds. Beta.1–beta.4 do not include the beta.5 interactive help.
+- JAR names retain the base version `0.25.0`. Use the **source commit, release tag and checksums** to distinguish builds. Previously published beta.5 artifacts do not include the current 26.3 update or the complete paginated help.
 - This wiki is maintained in English. Release archives preserve the documentation snapshot packaged with that release.
 
 ## Support and license
 
 Report problems in [this fork's issue tracker](https://github.com/mitsuba7891/LibreLogin-Fork/issues), including the JAR, server/proxy, Java and client versions, translation plugins, and reproduction steps. Remove passwords, forwarding secrets, TOTP secrets and personal data before sharing logs or configuration.
 
-LibreLogin retains **MPL-2.0** and its original notices. The MIT notices for FastLogin and TOTP apply to those dependencies. See [LICENSE](https://github.com/mitsuba7891/LibreLogin-Fork/blob/beta/LICENSE) and the [dependency license report](https://github.com/mitsuba7891/LibreLogin-Fork/blob/beta/docs/dependency-licenses.md). The [cross-fork issue review](https://github.com/mitsuba7891/LibreLogin-Fork/blob/beta/docs/libreloginprod-issues.md) records the status of reports from LibreLoginProd.
+LibreLogin retains **MPL-2.0** and its original notices. The MIT notices for FastLogin and TOTP apply to those dependencies. See [LICENSE](https://github.com/mitsuba7891/LibreLogin-Fork/blob/master/LICENSE) and the [dependency license report](https://github.com/mitsuba7891/LibreLogin-Fork/blob/master/docs/dependency-licenses.md). The [cross-fork issue review](https://github.com/mitsuba7891/LibreLogin-Fork/blob/master/docs/libreloginprod-issues.md) records the status of reports from LibreLoginProd.

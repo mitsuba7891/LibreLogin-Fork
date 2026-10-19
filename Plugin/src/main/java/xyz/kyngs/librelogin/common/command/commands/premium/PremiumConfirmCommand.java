@@ -8,6 +8,7 @@ package xyz.kyngs.librelogin.common.command.commands.premium;
 
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.Description;
 import net.kyori.adventure.audience.Audience;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
 
@@ -20,6 +21,7 @@ public class PremiumConfirmCommand<P> extends PremiumCommand<P> {
     }
 
     @Default
+    @Description("Confirm your pending premium autologin request.")
     public CompletionStage<Void> onPremiumConfirm(Audience sender, P player) {
         return runAsync(() -> {
             var user = getUser(player);

@@ -9,6 +9,7 @@ package xyz.kyngs.librelogin.common.command.commands.mail;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Syntax;
 import net.kyori.adventure.audience.Audience;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
@@ -31,6 +32,7 @@ public class ResetPasswordViaEMailCommand<P> extends EMailCommand<P> {
     }
 
     @Default
+    @Description("Request an email to reset your account password.")
     @Syntax("{@@syntax.reset-password}")
     @CommandCompletion("%autocomplete.reset-password")
     public CompletionStage<Void> onResetPassword(Audience audience, P player, UUID uuid) {

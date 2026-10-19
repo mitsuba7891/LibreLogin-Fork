@@ -16,6 +16,8 @@ Paper/plugins/LibreLogin-Paper-0.25.0.jar
 
 Start once to generate `config.yml` and `messages.yml`, stop the server, configure them, then start again. Back up the database and plugin data before upgrades.
 
+The internal name is `librelogin-fork`. New installations use `plugins/librelogin-fork/`; existing legacy data directories are reused without moving files. Paper keeps the `LibreLogin` provider alias, `/librelogin` and existing permission nodes.
+
 ## Configuration
 
 Important generated sections include:
@@ -42,11 +44,13 @@ Legacy `config.conf` and `messages.conf` files are converted to YAML and retaine
 
 Premium/autologin accounts must run `/cracked` before configuring 2FA.
 
-In beta.4, TOTP works through the manual secret/provisioning URI without a QR projector. Disabling `totp.enabled` does not bypass a saved second factor; recovery must be performed explicitly for the account. User guides are included in the bundle's `docs/wiki/` directory and [online at the release tag](https://github.com/mitsuba7891/LibreLogin-Fork/blob/v0.25.0-beta.4/docs/wiki/Home.md).
+Use `/librelogin [page]` or `/librelogin help [page]` for complete permission-aware help with clickable Previous/Next navigation. Staff/account clicks only suggest the command; they do not execute it.
+
+TOTP works through the manual secret/provisioning URI without a QR projector. Disabling `totp.enabled` does not bypass a saved second factor; recovery must be performed explicitly for the account. User guides are included in the bundle's `docs/wiki/` directory and [in the current source](https://github.com/mitsuba7891/LibreLogin-Fork/blob/master/docs/wiki/Home.md).
 
 `login-log-alias: false` disables only `/log` after restarting, preserving `/login` and `/l`. Review existing database URLs because upgraded explicit values are preserved even though new defaults use verified TLS.
 
-This is a pre-release. Tablist textures remain pending; live Paper/client validation is still required.
+This is the 0.25.0 source update for master; a source push does not create a GitHub tag/release. Tablist textures remain pending; live Paper/client validation is still required.
 
 ## Messages
 
@@ -58,13 +62,13 @@ Use `prefix: ""` to disable it. Reload messages with `/librelogin reload message
 
 ## Dependencies
 
-- Java 25 for Paper 26.2.
-- Compiled and tested against Paper API 26.2; the 1.13-26.2 range is a client/protocol range, not a Paper-server range.
+- Java 25 for Paper 26.3.
+- Compiled and unit-tested against Paper API 26.3; the 1.13-26.3 range is a client/protocol range, not a Paper-server range.
 - Runtime libraries and database drivers loaded through Libby.
 - Optional LuckPerms and Floodgate integrations.
-- PacketEvents 2.13.0+ is declared as a runtime library for this Paper artifact and is loaded through Libby; do not install a second copy unless your server setup explicitly requires it.
+- PacketEvents 2.14.0+ is declared as a runtime library for this Paper artifact and is loaded through Libby; do not install a second copy unless your server setup explicitly requires it.
 
-Older clients require the server/network's protocol translation layer. PacketEvents supplies packet compatibility to LibreLogin but does not translate a 1.13 client into the 26.2 server protocol by itself.
+Older clients require the server/network's protocol translation layer. PacketEvents supplies packet compatibility to LibreLogin but does not translate a 1.13 client into the 26.3 server protocol by itself.
 
 ## License
 

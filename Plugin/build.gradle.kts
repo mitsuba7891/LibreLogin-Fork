@@ -13,6 +13,8 @@ plugins {
     id("java-library")
 }
 
+val packetEventsVersion = "2.14.0"
+
 // The version lives in gradle.properties and is incremented by the root
 // 'bumpVersion' task on every build. Reading it lazily here ensures the
 // current build picks up the freshly bumped version at execution time.
@@ -55,7 +57,7 @@ configurations.named("compileOnly") {
     extendsFrom(libby)
 }
 
-// The compiler itself is JDK 25 and can read Paper 26.2's class files. Keep
+// The compiler itself is JDK 25 and can read Paper 26.3's class files. Keep
 // the emitted LibreLogin bytecode at Java 21, but advertise the compile
 // classpath's real toolchain level so Gradle selects Paper's Java 25 variant.
 configurations.matching { it.name.endsWith("compileClasspath", ignoreCase = true) }.configureEach {
@@ -109,7 +111,7 @@ repositories {
     maven { url = uri("https://repo.opencollab.dev/maven-snapshots/") }
     maven {
         url = uri("https://repo.papermc.io/repository/maven-public/")
-        // Paper 26.2 is compiled for Java 25, while LibreLogin deliberately
+        // Paper 26.3 is compiled for Java 25, while LibreLogin deliberately
         // keeps its own bytecode at Java 21 for the proxy/protocol range.
         // Resolve the published POM/JAR instead of rejecting the dependency
         // through Gradle's consumer target-JVM variant matching.
@@ -240,6 +242,7 @@ dependencies {
     // (MiniMessage + LegacyMessage are compileOnly/libby at runtime).
     testImplementation("net.kyori:adventure-text-minimessage:4.14.0")
     testImplementation("com.github.kyngs:LegacyMessage:0.2.0")
+    testImplementation("com.github.retrooper:packetevents-api:$packetEventsVersion")
 
     //API
     implementation(project(":API"))
@@ -276,7 +279,7 @@ dependencies {
     compileOnly("dev.simplix:protocolize-api:2.4.2")
     // PacketEvents is installed as an external Velocity/Paper plugin. Do not
     // shade or relocate its API: the platform plugin owns these classes.
-    compileOnly("com.github.retrooper:packetevents-velocity:2.13.0")
+    compileOnly("com.github.retrooper:packetevents-velocity:$packetEventsVersion")
     libby("org.bouncycastle:bcprov-jdk18on:1.80")
     libby("org.apache.commons:commons-email:1.6.0")
     libby("net.kyori:adventure-text-minimessage:4.14.0")
@@ -295,12 +298,12 @@ dependencies {
     libby("org.bstats:bstats-bukkit:3.0.2")
 
     //Paper
-    compileOnly("io.papermc.paper:paper-api:26.2.build.84-stable")
+    compileOnly("io.papermc.paper:paper-api:26.3.build.206-stable")
     //compileOnly "com.comphenix.protocol:ProtocolLib:5.1.0"
-    // 2.13.0+ parses the new Paper 26.x version strings (e.g. '26.1.2.build.74')
-    // and ships protocol mappings for the newest Minecraft lines. PacketEvents
+    // 2.14.0 adds Minecraft 26.3 mappings and understands Paper 26.x version
+    // strings. Keep the Paper runtime and Velocity compile API aligned. PacketEvents
     // is resolved from the Codemc repository listed below.
-    libby("com.github.retrooper:packetevents-spigot:2.13.0")
+    libby("com.github.retrooper:packetevents-spigot:$packetEventsVersion")
     compileOnly("io.netty:netty-transport:4.1.108.Final")
     compileOnly("com.mojang:datafixerupper:5.0.28")
     compileOnly("org.apache.logging.log4j:log4j-core:2.23.1")
@@ -440,6 +443,7 @@ val releaseArchive = tasks.register<Zip>("releaseArchive") {
     }
     from(layout.projectDirectory.file("../release/README.md"))
     from(layout.projectDirectory.file("../release/CHANGELOG.md"))
+    from(layout.projectDirectory.file("../release/notes-v0.25.0.md"))
     // Preserve the upstream license in the distributable package. LibreLogin
     // is MPL-2.0; the MIT notice under licenses/ belongs to a dependency.
     from(layout.projectDirectory.file("../LICENSE"))

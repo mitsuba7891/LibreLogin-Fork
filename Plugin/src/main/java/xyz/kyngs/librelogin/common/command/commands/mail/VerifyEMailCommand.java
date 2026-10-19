@@ -9,6 +9,7 @@ package xyz.kyngs.librelogin.common.command.commands.mail;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Syntax;
 import net.kyori.adventure.audience.Audience;
 import xyz.kyngs.librelogin.common.AuthenticLibreLogin;
@@ -24,6 +25,7 @@ public class VerifyEMailCommand<P> extends EMailCommand<P> {
     }
 
     @Default
+    @Description("Verify your recovery email using the code you received.")
     @Syntax("{@@syntax.verify-email}")
     @CommandCompletion("%autocomplete.verify-email")
     public CompletionStage<Void> onVerifyMail(P player, Audience sender, String token) {

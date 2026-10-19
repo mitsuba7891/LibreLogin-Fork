@@ -12,7 +12,6 @@ import co.aikar.commands.VelocityCommandIssuer;
 import co.aikar.commands.VelocityCommandManager;
 import com.google.inject.Inject;
 import com.velocitypowered.api.plugin.PluginDescription;
-import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -35,7 +34,6 @@ import xyz.kyngs.librelogin.common.util.CancellableTask;
 
 import java.io.File;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -46,9 +44,6 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
     private final VelocityBootstrap bootstrap;
     @Inject
     private org.slf4j.Logger logger;
-    @Inject
-    @DataDirectory
-    private Path dataDir;
     @Inject
     private ProxyServer server;
     @Inject
@@ -161,11 +156,17 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
     @Override
     protected AuthenticImageProjector<Player, RegisteredServer> provideImageProjector() {
         // PacketEvents is the maintained cross-version path and supports the
-        // current protocol line through Minecraft 26.2. It is installed as a
+        // current protocol line through Minecraft 26.3. It is installed as a
         // separate Velocity plugin so its injector owns the player channels.
         if (pluginPresent("packetevents")) {
-            getLogger().info("Detected PacketEvents, enabling cross-version 2FA (1.13-26.2)...");
-            return new PacketEventsImageProjector<>(this);
+            if (PacketEventsImageProjector.compatible()) {
+                getLogger().info("Detected PacketEvents, enabling optional QR maps for Minecraft clients "
+                        + PacketEventsImageProjector.SUPPORTED_CLIENT_RANGE + ".");
+                return new PacketEventsImageProjector<>(this);
+            }
+            getLogger().warn("Installed PacketEvents has no Minecraft 26.3 mappings. Update to "
+                    + PacketEventsImageProjector.REQUIRED_PACKET_EVENTS_VERSION
+                    + "+; falling back to legacy Protocolize or manual 2FA setup.");
         }
 
         // Keep the Protocolize path as a compatibility fallback for proxies
@@ -174,14 +175,16 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
         if (pluginPresent("protocolize")) {
             var projector = new ProtocolizeImageProjector<>(this);
             if (!projector.compatible()) {
-                getLogger().warn("Detected protocolize, however, with incompatible version (2.2.2), please upgrade or downgrade.");
+                getLogger().warn("Protocolize 2.2.2 is incompatible with QR maps. Manual 2FA setup remains available; "
+                        + "install PacketEvents " + PacketEventsImageProjector.REQUIRED_PACKET_EVENTS_VERSION
+                        + "+ for Minecraft clients " + PacketEventsImageProjector.SUPPORTED_CLIENT_RANGE + ".");
                 return null;
             }
-            getLogger().info("Detected Protocolize, enabling legacy 2FA (1.13-1.21.3)...");
+            getLogger().info("Detected Protocolize, enabling legacy QR maps for Minecraft clients 1.13-1.21.3.");
             return projector;
         }
 
-        logger.warn("Neither PacketEvents nor Protocolize was found; 2FA image support is disabled. Install PacketEvents 2.13.0+ for Minecraft 1.13-26.2 support.");
+        getLogger().info(PacketEventsImageProjector.MISSING_INTEGRATION_NOTICE);
         return null;
     }
 
@@ -194,11 +197,10 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
         super.enable();
 
         if (isDisabledByFailure()) {
-            getLogger().error("LibreLogin refuses every connection until the problem reported above is fixed.");
             return;
         }
 
-        getLogger().info("LibreLogin version " + getVersion() + " enabled!");
+        getLogger().info("LibreLogin-Fork version " + getVersion() + " enabled!");
     }
 
     @Override
@@ -247,7 +249,7 @@ public class VelocityLibreLogin extends AuthenticLibreLogin<Player, RegisteredSe
 
     @Override
     public File getDataFolder() {
-        return dataDir.toFile();
+        return bootstrap.getDataDirectory().toFile();
     }
 
 }

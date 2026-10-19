@@ -898,6 +898,13 @@ public class MessageKeys {
             ConfigurateHelper::getString
     );
 
+    public static final ConfigurationKey<String> SYNTAX_HELP = new ConfigurationKey<>(
+            "syntax.help",
+            "[page]",
+            "Optional page number for /librelogin and /librelogin help.",
+            ConfigurateHelper::getString
+    );
+
     public static final ConfigurationKey<String> SYNTAX_REGISTER = new ConfigurationKey<>(
             "syntax.register",
             "<password> <passwordRepeat>",

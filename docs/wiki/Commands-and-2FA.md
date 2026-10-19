@@ -77,16 +77,27 @@ The command system resolves the UUIDs present in internal method signatures; pla
 
 Many permission names retain the **`librepremium.*`** prefix for compatibility even though the command is `/librelogin`.
 
-Running `/librelogin` without a subcommand now shows the plugin version, platform, database/TOTP/email status and a clickable list of administrator commands. Hover a command for its description; click it to suggest the command in chat without executing it. Use `/librelogin about` for the full license/version message.
+Running `/librelogin` or `/librelogin help` shows six commands per page, with visible descriptions and a page/command count. The list comes from the live command registry, so it includes all permitted administrator and account commands without duplicating aliases. TOTP/email account commands appear only when registered. Hover the heading for platform/database/TOTP/email status, or a command for aliases and permission nodes.
+
+Click **Previous / Next** to navigate, or use `/librelogin 2` or `/librelogin help 2`. Page numbers also have tab completion. Account/staff command clicks only suggest the command's literal path, without argument placeholders or automatic execution; only the page navigation runs a command. Invalid page numbers display the valid range and a link back to page one. `/librelogin about` retains the full license/version message.
 
 | Command | Permission |
 |---|---|
+| `/librelogin [page]` / `/librelogin help [page]` | None; command visibility follows the caller's permissions. |
+| `/librelogin about` | None. |
 | `/librelogin reload messages` | `librepremium.reload.messages` |
 | `/librelogin reload configuration` | `librepremium.reload.configuration` |
 | `/librelogin user info <name>` | `librepremium.user.info` |
+| `/librelogin user migrate <name> <newName>` | `librepremium.user.migrate` |
+| `/librelogin user register <name> <password>` | `librepremium.user.register` |
+| `/librelogin user login <name>` | `librepremium.user.login` |
+| `/librelogin user pass-change <name> <newPassword>` | `librepremium.user.pass-change` |
 | `/librelogin user premium <name>` | `librepremium.user.premium` |
 | `/librelogin user cracked <name>` | `librepremium.user.cracked` |
 | `/librelogin user 2faoff <name>` | `librepremium.user.2faoff` |
+| `/librelogin user emailoff <name>` | `librepremium.user.emailoff` |
+| `/librelogin user setemail <name> <email>` | `librepremium.user.setemail` |
+| `/librelogin user alts <name>` | `librelogin.user.alts` |
 | `/librelogin user unregister <name>` | `librepremium.user.unregister` |
 | `/librelogin user delete <name>` | `librepremium.user.delete` |
 | `/librelogin dump` | `librelogin.dump` |

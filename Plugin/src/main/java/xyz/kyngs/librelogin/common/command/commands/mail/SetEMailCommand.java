@@ -31,6 +31,7 @@ public class SetEMailCommand<P> extends EMailCommand<P> {
     }
 
     @Default
+    @Description("Set a recovery email address using your account password.")
     @Syntax("{@@syntax.set-email}")
     @CommandCompletion("%autocomplete.set-email")
     public CompletionStage<Void> onSetMail(Audience sender, P player, UUID uuid, String mail, @Single String password) {

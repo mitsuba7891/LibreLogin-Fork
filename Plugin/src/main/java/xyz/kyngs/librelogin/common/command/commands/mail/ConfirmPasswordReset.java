@@ -21,6 +21,7 @@ public class ConfirmPasswordReset<P> extends EMailCommand<P> {
     }
 
     @Default
+    @Description("Reset your password using the confirmation code from your email.")
     @Syntax("{@@syntax.confirm-password-reset}")
     @CommandCompletion("%autocomplete.confirm-password-reset")
     public CompletionStage<Void> onConfirmPassReset(Audience audience, P player, String token, String password, @Single String passwordRepeat) {

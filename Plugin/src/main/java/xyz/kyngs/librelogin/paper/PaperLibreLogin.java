@@ -63,7 +63,7 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
 
     @Override
     public File getDataFolder() {
-        return bootstrap.getDataFolder();
+        return bootstrap.getAuthenticationDataFolder();
     }
 
     @Override
@@ -164,7 +164,6 @@ public class PaperLibreLogin extends AuthenticLibreLogin<Player, World> {
             if (!isRestartRequested()) {
                 listeners = new PaperListeners(this);
                 Bukkit.getPluginManager().registerEvents(listeners, bootstrap);
-                getLogger().error("LibreLogin refuses every connection until the problem reported above is fixed.");
             }
             return;
         }

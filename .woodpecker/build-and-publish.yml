@@ -19,14 +19,14 @@
 
 steps:
   platformArtifacts:
-    image: "eclipse-temurin:21-alpine"
+    image: "eclipse-temurin:25-alpine"
     commands:
-      - "./gradlew -PnoBump :Plugin:licenseCheck :Plugin:platformJars"
-      - "./gradlew :API:javadocJar"
+      - "./gradlew -PnoBump test checkLicenses :Plugin:platformJars :Plugin:releaseArchive"
+      - "./gradlew -PnoBump :API:javadocJar"
 
 
   verify-platform-artifacts:
-    image: "eclipse-temurin:21-alpine"
+    image: "eclipse-temurin:25-alpine"
     commands:
       - "find Plugin/build/libs/platform -maxdepth 1 -type f -name '*.jar' -print"
       - "test \"$(find Plugin/build/libs/platform -maxdepth 1 -type f -name 'LibreLogin-Paper-*.jar' | wc -l)\" -eq 1"

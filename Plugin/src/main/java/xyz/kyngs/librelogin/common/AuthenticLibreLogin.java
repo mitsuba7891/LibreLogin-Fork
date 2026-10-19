@@ -261,13 +261,10 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
             fatalFailure = disabled.getMessage();
             restartRequested = disabled.restartRequested();
             if (logger != null) {
-                logger.error("LibreLogin is disabled and refuses every login until the reported problem is fixed: " + fatalFailure);
-                if (restartRequested) {
-                    logger.warn("The configuration was generated during first startup. The server/proxy will restart now; fill in the generated configuration before it starts again.");
-                    requestRestart();
-                } else {
-                    logger.error("The server/proxy was deliberately left running. Fix the problem above and restart it.");
-                }
+                disabled.logOutcome(logger);
+            }
+            if (restartRequested) {
+                requestRestart();
             }
         }
     }
@@ -289,15 +286,6 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
         }
 
         var folder = getDataFolder();
-        if (!folder.exists()) {
-            var oldFolder = new File(folder.getParentFile(), folder.getName().equals("librelogin") ? "librepremium" : "LibrePremium");
-            if (oldFolder.exists()) {
-                logger.info("Migrating configuration and messages from old folder...");
-                if (!oldFolder.renameTo(folder)) {
-                    throw new RuntimeException("Can't migrate configuration and messages from old folder!");
-                }
-            }
-        }
 
         try {
             Files.copy(getResourceAsStream("LICENSE.txt"), new File(folder, "LICENSE.txt").toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -506,7 +494,8 @@ public abstract class AuthenticLibreLogin<P, S> implements LibreLoginPlugin<P, S
 
         try {
             if (configuration.reload(this)) {
-                logger.warn("!! A new configuration was generated, please fill it out, if in doubt, see the wiki !!");
+                logger.info("Generated configuration at " + new File(getDataFolder(), "config.yml")
+                        + ". Setup guide: https://github.com/mitsuba7891/LibreLogin-Fork/wiki");
                 abortStartup(0);
             }
 

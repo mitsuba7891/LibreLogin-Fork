@@ -16,10 +16,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import xyz.kyngs.librelogin.api.provider.LibreLoginProvider;
+import xyz.kyngs.librelogin.common.util.PluginDataDirectory;
+
+import java.io.File;
 
 public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Player, World> {
 
     private PaperLibreLogin libreLogin;
+    private File authenticationDataFolder;
 
     /**
      * Set when the server distribution cannot run LibreLogin at all. The plugin
@@ -42,7 +46,7 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
 
     @Override
     public void onEnable() {
-        getLogger().info("Bootstrapping LibreLogin...");
+        getLogger().info("Bootstrapping LibreLogin-Fork...");
         if (libreLogin == null) {
             getLogger().warning("LibreLogin was not initialized during onLoad; initializing during onEnable.");
         }
@@ -62,7 +66,11 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
             return;
         }
 
-        getLogger().info("Initializing LibreLogin...");
+        getLogger().info("Initializing LibreLogin-Fork...");
+        var authenticationFolder = getAuthenticationDataFolder();
+        if (!authenticationFolder.equals(getDataFolder())) {
+            getLogger().info("Using existing authentication data directory: " + authenticationFolder);
+        }
 
         try {
             var adventureClass = Class.forName("net.kyori.adventure.audience.Audience");
@@ -130,6 +138,14 @@ public class PaperBootstrap extends JavaPlugin implements LibreLoginProvider<Pla
 
     protected void disable() {
         setEnabled(false);
+    }
+
+    File getAuthenticationDataFolder() {
+        if (authenticationDataFolder == null) {
+            authenticationDataFolder = PluginDataDirectory.resolve(getDataFolder().toPath(),
+                    "LibreLogin", "librelogin", "LibrePremium", "librepremium").toFile();
+        }
+        return authenticationDataFolder;
     }
 
 }
